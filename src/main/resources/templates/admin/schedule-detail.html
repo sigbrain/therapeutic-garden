@@ -26,8 +26,8 @@
             </div>
 
             <div class="member-detail-item">
-                <dt>참가자 번호</dt>
-                <dd th:text="${schedule.member.participantNo}"></dd>
+                <dt>이름</dt>
+                <dd th:text="${schedule.member.name != null ? schedule.member.name : '-'}"></dd>
             </div>
 
             <div class="member-detail-item">
@@ -36,7 +36,7 @@
             </div>
 
             <div class="member-detail-item">
-                <dt>로그인 아이디</dt>
+                <dt>아이디</dt>
                 <dd th:text="${schedule.member.loginId}"></dd>
             </div>
 
@@ -85,8 +85,31 @@
 
                         <p
                                 class="schedule-spot"
-                                th:text="|스팟 ${spot.spotNo}|">
+                                th:switch="${spot.spotNo}">
+
+                            <span th:case="1">
+                                HS1 호스타 정원
+                            </span>
+                            <span th:case="2">
+                                HS2 곶자왈원
+                            </span>
+                            <span th:case="3">
+                                HS3 가든 위스퍼스
+                            </span>
+                            <span th:case="4">
+                                HS4 콜로네이드 가든
+                            </span>
+                            <span th:case="5">
+                                HS5 블로썸 가든
+                            </span>
+                            <span th:case="6">
+                                HS6 극림원
+                            </span>
+                            <span th:case="*">
+                                -
+                            </span>
                         </p>
+
                     </div>
                 </article>
             </div>

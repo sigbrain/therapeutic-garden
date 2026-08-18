@@ -18,7 +18,15 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         adminService.createAdmin("admin", "1234");
         memberService.createMember(1, 1, "p001", "0001");
+        memberService.createMember(2, 1, "p002", "0002");
+        memberService.createMember(3, 1, "p003", "0003");
         memberService.createMember(4, 2, "p004", "0004");
+        memberService.createMember(5, 2, "p005", "0005");
+        memberService.createMember(6, 2, "p006", "0006");
+        memberService.createMember(7, 2, "p007", "0007");
         memberService.createMember(8, 3, "p008", "0008");
+        memberService.createMember(9, 3, "p009", "0009");
+        memberService.createMember(10, 3, "p010", "0010");
+        memberService.createMember(11, 3, "p011", "0011");
     }
 }

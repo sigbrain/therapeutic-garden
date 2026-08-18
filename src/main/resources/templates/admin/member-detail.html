@@ -42,7 +42,7 @@
 
             <div class="member-detail-item">
                 <dt>전화번호</dt>
-                <dd th:text="${member.phone != null ? member.phone : '-'}"></dd>
+                <dd th:text="${formattedPhone != null ? formattedPhone : '-'}"></dd>
             </div>
         </dl>
 

@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>참가자 목록</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/style.css}">
 </head>
+
 <body class="page-body">
 
 <main class="page-container">
@@ -13,7 +18,10 @@
     <section class="card list-card">
 
         <div class="card-header">
-            <p class="card-eyebrow">Administrator</p>
+
+            <p class="card-eyebrow">
+                Administrator
+            </p>
 
             <h1 class="card-title">
                 참가자 목록
@@ -22,41 +30,80 @@
             <p class="card-description">
                 현재 등록된 참가자 목록입니다.
             </p>
+
         </div>
 
+
         <div class="table-wrapper">
+
             <table class="member-table">
+
                 <thead>
+
                 <tr>
                     <th>참가자 번호</th>
                     <th>그룹</th>
+                    <th>이름</th>
                     <th>아이디</th>
                 </tr>
+
                 </thead>
 
+
                 <tbody>
+
                 <tr th:each="member : ${members}">
+
+                    <!-- 참가자 번호 -->
                     <td>
-                        <a class="member-detail-link"
-                           th:href="@{/admin/members/{memberId}(memberId=${member.memberId})}"
-                           th:text="${member.participantNo}">
+
+                        <a
+                                class="member-detail-link"
+                                th:href="@{/admin/members/{memberId}(
+                                    memberId=${member.memberId}
+                                )}"
+                                th:text="${member.participantNo}">
                         </a>
+
                     </td>
 
+
+                    <!-- 그룹 -->
                     <td>
-                <span class="group-label"
-                      th:text="|${member.groupNo}그룹|">
-                </span>
+
+                        <span
+                                class="group-label"
+                                th:classappend="| group-${member.groupNo}-label|"
+                                th:text="|${member.groupNo}그룹|">
+                        </span>
+
                     </td>
 
-                    <td th:text="${member.loginId}"></td>
+
+                    <!-- 이름 -->
+                    <td
+                            th:text="${member.name != null
+                                ? member.name
+                                : '-'}">
+                    </td>
+
+
+                    <!-- 로그인 아이디 -->
+                    <td th:text="${member.loginId}">
+                    </td>
+
                 </tr>
+
                 </tbody>
+
             </table>
+
         </div>
 
-        <a th:href="@{/admin}"
-           class="back-link">
+
+        <a
+                th:href="@{/admin}"
+                class="back-link">
             관리자 메인으로
         </a>
 

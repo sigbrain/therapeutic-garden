@@ -118,6 +118,22 @@ public class MemberService {
         }
 
         /*
+         * 전화번호 형식 통일
+         *
+         * 관리자가
+         * [PHONE_REDACTED]
+         * 형식으로 입력해도
+         *
+         * DB에는
+         * [PHONE_REDACTED]
+         * 형식으로 저장한다.
+         */
+        if (phone != null) {
+            phone = phone.replace("-", "");
+        }
+
+
+        /*
          * 참가자 정보 수정
          * MemberService 클래스에 @Transactional이 적용되어 있으므로
          * 트랜잭션 종료 시 JPA 변경 감지로 UPDATE SQL이 실행된다.

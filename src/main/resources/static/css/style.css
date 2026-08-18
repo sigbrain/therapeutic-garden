@@ -454,6 +454,30 @@ body {
     color: #475569;
 }
 
+/* ================================
+   참가자 목록 그룹 색상
+================================ */
+
+/* 1그룹 - 보라 */
+.group-1-label {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+
+/* 2그룹 - 청록 */
+.group-2-label {
+    background-color: #ccfbf1;
+    color: #0f766e;
+}
+
+
+/* 3그룹 - 장미 */
+.group-3-label {
+    background-color: #ffe4e6;
+    color: #e11d48;
+}
+
 .course-label {
     background-color: #dbeafe;
     color: #1d4ed8;
@@ -1083,6 +1107,94 @@ input[type="time"].form-input {
     padding: 8px;
     color: #374151;
     text-decoration: none;
+}
+
+/* ================================
+   관리자 달력 그룹 드롭다운
+================================ */
+
+.admin-group-dropdown {
+    position: fixed;
+    z-index: 9999;
+
+    display: none;
+
+    min-width: 150px;
+    padding: 10px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+
+    background-color: #ffffff;
+
+    box-shadow:
+            0 10px 25px rgba(15, 23, 42, 0.18);
+}
+
+
+/*
+ * 그룹을 클릭했을 때만 표시
+ */
+.admin-group-dropdown.show {
+    display: block;
+}
+
+
+/*
+ * 드롭다운 제목
+ */
+.admin-group-dropdown-title {
+    margin-bottom: 8px;
+    padding: 4px 6px 8px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    color: var(--group-color);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/*
+ * 참가자 목록
+ */
+.admin-group-dropdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+/*
+ * P001, P002 ... 버튼
+ */
+.admin-group-participant-button {
+    width: 100%;
+    padding: 7px 10px;
+
+    border: 0;
+    border-radius: 6px;
+
+    background-color: var(--group-color);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+            filter 0.2s ease,
+            transform 0.1s ease;
+}
+
+/*
+ * 참가자 버튼 hover
+ */
+.admin-group-participant-button:hover {
+    filter: brightness(0.88);
+    transform: translateY(-1px);
 }
 
 

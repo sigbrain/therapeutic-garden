@@ -377,6 +377,15 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
 
+        const course =
+                document.getElementById("course");
+
+        const firstSpotNo =
+                document.getElementById("firstSpotNo");
+
+        const secondSpotNo =
+                document.getElementById("secondSpotNo");
+
         const firstStartTime =
                 document.getElementById("firstStartTime");
 
@@ -388,16 +397,53 @@
 
 
         /*
-         * 첫 번째 시작 시간을 변경하면
-         * 두 번째 시작 시간을 10분 뒤로 자동 설정한다.
+         * 첫 번째 스팟과 두 번째 스팟의
+         * 기본 짝을 반환한다.
          *
-         * 자동 설정된 이후에는
-         * 관리자가 두 번째 시작 시간을 직접 수정할 수 있다.
+         * HS1 ↔ HS2
+         * HS3 ↔ HS4
+         * HS5 ↔ HS6
          */
-        firstStartTime.addEventListener("change", function () {
+        function getPairedSpot(firstSpot) {
+
+            if (firstSpot === "1") {
+                return "2";
+            }
+
+            if (firstSpot === "2") {
+                return "1";
+            }
+
+            if (firstSpot === "3") {
+                return "4";
+            }
+
+            if (firstSpot === "4") {
+                return "3";
+            }
+
+            if (firstSpot === "5") {
+                return "6";
+            }
+
+            if (firstSpot === "6") {
+                return "5";
+            }
+
+            return "";
+        }
+
+
+        /*
+         * 첫 번째 시작 시간을 기준으로
+         * 두 번째 시작 시간을 10분 뒤로 설정한다.
+         */
+        function setSecondStartTime() {
 
             if (!firstStartTime.value) {
+
                 secondStartTime.value = "";
+
                 return;
             }
 
@@ -406,7 +452,8 @@
                             .split(":")
                             .map(Number);
 
-            const firstTime = new Date();
+            const firstTime =
+                    new Date();
 
             firstTime.setHours(hour);
             firstTime.setMinutes(minute);
@@ -417,15 +464,82 @@
             );
 
             const secondHour =
-                    String(firstTime.getHours())
-                            .padStart(2, "0");
+                    String(
+                            firstTime.getHours()
+                    ).padStart(2, "0");
 
             const secondMinute =
-                    String(firstTime.getMinutes())
-                            .padStart(2, "0");
+                    String(
+                            firstTime.getMinutes()
+                    ).padStart(2, "0");
 
             secondStartTime.value =
                     `${secondHour}:${secondMinute}`;
+        }
+
+
+        /*
+         * 코스를 변경하면
+         * 해당 코스의 기본값으로 다시 설정한다.
+         *
+         * A → HS1, HS2
+         * B → HS3, HS4
+         * C → HS5, HS6
+         *
+         * 시간은 09:00 / 09:10
+         */
+        course.addEventListener("change", function () {
+
+            if (course.value === "A") {
+
+                firstSpotNo.value = "1";
+                secondSpotNo.value = "2";
+
+            } else if (course.value === "B") {
+
+                firstSpotNo.value = "3";
+                secondSpotNo.value = "4";
+
+            } else if (course.value === "C") {
+
+                firstSpotNo.value = "5";
+                secondSpotNo.value = "6";
+
+            } else {
+
+                firstSpotNo.value = "";
+                secondSpotNo.value = "";
+
+                return;
+            }
+
+            firstStartTime.value =
+                    "09:00";
+
+            setSecondStartTime();
+        });
+
+
+        /*
+         * 첫 번째 스팟을 변경하면
+         * 두 번째 스팟을 자동으로 짝지어준다.
+         */
+        firstSpotNo.addEventListener("change", function () {
+
+            secondSpotNo.value =
+                    getPairedSpot(
+                            firstSpotNo.value
+                    );
+        });
+
+
+        /*
+         * 첫 번째 시작 시간을 변경하면
+         * 두 번째 시작 시간을 10분 뒤로 설정한다.
+         */
+        firstStartTime.addEventListener("change", function () {
+
+            setSecondStartTime();
         });
 
 
@@ -435,11 +549,12 @@
         weatherButton.addEventListener("click", async function () {
 
             const date =
-                    document.getElementById("scheduleDate").value;
+                    document.getElementById(
+                            "scheduleDate"
+                    ).value;
 
             const time =
-                    document.getElementById("firstStartTime").value;
-
+                    firstStartTime.value;
 
             if (!date || !time) {
 
@@ -450,14 +565,12 @@
                 return;
             }
 
-
             try {
 
                 const response =
                         await fetch(
                                 `/admin/weather?date=${date}&time=${time}`
                         );
-
 
                 if (!response.ok) {
 
@@ -468,20 +581,23 @@
                     return;
                 }
 
-
                 const data =
                         await response.json();
 
-
-                document.getElementById("weather").value =
+                document.getElementById(
+                        "weather"
+                ).value =
                         data.weather;
 
-                document.getElementById("temperature").value =
+                document.getElementById(
+                        "temperature"
+                ).value =
                         data.temperature;
 
-                document.getElementById("humidity").value =
+                document.getElementById(
+                        "humidity"
+                ).value =
                         data.humidity;
-
 
             } catch (error) {
 
