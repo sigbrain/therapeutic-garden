@@ -6,10 +6,12 @@
     <title>일정 관리 시스템</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
+
 <body class="page-body">
 
 <main class="page-container">
     <section class="card home-card">
+
         <div class="card-header">
             <p class="card-eyebrow">Schedule Management</p>
             <h1 class="card-title">일정 관리 시스템</h1>
@@ -29,8 +31,47 @@
                 참가자 로그인
             </a>
         </div>
+
+        <div id="map" style="width:500px; height:400px;"></div>
+
     </section>
 </main>
+
+
+<script
+        type="text/javascript"
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1aba5dbe26eaf88b19db4691de1f52cd&libraries=services">
+</script>
+
+<script>
+    var container = document.getElementById('map');
+
+    var options = {
+        center: new kakao.maps.LatLng(33.450701, 126.570667),
+        level: 3
+    };
+
+    var map = new kakao.maps.Map(container, options);
+
+    // 주소 검색 객체 생성
+    var geocoder = new kakao.maps.services.Geocoder();
+
+    // 실제 Site 주소 검색
+    geocoder.addressSearch('서울 서초구 서초대로 50', function (result, status) {
+
+        if (status === kakao.maps.services.Status.OK) {
+
+            // 검색된 주소의 위도, 경도
+            var sitePosition = new kakao.maps.LatLng(
+                result[0].y,
+                result[0].x
+            );
+
+            // 지도 중심을 Site로 이동
+            map.setCenter(sitePosition);
+        }
+    });
+</script>
 
 </body>
 </html>
