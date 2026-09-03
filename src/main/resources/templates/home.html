@@ -11,12 +11,19 @@
 
 <header class="home-header">
     <div class="home-header-inner">
+
         <div>
-            <p class="dashboard-eyebrow">Therapeutic Garden</p>
-            <h1 class="home-title">치유 공간 모니터링</h1>
+            <p class="dashboard-eyebrow">
+                Therapeutic Garden
+            </p>
+
+            <h1 class="home-title">
+                치유 공간 모니터링
+            </h1>
         </div>
 
         <nav class="home-login-navigation">
+
             <a class="home-login-link"
                th:href="@{/admin/login}">
                 관리자 로그인
@@ -26,60 +33,449 @@
                th:href="@{/member/login}">
                 참가자 로그인
             </a>
+
         </nav>
+
     </div>
 </header>
+
 
 <main class="home-map-container">
 
     <aside class="site-panel">
 
-        <div class="site-panel-header">
-            <p class="site-panel-label">SITE</p>
 
-            <select class="site-select">
-                <option>방배 Site</option>
-            </select>
+        <!-- ================================
+             Site 기본 정보
+        ================================= -->
+
+        <div id="siteInformationPanel">
+
+            <div class="site-panel-header">
+
+                <p class="site-panel-label">
+                    SITE
+                </p>
+
+                <select class="site-select">
+                    <option>방배 Site</option>
+                </select>
+
+            </div>
+
+
+            <div class="site-image-placeholder">
+                <span>Site Image</span>
+            </div>
+
+
+            <div class="site-information">
+
+                <h2>
+                    방배 Site
+                </h2>
+
+                <p>
+                    서울 서초구 서초대로 50
+                </p>
+
+            </div>
+
         </div>
 
-        <div class="site-image-placeholder">
-            <span>Site Image</span>
-        </div>
 
-        <div class="site-information">
-            <h2>방배 Site</h2>
-            <p>서울 서초구 서초대로 50</p>
+        <!-- ================================
+             Healing Spot 상세 정보
+        ================================= -->
+
+        <div id="spotInformationPanel"
+             class="hidden">
+
+
+            <button
+                    type="button"
+                    class="spot-back-button"
+                    id="showSitePanelButton">
+
+                ← Site로 돌아가기
+
+            </button>
+
+
+            <div class="spot-heading">
+
+                <p class="site-panel-label">
+                    HEALING SPOT
+                </p>
+
+                <!-- 클릭한 HS 번호 -->
+                <h2 id="spotId">
+                    HS1
+                </h2>
+
+                <!-- 클릭한 HS 이름 -->
+                <p id="spotName">
+                    호스타 정원
+                </p>
+
+            </div>
+
+
+            <!-- HS 사진 영역 -->
+            <div class="site-image-placeholder">
+
+                <span>
+                    Healing Spot Image
+                </span>
+
+            </div>
+
+
+            <div class="spot-information-list">
+
+
+                <!-- Healing Course -->
+                <div class="spot-information-item">
+
+                    <span>
+                        Healing Course
+                    </span>
+
+                    <strong id="spotCourse">
+                        HC-A · 회복 코스
+                    </strong>
+
+                </div>
+
+
+                <!-- Alpha Power -->
+                <div class="spot-information-item">
+
+                    <span>
+                        Alpha Power
+                    </span>
+
+                    <strong>
+                        -- %
+                    </strong>
+
+                </div>
+
+
+                <!-- 방문 참가자 -->
+                <div class="spot-information-item">
+
+                    <span>
+                        방문 참가자
+                    </span>
+
+                    <strong>
+                        -- 명
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- 최근 방문자 -->
+            <div class="spot-visitor-section">
+
+                <h3>
+                    최근 방문자
+                </h3>
+
+                <div class="spot-visitor-placeholder">
+
+                    방문자 정보가 표시될 영역입니다.
+
+                </div>
+
+            </div>
+
         </div>
 
     </aside>
 
+
+    <!-- ================================
+         Kakao Map
+    ================================= -->
+
     <section class="map-section">
+
         <div id="map"></div>
+
     </section>
 
 </main>
 
 
+<!-- Kakao Maps SDK -->
 <script
         type="text/javascript"
-        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1aba5dbe26eaf88b19db4691de1f52cd">
+        th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}|">
 </script>
 
-<script>
-    var container = document.getElementById('map');
 
-    // 방배 Site 지도 표시 위치
-    var siteMapCenter = new kakao.maps.LatLng(
-        37.48385230687292,
-        126.98882349727562
-    );
+<script>
+
+    /* ================================
+       Kakao Map 생성
+    ================================= */
+
+    var container =
+        document.getElementById('map');
+
+
+    // 방배 Site 지도 중심
+    var siteMapCenter =
+        new kakao.maps.LatLng(
+            37.48385230687292,
+            126.98882349727562
+        );
+
 
     var options = {
+
         center: siteMapCenter,
+
         level: 3
+
     };
 
-    var map = new kakao.maps.Map(container, options);
+
+    var map =
+        new kakao.maps.Map(
+            container,
+            options
+        );
+
+
+    /* ================================
+       Healing Spot 데이터
+    ================================= */
+
+    var healingSpots = [
+
+        {
+            id: 'HS1',
+            name: '호스타 정원',
+
+            course: 'HC-A',
+            courseName: '회복 코스',
+
+            lat: 37.48577591872291,
+            lng: 126.98839637835367
+        },
+
+        {
+            id: 'HS2',
+            name: '곳자왈원',
+
+            course: 'HC-A',
+            courseName: '회복 코스',
+
+            lat: 37.48552596813059,
+            lng: 126.98923311873006
+        },
+
+        {
+            id: 'HS3',
+            name: '가든 위스퍼스',
+
+            course: 'HC-B',
+            courseName: '감각 코스',
+
+            lat: 37.483215042958435,
+            lng: 126.99118380982651
+        },
+
+        {
+            id: 'HS4',
+            name: '콜로네이드 가든',
+
+            course: 'HC-B',
+            courseName: '감각 코스',
+
+            lat: 37.483142914225716,
+            lng: 126.99056196515338
+        },
+
+        {
+            id: 'HS5',
+            name: '블로썸 가든',
+
+            course: 'HC-C',
+            courseName: '힐링 코스',
+
+            lat: 37.48283188337498,
+            lng: 126.98849859102245
+        },
+
+        {
+            id: 'HS6',
+            name: '극림원',
+
+            course: 'HC-C',
+            courseName: '힐링 코스',
+
+            lat: 37.48207726403847,
+            lng: 126.9882499689662
+        }
+
+    ];
+
+
+    /* ================================
+       왼쪽 정보 패널
+    ================================= */
+
+    var siteInformationPanel =
+        document.getElementById(
+            'siteInformationPanel'
+        );
+
+
+    var spotInformationPanel =
+        document.getElementById(
+            'spotInformationPanel'
+        );
+
+
+    var showSitePanelButton =
+        document.getElementById(
+            'showSitePanelButton'
+        );
+
+
+    /*
+     * HS 상세 정보에서
+     * 실제로 값이 변경될 HTML 요소
+     */
+
+    var spotId =
+        document.getElementById(
+            'spotId'
+        );
+
+
+    var spotName =
+        document.getElementById(
+            'spotName'
+        );
+
+
+    var spotCourse =
+        document.getElementById(
+            'spotCourse'
+        );
+
+
+    /* ================================
+       HS 상세 정보 표시
+    ================================= */
+
+    function showSpotInformation(spot) {
+
+        // 클릭한 HS 데이터로 변경
+        spotId.textContent =
+            spot.id;
+
+
+        spotName.textContent =
+            spot.name;
+
+
+        spotCourse.textContent =
+            spot.course
+            + ' · '
+            + spot.courseName;
+
+
+        // Site 정보 숨기기
+        siteInformationPanel
+            .classList
+            .add('hidden');
+
+
+        // HS 정보 보여주기
+        spotInformationPanel
+            .classList
+            .remove('hidden');
+
+    }
+
+
+    /* ================================
+       Healing Spot 마커 생성
+    ================================= */
+
+    healingSpots.forEach(
+        function(spot) {
+
+
+            // HS 실제 위치
+            var position =
+                new kakao.maps.LatLng(
+                    spot.lat,
+                    spot.lng
+                );
+
+
+            // 마커 생성
+            var marker =
+                new kakao.maps.Marker({
+
+                    position: position
+
+                });
+
+
+            // 지도에 표시
+            marker.setMap(map);
+
+
+            // 마커 클릭
+            kakao.maps.event.addListener(
+                marker,
+                'click',
+                function() {
+
+                    showSpotInformation(
+                        spot
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    /* ================================
+       Site 기본 정보로 돌아가기
+    ================================= */
+
+    showSitePanelButton.addEventListener(
+        'click',
+        function() {
+
+
+            // HS 상세 정보 숨기기
+            spotInformationPanel
+                .classList
+                .add('hidden');
+
+
+            // Site 기본 정보 보여주기
+            siteInformationPanel
+                .classList
+                .remove('hidden');
+
+        }
+    );
+
 </script>
 
 </body>

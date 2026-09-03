@@ -3390,3 +3390,145 @@ input[type="time"].form-input {
         height: 420px;
     }
 }
+
+/* ================================
+   Healing Spot 상세 패널
+================================ */
+
+.hidden {
+    display: none;
+}
+
+
+/* HS 상세 제목 */
+.spot-heading {
+    margin-bottom: 22px;
+}
+
+.spot-heading h2 {
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 24px;
+}
+
+.spot-heading p:last-child {
+    margin: 6px 0 0;
+
+    color: #6b7280;
+
+    font-size: 14px;
+}
+
+
+/* Site로 돌아가기 */
+.spot-back-button {
+    margin-bottom: 24px;
+    padding: 0;
+
+    border: 0;
+
+    background-color: transparent;
+    color: #2563eb;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.spot-back-button:hover {
+    color: #1d4ed8;
+}
+
+
+/* HS 정보 목록 */
+.spot-information-list {
+    margin-top: 20px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.spot-information-item {
+    padding: 14px 16px;
+
+    border-radius: 10px;
+
+    background-color: #f8fafc;
+}
+
+.spot-information-item span,
+.spot-information-item strong {
+    display: block;
+}
+
+.spot-information-item span {
+    margin-bottom: 6px;
+
+    color: #6b7280;
+
+    font-size: 12px;
+}
+
+.spot-information-item strong {
+    color: #111827;
+
+    font-size: 14px;
+}
+
+
+/* 최근 방문자 영역 */
+.spot-visitor-section {
+    margin-top: 26px;
+}
+
+.spot-visitor-section h3 {
+    margin: 0 0 12px;
+
+    color: #111827;
+
+    font-size: 16px;
+}
+
+.spot-visitor-placeholder {
+    padding: 18px;
+
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+
+    background-color: #f8fafc;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* 지금 단계 테스트용 버튼 */
+.spot-test-button {
+    width: 100%;
+    min-height: 42px;
+
+    margin-top: 24px;
+
+    border: 1px solid #2563eb;
+    border-radius: 8px;
+
+    background-color: #ffffff;
+    color: #2563eb;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.spot-test-button:hover {
+    background-color: #eff6ff;
+}
