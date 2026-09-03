@@ -1,18 +1,31 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Therapeutic Garden</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <link
+            rel="stylesheet"
+            th:href="@{/css/style.css}">
 </head>
+
 
 <body class="page-body">
 
+
+<!-- ================================
+     Header
+================================ -->
+
 <header class="home-header">
+
     <div class="home-header-inner">
 
         <div>
+
             <p class="dashboard-eyebrow">
                 Therapeutic Garden
             </p>
@@ -20,27 +33,41 @@
             <h1 class="home-title">
                 치유 공간 모니터링
             </h1>
+
         </div>
+
 
         <nav class="home-login-navigation">
 
-            <a class="home-login-link"
-               th:href="@{/admin/login}">
+            <a
+                    class="home-login-link"
+                    th:href="@{/admin/login}">
                 관리자 로그인
             </a>
 
-            <a class="home-login-link"
-               th:href="@{/member/login}">
+            <a
+                    class="home-login-link"
+                    th:href="@{/member/login}">
                 참가자 로그인
             </a>
 
         </nav>
 
     </div>
+
 </header>
 
 
+<!-- ================================
+     Main
+================================ -->
+
 <main class="home-map-container">
+
+
+    <!-- ================================
+         왼쪽 정보 패널
+    ================================= -->
 
     <aside class="site-panel">
 
@@ -51,24 +78,46 @@
 
         <div id="siteInformationPanel">
 
+
             <div class="site-panel-header">
 
                 <p class="site-panel-label">
                     SITE
                 </p>
 
-                <select class="site-select">
-                    <option>방배 Site</option>
+
+                <!--
+                    현재는 방배 Site 하나만 존재.
+
+                    나중에 Site가 여러 개 생기면
+                    option을 추가해서 Site별 지도로
+                    이동하도록 확장할 예정.
+                -->
+
+                <select
+                        class="site-select"
+                        id="siteSelect">
+
+                    <option value="bangbae">
+                        방배 Site
+                    </option>
+
                 </select>
 
             </div>
 
 
+            <!-- Site 이미지 -->
             <div class="site-image-placeholder">
-                <span>Site Image</span>
+
+                <span>
+                    Site Image
+                </span>
+
             </div>
 
 
+            <!-- Site 정보 -->
             <div class="site-information">
 
                 <h2>
@@ -88,10 +137,12 @@
              Healing Spot 상세 정보
         ================================= -->
 
-        <div id="spotInformationPanel"
-             class="hidden">
+        <div
+                id="spotInformationPanel"
+                class="hidden">
 
 
+            <!-- Site 화면으로 복귀 -->
             <button
                     type="button"
                     class="spot-back-button"
@@ -102,18 +153,19 @@
             </button>
 
 
+            <!-- HS 이름 -->
             <div class="spot-heading">
 
                 <p class="site-panel-label">
                     HEALING SPOT
                 </p>
 
-                <!-- 클릭한 HS 번호 -->
+
                 <h2 id="spotId">
                     HS1
                 </h2>
 
-                <!-- 클릭한 HS 이름 -->
+
                 <p id="spotName">
                     호스타 정원
                 </p>
@@ -121,7 +173,7 @@
             </div>
 
 
-            <!-- HS 사진 영역 -->
+            <!-- HS 이미지 -->
             <div class="site-image-placeholder">
 
                 <span>
@@ -131,6 +183,7 @@
             </div>
 
 
+            <!-- HS 정보 -->
             <div class="spot-information-list">
 
 
@@ -185,6 +238,7 @@
                     최근 방문자
                 </h3>
 
+
                 <div class="spot-visitor-placeholder">
 
                     방문자 정보가 표시될 영역입니다.
@@ -208,17 +262,32 @@
 
     </section>
 
+
 </main>
 
 
-<!-- Kakao Maps SDK -->
+<!-- ================================
+     Kakao Maps SDK
+
+     실제 JavaScript Key는
+     application.yaml에서 전달받음
+================================ -->
+
 <script
         type="text/javascript"
         th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}|">
 </script>
 
-<!-- 홈 지도 기능 -->
-<script th:src="@{/js/home-map.js}"></script>
+
+<!-- ================================
+     홈 지도 JavaScript
+================================ -->
+
+<script
+        th:src="@{/js/home-map.js}">
+</script>
+
 
 </body>
+
 </html>
