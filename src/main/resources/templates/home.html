@@ -3,74 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>일정 관리 시스템</title>
+    <title>Therapeutic Garden</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 
 <body class="page-body">
 
-<main class="page-container">
-    <section class="card home-card">
-
-        <div class="card-header">
-            <p class="card-eyebrow">Schedule Management</p>
-            <h1 class="card-title">일정 관리 시스템</h1>
-            <p class="card-description">
-                로그인 유형을 선택해 주세요.
-            </p>
+<header class="home-header">
+    <div class="home-header-inner">
+        <div>
+            <p class="dashboard-eyebrow">Therapeutic Garden</p>
+            <h1 class="home-title">치유 공간 모니터링</h1>
         </div>
 
-        <div class="login-type-list">
-            <a class="primary-link-button"
+        <nav class="home-login-navigation">
+            <a class="home-login-link"
                th:href="@{/admin/login}">
                 관리자 로그인
             </a>
 
-            <a class="secondary-link-button"
+            <a class="home-login-link"
                th:href="@{/member/login}">
                 참가자 로그인
             </a>
+        </nav>
+    </div>
+</header>
+
+<main class="home-map-container">
+
+    <aside class="site-panel">
+
+        <div class="site-panel-header">
+            <p class="site-panel-label">SITE</p>
+
+            <select class="site-select">
+                <option>방배 Site</option>
+            </select>
         </div>
 
-        <div id="map" style="width:500px; height:400px;"></div>
+        <div class="site-image-placeholder">
+            <span>Site Image</span>
+        </div>
 
+        <div class="site-information">
+            <h2>방배 Site</h2>
+            <p>서울 서초구 서초대로 50</p>
+        </div>
+
+    </aside>
+
+    <section class="map-section">
+        <div id="map"></div>
     </section>
+
 </main>
 
 
 <script
         type="text/javascript"
-        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1aba5dbe26eaf88b19db4691de1f52cd&libraries=services">
+        src="//dapi.kakao.com/v2/maps/sdk.js?appkey=1aba5dbe26eaf88b19db4691de1f52cd">
 </script>
 
 <script>
     var container = document.getElementById('map');
 
+    // 방배 Site 지도 표시 위치
+    var siteMapCenter = new kakao.maps.LatLng(
+        37.48385230687292,
+        126.98882349727562
+    );
+
     var options = {
-        center: new kakao.maps.LatLng(33.450701, 126.570667),
+        center: siteMapCenter,
         level: 3
     };
 
     var map = new kakao.maps.Map(container, options);
-
-    // 주소 검색 객체 생성
-    var geocoder = new kakao.maps.services.Geocoder();
-
-    // 실제 Site 주소 검색
-    geocoder.addressSearch('서울 서초구 서초대로 50', function (result, status) {
-
-        if (status === kakao.maps.services.Status.OK) {
-
-            // 검색된 주소의 위도, 경도
-            var sitePosition = new kakao.maps.LatLng(
-                result[0].y,
-                result[0].x
-            );
-
-            // 지도 중심을 Site로 이동
-            map.setCenter(sitePosition);
-        }
-    });
 </script>
 
 </body>
