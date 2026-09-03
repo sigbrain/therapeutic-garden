@@ -239,14 +239,7 @@ healingCourses.forEach(
 
 
                 // 테두리
-                strokeWeight: 2,
-
-                strokeColor:
-                courseColor,
-
-                strokeOpacity: 0.8,
-
-                strokeStyle: 'solid',
+                strokeWeight: 0,
 
 
                 // 내부
