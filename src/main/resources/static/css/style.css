@@ -3225,10 +3225,10 @@ input[type="time"].form-input {
 /* 왼쪽 Site 패널 */
 .site-panel {
     padding: 24px;
-
     border-right: 1px solid #e5e7eb;
+    background: #fff;
 
-    background-color: #ffffff;
+    overflow-y: auto;
 }
 
 .site-panel-header {
