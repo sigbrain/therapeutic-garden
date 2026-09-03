@@ -3532,3 +3532,77 @@ input[type="time"].form-input {
 .spot-test-button:hover {
     background-color: #eff6ff;
 }
+
+/* ================================
+   Alpha Power 범례
+================================ */
+
+.map-section {
+    position: relative;
+}
+
+.alpha-legend {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    z-index: 10;
+
+    padding: 14px 16px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    background: rgba(255, 255, 255, 0.94);
+
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+.alpha-legend-title {
+    margin: 0 0 10px;
+
+    color: #111827;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.alpha-legend-scale {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.alpha-legend-gradient {
+    width: 14px;
+    height: 120px;
+
+    border-radius: 999px;
+
+    background: linear-gradient(
+            to bottom,
+            #ef4444 0%,
+            #f97316 17%,
+            #eab308 34%,
+            #22c55e 51%,
+            #06b6d4 68%,
+            #3b82f6 84%,
+            #8b5cf6 100%
+    );
+}
+
+.alpha-legend-label {
+    color: #6b7280;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.alpha-legend-unit {
+    margin: 10px 0 0;
+
+    color: #9ca3af;
+
+    font-size: 10px;
+    text-align: center;
+}

@@ -8,10 +8,6 @@ var container =
 
 /*
  * 방배 Site 기본 지도 중심
- *
- * 처음 페이지에 들어왔을 때와
- * Site를 다시 선택했을 때
- * 이 좌표를 사용한다.
  */
 var siteMapCenter =
     new kakao.maps.LatLng(
@@ -21,11 +17,8 @@ var siteMapCenter =
 
 
 var options = {
-
     center: siteMapCenter,
-
     level: 3
-
 };
 
 
@@ -55,7 +48,7 @@ var healingSpots = [
 
     {
         id: 'HS2',
-        name: '굿자일원',
+        name: '곳자왈원',
 
         course: 'HC-A',
         courseName: '회복 코스',
@@ -112,10 +105,12 @@ var healingSpots = [
 
 
 /* ================================
-   Healing Course 테스트 데이터
+   Healing Course 데이터
 
-   아직 실제 Alpha Power 데이터가 아니라
-   지도 표현 방식 확인을 위한 임시 색상
+   Alpha Power는 현재 테스트용 임시값
+
+   HS는 별도의 Alpha Power를 가지지 않고,
+   자신이 속한 HC의 Alpha Power를 사용한다.
 ================================ */
 
 var healingCourses = [
@@ -129,7 +124,7 @@ var healingCourses = [
 
         radius: 90,
 
-        color: '#ef4444'
+        alphaPower: 90
     },
 
     {
@@ -141,7 +136,7 @@ var healingCourses = [
 
         radius: 80,
 
-        color: '#22c55e'
+        alphaPower: 50
     },
 
     {
@@ -153,10 +148,60 @@ var healingCourses = [
 
         radius: 90,
 
-        color: '#f59e0b'
+        alphaPower: 5
     }
 
 ];
+
+
+/* ================================
+   Alpha Power → 무지개 색상
+
+   낮음
+   보라
+   ↓
+   파랑
+   ↓
+   청록
+   ↓
+   초록
+   ↓
+   노랑
+   ↓
+   주황
+   ↓
+   빨강
+   높음
+================================ */
+
+function getAlphaPowerColor(alphaPower) {
+
+    if (alphaPower >= 85) {
+        return '#ef4444';
+    }
+
+    if (alphaPower >= 70) {
+        return '#f97316';
+    }
+
+    if (alphaPower >= 55) {
+        return '#eab308';
+    }
+
+    if (alphaPower >= 40) {
+        return '#22c55e';
+    }
+
+    if (alphaPower >= 25) {
+        return '#06b6d4';
+    }
+
+    if (alphaPower >= 10) {
+        return '#3b82f6';
+    }
+
+    return '#8b5cf6';
+}
 
 
 /* ================================
@@ -174,6 +219,16 @@ healingCourses.forEach(
             );
 
 
+        /*
+         * Alpha Power 값으로
+         * HC 색상 결정
+         */
+        var courseColor =
+            getAlphaPowerColor(
+                course.alphaPower
+            );
+
+
         var circle =
             new kakao.maps.Circle({
 
@@ -187,7 +242,7 @@ healingCourses.forEach(
                 strokeWeight: 2,
 
                 strokeColor:
-                course.color,
+                courseColor,
 
                 strokeOpacity: 0.8,
 
@@ -196,7 +251,7 @@ healingCourses.forEach(
 
                 // 내부
                 fillColor:
-                course.color,
+                courseColor,
 
                 fillOpacity: 0.22
 
@@ -210,8 +265,14 @@ healingCourses.forEach(
 
 
 /* ================================
-   왼쪽 정보 패널
+   왼쪽 정보 패널 요소
 ================================ */
+
+var sitePanel =
+    document.querySelector(
+        '.site-panel'
+    );
+
 
 var siteInformationPanel =
     document.getElementById(
@@ -249,6 +310,12 @@ var spotCourse =
     );
 
 
+var spotAlphaPower =
+    document.getElementById(
+        'spotAlphaPower'
+    );
+
+
 /* ================================
    HS 상세 정보 표시
 ================================ */
@@ -266,11 +333,42 @@ function showSpotInformation(spot) {
         spot.name;
 
 
-    // HC 정보
+    // Healing Course
     spotCourse.textContent =
         spot.course
         + ' · '
         + spot.courseName;
+
+
+    /*
+     * 클릭한 HS가 속한
+     * Healing Course 찾기
+     */
+    var course =
+        healingCourses.find(
+            function(course) {
+
+                return course.id === spot.course;
+
+            }
+        );
+
+
+    /*
+     * 해당 HC의 Alpha Power를
+     * HS 상세 화면에도 표시
+     */
+    if (course) {
+
+        spotAlphaPower.textContent =
+            course.alphaPower;
+
+    } else {
+
+        spotAlphaPower.textContent =
+            '--';
+
+    }
 
 
     // Site 기본 정보 숨기기
@@ -279,10 +377,17 @@ function showSpotInformation(spot) {
         .add('hidden');
 
 
-    // HS 상세 정보 보여주기
+    // HS 상세 정보 표시
     spotInformationPanel
         .classList
         .remove('hidden');
+
+
+    /*
+     * 왼쪽 패널을 아래로 내려놓았더라도
+     * HS를 클릭하면 맨 위로 복귀
+     */
+    sitePanel.scrollTop = 0;
 
 }
 
@@ -315,10 +420,7 @@ healingSpots.forEach(
 
 
         /*
-         * 마커 클릭
-         *
-         * 클릭한 HS 정보를
-         * 왼쪽 패널에 표시한다.
+         * HS 마커 클릭
          */
         kakao.maps.event.addListener(
             marker,
@@ -356,6 +458,10 @@ showSitePanelButton.addEventListener(
             .classList
             .remove('hidden');
 
+
+        // 왼쪽 패널 맨 위로 복귀
+        sitePanel.scrollTop = 0;
+
     }
 );
 
@@ -371,26 +477,23 @@ var siteSelect =
 
 
 /*
- * 현재는 Site가 방배 하나뿐이기 때문에
- * 클릭하면 항상 방배 Site 기본 위치로 복귀한다.
+ * 현재 Site가 방배 하나뿐이므로
+ * 클릭하면 방배 Site 위치와 배율로 복귀
  *
- * 추후 Site가 여러 개가 되면
- * change 이벤트 + Site 데이터 기반으로
- * 확장하면 된다.
+ * 나중에 Site가 여러 개가 되면
+ * change 이벤트로 변경해서
+ * 각 Site의 좌표와 level을 사용하면 된다.
  */
 siteSelect.addEventListener(
     'click',
     function() {
 
 
-        // 방배 Site 중심으로 복귀
         map.setCenter(
             siteMapCenter
         );
 
 
-        // 처음 접속했을 때와
-        // 동일한 확대/축소 단계
         map.setLevel(3);
 
     }

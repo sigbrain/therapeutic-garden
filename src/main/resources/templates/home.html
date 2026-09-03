@@ -86,14 +86,6 @@
                 </p>
 
 
-                <!--
-                    현재는 방배 Site 하나만 존재.
-
-                    나중에 Site가 여러 개 생기면
-                    option을 추가해서 Site별 지도로
-                    이동하도록 확장할 예정.
-                -->
-
                 <select
                         class="site-select"
                         id="siteSelect">
@@ -142,7 +134,6 @@
                 class="hidden">
 
 
-            <!-- Site 화면으로 복귀 -->
             <button
                     type="button"
                     class="spot-back-button"
@@ -153,7 +144,6 @@
             </button>
 
 
-            <!-- HS 이름 -->
             <div class="spot-heading">
 
                 <p class="site-panel-label">
@@ -183,7 +173,7 @@
             </div>
 
 
-            <!-- HS 정보 -->
+            <!-- HS 상세 정보 -->
             <div class="spot-information-list">
 
 
@@ -208,7 +198,7 @@
                         Alpha Power
                     </span>
 
-                    <strong>
+                    <strong id="spotAlphaPower">
                         -- %
                     </strong>
 
@@ -260,6 +250,33 @@
 
         <div id="map"></div>
 
+        <!-- Alpha Power 범례 -->
+        <div class="alpha-legend">
+
+            <p class="alpha-legend-title">
+                Alpha Power
+            </p>
+
+            <div class="alpha-legend-scale">
+
+            <span class="alpha-legend-label">
+                High
+            </span>
+
+                <div class="alpha-legend-gradient"></div>
+
+                <span class="alpha-legend-label">
+                Low
+            </span>
+
+            </div>
+
+            <p class="alpha-legend-unit">
+                단위 결정 필요
+            </p>
+
+        </div>
+
     </section>
 
 
@@ -268,9 +285,6 @@
 
 <!-- ================================
      Kakao Maps SDK
-
-     실제 JavaScript Key는
-     application.yaml에서 전달받음
 ================================ -->
 
 <script
