@@ -38,9 +38,9 @@ var healingSpots = [
     {
         id: 'HS1',
         name: '호스타 정원',
-
         course: 'HC-A',
         courseName: '회복 코스',
+        image: '/images/site1/healing-spots/hs1.jpeg',
 
         lat: 37.48577591872291,
         lng: 126.98839637835367
@@ -49,9 +49,9 @@ var healingSpots = [
     {
         id: 'HS2',
         name: '곳자왈원',
-
         course: 'HC-A',
         courseName: '회복 코스',
+        image: '/images/site1/healing-spots/hs2.jpeg',
 
         lat: 37.48552596813059,
         lng: 126.98923311873006
@@ -60,9 +60,9 @@ var healingSpots = [
     {
         id: 'HS3',
         name: '가든 위스퍼스',
-
         course: 'HC-B',
         courseName: '감각 코스',
+        image: '/images/site1/healing-spots/hs3.jpeg',
 
         lat: 37.483215042958435,
         lng: 126.99118380982651
@@ -71,9 +71,9 @@ var healingSpots = [
     {
         id: 'HS4',
         name: '콜로네이드 가든',
-
         course: 'HC-B',
         courseName: '감각 코스',
+        image: '/images/site1/healing-spots/hs4.jpeg',
 
         lat: 37.483142914225716,
         lng: 126.99056196515338
@@ -82,9 +82,9 @@ var healingSpots = [
     {
         id: 'HS5',
         name: '블로썸 가든',
-
         course: 'HC-C',
         courseName: '힐링 코스',
+        image: '/images/site1/healing-spots/hs5.jpeg',
 
         lat: 37.48283188337498,
         lng: 126.98849859102245
@@ -93,9 +93,9 @@ var healingSpots = [
     {
         id: 'HS6',
         name: '극림원',
-
         course: 'HC-C',
         courseName: '힐링 코스',
+        image: '/images/site1/healing-spots/hs6.jpeg',
 
         lat: 37.48207726403847,
         lng: 126.9882499689662
@@ -237,15 +237,11 @@ healingCourses.forEach(
                 // 단위: m
                 radius: course.radius,
 
-
-                // 테두리
+                // 테두리 없음
                 strokeWeight: 0,
 
-
                 // 내부
-                fillColor:
-                courseColor,
-
+                fillColor: courseColor,
                 fillOpacity: 0.22
 
             });
@@ -309,6 +305,15 @@ var spotAlphaPower =
     );
 
 
+/*
+ * Healing Spot 이미지
+ */
+var spotImage =
+    document.getElementById(
+        'spotImage'
+    );
+
+
 /* ================================
    HS 상세 정보 표시
 ================================ */
@@ -331,6 +336,18 @@ function showSpotInformation(spot) {
         spot.course
         + ' · '
         + spot.courseName;
+
+
+    // HS 이미지 변경
+    spotImage.src =
+        spot.image;
+
+
+    // 이미지 alt 변경
+    spotImage.alt =
+        spot.id
+        + ' '
+        + spot.name;
 
 
     /*
