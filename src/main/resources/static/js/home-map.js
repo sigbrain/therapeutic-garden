@@ -48,7 +48,7 @@ var healingSpots = [
 
     {
         id: 'HS2',
-        name: '곳자왈원',
+        name: '곶자왈원',
         course: 'HC-A',
         courseName: '회복 코스',
         image: '/images/site1/healing-spots/hs2.jpeg',
