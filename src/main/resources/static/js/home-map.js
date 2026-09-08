@@ -1,24 +1,51 @@
 /* ================================
+   Site 데이터
+================================ */
+
+var siteSelect =
+    document.getElementById(
+        'siteSelect'
+    );
+
+
+/*
+ * 현재 선택된 Site
+ */
+var selectedSite =
+    siteSelect.options[
+        siteSelect.selectedIndex
+        ];
+
+
+/*
+ * 선택된 Site의 DB 좌표를 이용해
+ * 기본 지도 중심 생성
+ */
+var siteMapCenter =
+    new kakao.maps.LatLng(
+        Number(selectedSite.dataset.latitude),
+        Number(selectedSite.dataset.longitude)
+    );
+
+
+/* ================================
    Kakao Map 생성
 ================================ */
 
 var container =
-    document.getElementById('map');
-
-
-/*
- * 방배 Site 기본 지도 중심
- */
-var siteMapCenter =
-    new kakao.maps.LatLng(
-        37.48405230687292,
-        126.98882349727562
+    document.getElementById(
+        'map'
     );
 
 
 var options = {
+
     center: siteMapCenter,
-    level: 3
+
+    level: Number(
+        selectedSite.dataset.mapLevel
+    )
+
 };
 
 
@@ -30,148 +57,52 @@ var map =
 
 
 /* ================================
-   Healing Spot 데이터
+   Healing Space 데이터
+
+   HC / HS 데이터는 더 이상
+   JavaScript에 직접 작성하지 않는다.
+
+   선택된 Site의 ID를 이용해서
+   Spring Boot API로부터 조회한다.
 ================================ */
 
-var healingSpots = [
+var healingCourses = [];
+var healingSpots = [];
 
-    {
-        id: 'HS1',
-        name: '호스타 정원',
-        course: 'HC-A',
-        courseName: '회복 코스',
-        image: '/images/site1/healing-spots/hs1.jpeg',
 
-        lat: 37.48577591872291,
-        lng: 126.98839637835367
-    },
-
-    {
-        id: 'HS2',
-        name: '곳자왈원',
-        course: 'HC-A',
-        courseName: '회복 코스',
-        image: '/images/site1/healing-spots/hs2.jpeg',
-
-        lat: 37.48552596813059,
-        lng: 126.98923311873006
-    },
-
-    {
-        id: 'HS3',
-        name: '가든 위스퍼스',
-        course: 'HC-B',
-        courseName: '감각 코스',
-        image: '/images/site1/healing-spots/hs3.jpeg',
-
-        lat: 37.483215042958435,
-        lng: 126.99118380982651
-    },
-
-    {
-        id: 'HS4',
-        name: '콜로네이드 가든',
-        course: 'HC-B',
-        courseName: '감각 코스',
-        image: '/images/site1/healing-spots/hs4.jpeg',
-
-        lat: 37.483142914225716,
-        lng: 126.99056196515338
-    },
-
-    {
-        id: 'HS5',
-        name: '블로썸 가든',
-        course: 'HC-C',
-        courseName: '힐링 코스',
-        image: '/images/site1/healing-spots/hs5.jpeg',
-
-        lat: 37.48283188337498,
-        lng: 126.98849859102245
-    },
-
-    {
-        id: 'HS6',
-        name: '극림원',
-        course: 'HC-C',
-        courseName: '힐링 코스',
-        image: '/images/site1/healing-spots/hs6.jpeg',
-
-        lat: 37.48207726403847,
-        lng: 126.9882499689662
-    }
-
-];
+/*
+ * 지도에 생성된 HC Circle과
+ * HS Marker를 보관한다.
+ *
+ * Site를 변경했을 때 기존 객체를
+ * 지도에서 제거하기 위해 필요하다.
+ */
+var courseCircles = [];
+var spotMarkers = [];
 
 
 /* ================================
-   Healing Course 데이터
+   Alpha Power 임시 데이터
 
-   Alpha Power는 현재 테스트용 임시값
+   Alpha Power의 실제 데이터 구조는
+   아직 결정되지 않았기 때문에
+   현재는 테스트용 값만 사용한다.
 
-   HS는 별도의 Alpha Power를 가지지 않고,
-   자신이 속한 HC의 Alpha Power를 사용한다.
+   나중에 실제 Alpha Power 데이터가
+   연결되면 이 부분을 제거한다.
 ================================ */
 
-var healingCourses = [
+var temporaryAlphaPower = {
 
-    {
-        id: 'HC-A',
-        name: '회복 코스',
+    'HC-A': 90,
+    'HC-B': 50,
+    'HC-C': 5
 
-        centerLat: 37.4856509,
-        centerLng: 126.9888147,
-
-        radius: 90,
-
-        alphaPower: 90
-    },
-
-    {
-        id: 'HC-B',
-        name: '감각 코스',
-
-        centerLat: 37.4831789,
-        centerLng: 126.9908729,
-
-        radius: 80,
-
-        alphaPower: 50
-    },
-
-    {
-        id: 'HC-C',
-        name: '힐링 코스',
-
-        centerLat: 37.4824545,
-        centerLng: 126.9883743,
-
-        radius: 90,
-
-        alphaPower: 5
-    }
-
-];
+};
 
 
 /* ================================
    Alpha Power → 무지개 색상
-
-   낮음
-   보라
-   ↓
-   파랑
-   ↓
-   청록
-   ↓
-   초록
-   ↓
-   노랑
-   ↓
-   주황
-   ↓
-   빨강
-   높음
 ================================ */
 
 function getAlphaPowerColor(alphaPower) {
@@ -205,55 +136,6 @@ function getAlphaPowerColor(alphaPower) {
 
 
 /* ================================
-   Healing Course 영역 표시
-================================ */
-
-healingCourses.forEach(
-    function(course) {
-
-
-        var center =
-            new kakao.maps.LatLng(
-                course.centerLat,
-                course.centerLng
-            );
-
-
-        /*
-         * Alpha Power 값으로
-         * HC 색상 결정
-         */
-        var courseColor =
-            getAlphaPowerColor(
-                course.alphaPower
-            );
-
-
-        var circle =
-            new kakao.maps.Circle({
-
-                center: center,
-
-                // 단위: m
-                radius: course.radius,
-
-                // 테두리 없음
-                strokeWeight: 0,
-
-                // 내부
-                fillColor: courseColor,
-                fillOpacity: 0.22
-
-            });
-
-
-        circle.setMap(map);
-
-    }
-);
-
-
-/* ================================
    왼쪽 정보 패널 요소
 ================================ */
 
@@ -281,6 +163,24 @@ var showSitePanelButton =
     );
 
 
+/*
+ * Site 정보
+ */
+var siteName =
+    document.getElementById(
+        'siteName'
+    );
+
+
+var siteAddress =
+    document.getElementById(
+        'siteAddress'
+    );
+
+
+/*
+ * Healing Spot 정보
+ */
 var spotId =
     document.getElementById(
         'spotId'
@@ -305,13 +205,149 @@ var spotAlphaPower =
     );
 
 
-/*
- * Healing Spot 이미지
- */
 var spotImage =
     document.getElementById(
         'spotImage'
     );
+
+
+/* ================================
+   Site 기본 정보 표시
+================================ */
+
+function showSiteInformation(siteOption) {
+
+    siteName.textContent =
+        siteOption.dataset.name;
+
+
+    siteAddress.textContent =
+        siteOption.dataset.address;
+
+}
+
+
+/* ================================
+   기존 지도 객체 제거
+
+   Site를 변경할 때
+   이전 Site의 HC / HS가 지도에
+   남아있지 않도록 제거한다.
+================================ */
+
+function clearHealingSpaceMap() {
+
+
+    /*
+     * 기존 HealingCourse Circle 제거
+     */
+    courseCircles.forEach(
+        function(circle) {
+
+            circle.setMap(null);
+
+        }
+    );
+
+
+    /*
+     * 기존 HealingSpot Marker 제거
+     */
+    spotMarkers.forEach(
+        function(marker) {
+
+            marker.setMap(null);
+
+        }
+    );
+
+
+    /*
+     * 보관 배열도 비운다.
+     */
+    courseCircles = [];
+    spotMarkers = [];
+
+}
+
+
+/* ================================
+   Healing Course 영역 표시
+================================ */
+
+function drawHealingCourses() {
+
+
+    healingCourses.forEach(
+        function(course) {
+
+
+            /*
+             * DB에서 받은 HC 중심 좌표
+             */
+            var center =
+                new kakao.maps.LatLng(
+                    course.centerLatitude,
+                    course.centerLongitude
+                );
+
+
+            /*
+             * Alpha Power는 아직
+             * 실제 DB 데이터가 없으므로
+             * 임시값 사용
+             */
+            var alphaPower =
+                temporaryAlphaPower[
+                    course.code
+                    ];
+
+
+            /*
+             * 임시값이 없는 경우
+             * 가장 낮은 값으로 처리
+             */
+            if (alphaPower === undefined) {
+                alphaPower = 0;
+            }
+
+
+            var courseColor =
+                getAlphaPowerColor(
+                    alphaPower
+                );
+
+
+            var circle =
+                new kakao.maps.Circle({
+
+                    center: center,
+
+                    radius: course.radius,
+
+                    strokeWeight: 0,
+
+                    fillColor: courseColor,
+                    fillOpacity: 0.22
+
+                });
+
+
+            circle.setMap(map);
+
+
+            /*
+             * 나중에 Site 변경 시
+             * 제거할 수 있도록 저장
+             */
+            courseCircles.push(
+                circle
+            );
+
+        }
+    );
+
+}
 
 
 /* ================================
@@ -321,57 +357,61 @@ var spotImage =
 function showSpotInformation(spot) {
 
 
-    // HS 번호
+    /*
+     * DB의 code
+     * 예: HS1
+     */
     spotId.textContent =
-        spot.id;
+        spot.code;
 
 
-    // HS 이름
     spotName.textContent =
         spot.name;
 
 
-    // Healing Course
+    /*
+     * HealingSpotResponse에 담긴
+     * HC 정보 사용
+     */
     spotCourse.textContent =
-        spot.course
+        spot.courseCode
         + ' · '
         + spot.courseName;
 
 
-    // HS 이미지 변경
+    /*
+     * 이미지 경로는 아직 DB에 없으므로
+     * 현재 파일 구조를 이용한 임시 처리
+     *
+     * 예:
+     * HS1 → hs1.jpeg
+     */
     spotImage.src =
-        spot.image;
+        '/images/site1/healing-spots/'
+        + spot.code.toLowerCase()
+        + '.jpeg';
 
 
-    // 이미지 alt 변경
     spotImage.alt =
-        spot.id
+        spot.code
         + ' '
         + spot.name;
 
 
     /*
-     * 클릭한 HS가 속한
-     * Healing Course 찾기
+     * 클릭한 HS가 속한 HC의
+     * 임시 Alpha Power 조회
      */
-    var course =
-        healingCourses.find(
-            function(course) {
-
-                return course.id === spot.course;
-
-            }
-        );
+    var alphaPower =
+        temporaryAlphaPower[
+            spot.courseCode
+            ];
 
 
-    /*
-     * 해당 HC의 Alpha Power를
-     * HS 상세 화면에도 표시
-     */
-    if (course) {
+    if (alphaPower !== undefined) {
 
         spotAlphaPower.textContent =
-            course.alphaPower;
+            alphaPower;
 
     } else {
 
@@ -381,70 +421,203 @@ function showSpotInformation(spot) {
     }
 
 
-    // Site 기본 정보 숨기기
+    /*
+     * Site 기본 정보 숨기기
+     */
     siteInformationPanel
         .classList
         .add('hidden');
 
 
-    // HS 상세 정보 표시
+    /*
+     * HS 상세 정보 표시
+     */
     spotInformationPanel
         .classList
         .remove('hidden');
 
 
-    /*
-     * 왼쪽 패널을 아래로 내려놓았더라도
-     * HS를 클릭하면 맨 위로 복귀
-     */
     sitePanel.scrollTop = 0;
 
 }
 
 
 /* ================================
-   Healing Spot 마커 생성
+   Healing Spot 마커 표시
 ================================ */
 
-healingSpots.forEach(
-    function(spot) {
+function drawHealingSpots() {
 
 
-        var position =
-            new kakao.maps.LatLng(
-                spot.lat,
-                spot.lng
+    healingSpots.forEach(
+        function(spot) {
+
+
+            /*
+             * DB에서 받은 HS 좌표
+             */
+            var position =
+                new kakao.maps.LatLng(
+                    spot.latitude,
+                    spot.longitude
+                );
+
+
+            var marker =
+                new kakao.maps.Marker({
+
+                    position: position
+
+                });
+
+
+            marker.setMap(map);
+
+
+            /*
+             * 나중에 Site 변경 시
+             * 제거할 수 있도록 저장
+             */
+            spotMarkers.push(
+                marker
             );
 
 
-        var marker =
-            new kakao.maps.Marker({
+            /*
+             * HS 마커 클릭
+             */
+            kakao.maps.event.addListener(
+                marker,
+                'click',
+                function() {
 
-                position: position
+                    showSpotInformation(
+                        spot
+                    );
 
-            });
+                }
+            );
+
+        }
+    );
+
+}
 
 
-        // 지도에 마커 표시
-        marker.setMap(map);
+/* ================================
+   Healing Space DB 데이터 조회
+================================ */
+
+async function loadHealingSpace(siteId) {
+
+
+    /*
+     * Site가 변경될 수도 있으므로
+     * 기존 지도 객체부터 제거
+     */
+    clearHealingSpaceMap();
+
+
+    try {
 
 
         /*
-         * HS 마커 클릭
+         * 특정 Site의 HC 조회
+         *
+         * 예:
+         * /api/sites/1/courses
          */
-        kakao.maps.event.addListener(
-            marker,
-            'click',
-            function() {
+        var courseResponse =
+            await fetch(
+                '/api/sites/'
+                + siteId
+                + '/courses'
+            );
 
-                showSpotInformation(
-                    spot
-                );
 
-            }
+        /*
+         * 특정 Site의 HS 조회
+         */
+        var spotResponse =
+            await fetch(
+                '/api/sites/'
+                + siteId
+                + '/spots'
+            );
+
+
+        /*
+         * HTTP 요청 자체가 실패한 경우
+         */
+        if (!courseResponse.ok) {
+
+            throw new Error(
+                'HealingCourse 조회 실패'
+            );
+
+        }
+
+
+        if (!spotResponse.ok) {
+
+            throw new Error(
+                'HealingSpot 조회 실패'
+            );
+
+        }
+
+
+        /*
+         * 서버가 보내준 JSON을
+         * JavaScript 객체 배열로 변환
+         */
+        healingCourses =
+            await courseResponse.json();
+
+
+        healingSpots =
+            await spotResponse.json();
+
+
+        /*
+         * DB 데이터를 이용해
+         * 지도에 HC / HS 표시
+         */
+        drawHealingCourses();
+
+        drawHealingSpots();
+
+
+    } catch (error) {
+
+        console.error(
+            'Healing Space 데이터를 불러오는 중 오류가 발생했습니다.',
+            error
         );
 
     }
+
+}
+
+
+/* ================================
+   페이지 최초 실행
+================================ */
+
+/*
+ * 첫 번째 Site 이름 / 주소 표시
+ */
+showSiteInformation(
+    selectedSite
+);
+
+
+/*
+ * 첫 번째 Site의 HC / HS를
+ * DB에서 조회해서 지도에 표시
+ */
+loadHealingSpace(
+    selectedSite.value
 );
 
 
@@ -457,19 +630,16 @@ showSitePanelButton.addEventListener(
     function() {
 
 
-        // HS 상세 정보 숨기기
         spotInformationPanel
             .classList
             .add('hidden');
 
 
-        // Site 기본 정보 표시
         siteInformationPanel
             .classList
             .remove('hidden');
 
 
-        // 왼쪽 패널 맨 위로 복귀
         sitePanel.scrollTop = 0;
 
     }
@@ -480,31 +650,84 @@ showSitePanelButton.addEventListener(
    Site 선택
 ================================ */
 
-var siteSelect =
-    document.getElementById(
-        'siteSelect'
-    );
-
-
-/*
- * 현재 Site가 방배 하나뿐이므로
- * 클릭하면 방배 Site 위치와 배율로 복귀
- *
- * 나중에 Site가 여러 개가 되면
- * change 이벤트로 변경해서
- * 각 Site의 좌표와 level을 사용하면 된다.
- */
 siteSelect.addEventListener(
-    'click',
+    'change',
     function() {
 
 
+        /*
+         * 새로 선택된 Site
+         */
+        var selectedSite =
+            siteSelect.options[
+                siteSelect.selectedIndex
+                ];
+
+
+        /*
+         * 선택된 Site의 DB 좌표
+         */
+        var siteMapCenter =
+            new kakao.maps.LatLng(
+                Number(
+                    selectedSite.dataset.latitude
+                ),
+                Number(
+                    selectedSite.dataset.longitude
+                )
+            );
+
+
+        /*
+         * 지도 중심 이동
+         */
         map.setCenter(
             siteMapCenter
         );
 
 
-        map.setLevel(3);
+        /*
+         * DB의 mapLevel 적용
+         */
+        map.setLevel(
+            Number(
+                selectedSite.dataset.mapLevel
+            )
+        );
+
+
+        /*
+         * Site 이름 / 주소 변경
+         */
+        showSiteInformation(
+            selectedSite
+        );
+
+
+        /*
+         * HS 상세 화면을 보고 있었다면
+         * Site 기본 정보 화면으로 복귀
+         */
+        spotInformationPanel
+            .classList
+            .add('hidden');
+
+
+        siteInformationPanel
+            .classList
+            .remove('hidden');
+
+
+        sitePanel.scrollTop = 0;
+
+
+        /*
+         * 선택된 Site ID를 이용해서
+         * 해당 Site의 HC / HS를 DB에서 다시 조회
+         */
+        loadHealingSpace(
+            selectedSite.value
+        );
 
     }
 );

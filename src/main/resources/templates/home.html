@@ -90,8 +90,15 @@
                         class="site-select"
                         id="siteSelect">
 
-                    <option value="bangbae">
-                        방배 Site
+                    <option
+                            th:each="site : ${sites}"
+                            th:value="${site.siteId}"
+                            th:text="${site.name}"
+                            th:data-name="${site.name}"
+                            th:data-address="${site.address}"
+                            th:data-latitude="${site.latitude}"
+                            th:data-longitude="${site.longitude}"
+                            th:data-map-level="${site.mapLevel}">
                     </option>
 
                 </select>
@@ -103,20 +110,16 @@
             <div class="site-image-placeholder">
                 <img
                         src="/images/site1/site1.png"
-                        alt="방배 Site">
+                        alt="Site Image">
             </div>
 
 
             <!-- Site 정보 -->
             <div class="site-information">
 
-                <h2>
-                    방배 Site
-                </h2>
+                <h2 id="siteName"></h2>
 
-                <p>
-                    서울 서초구 서초대로 50
-                </p>
+                <p id="siteAddress"></p>
 
             </div>
 
@@ -196,7 +199,7 @@
                     </span>
 
                     <strong id="spotAlphaPower">
-                        -- %
+                        --
                     </strong>
 
                 </div>
@@ -256,15 +259,15 @@
 
             <div class="alpha-legend-scale">
 
-            <span class="alpha-legend-label">
-                High
-            </span>
+                <span class="alpha-legend-label">
+                    High
+                </span>
 
                 <div class="alpha-legend-gradient"></div>
 
                 <span class="alpha-legend-label">
-                Low
-            </span>
+                    Low
+                </span>
 
             </div>
 
