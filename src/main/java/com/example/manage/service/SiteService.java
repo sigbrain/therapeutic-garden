@@ -5,6 +5,8 @@ import com.example.manage.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SiteService {
@@ -32,5 +34,9 @@ public class SiteService {
         );
 
         return siteRepository.save(site);
+    }
+
+    public List<Site> findAllSites() {
+        return siteRepository.findAll();
     }
 }

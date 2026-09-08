@@ -6,6 +6,8 @@ import com.example.manage.repository.HealingCourseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class HealingCourseService {
@@ -30,5 +32,9 @@ public class HealingCourseService {
         );
 
         return healingCourseRepository.save(healingCourse);
+    }
+
+    public List<HealingCourse> findBySiteId(Long siteId) {
+        return healingCourseRepository.findBySiteSiteId(siteId);
     }
 }
