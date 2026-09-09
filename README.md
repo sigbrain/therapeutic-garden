@@ -4,7 +4,7 @@
 **Spring Boot 기반 웹 애플리케이션**입니다.
 
 관리자와 참가자의 일정 관리 기능을 기반으로  
-실증 장소인 **Site**, Site 내부의 **Healing Course(HC)**, **Healing Spot(HS)**을 관리하고  
+실증 장소인 **Site**, Site 내부의 **Healing Course(HC)**, <strong>Healing Spot(HS)</strong>을을 관리하고  
 Kakao Map을 통해 공간 정보를 확인할 수 있는 서비스로 확장하고 있습니다.
 
 ---
