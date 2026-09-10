@@ -16,3 +16,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+kakao:
+  maps:
+    javascript-key: YOUR_KAKAO_MAPS_JAVASCRIPT_KEY
