@@ -1,6 +1,7 @@
 package com.example.manage.repository;
 
 import com.example.manage.domain.HealingSpot;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -75,5 +76,6 @@ public interface HealingSpotRepository
      *     ON hs.course_id = hc.course_id
      * WHERE hc.site_id = 1;
      */
+    @EntityGraph(attributePaths = "healingCourse")
     List<HealingSpot> findByHealingCourseSiteSiteId(Long siteId);
 }

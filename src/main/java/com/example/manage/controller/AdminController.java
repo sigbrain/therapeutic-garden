@@ -3,9 +3,11 @@ package com.example.manage.controller;
 import com.example.manage.domain.Admin;
 import com.example.manage.domain.Member;
 import com.example.manage.domain.Schedule;
-import com.example.manage.domain.ScheduleSpot;
 import com.example.manage.dto.MemberEditForm;
 import com.example.manage.dto.ScheduleForm;
+import com.example.manage.dto.ScheduleResponse;
+import com.example.manage.service.SiteService;
+import com.example.manage.dto.SiteResponse;
 import com.example.manage.dto.WeatherResult;
 import com.example.manage.service.AdminService;
 import com.example.manage.service.MemberService;
@@ -32,6 +34,12 @@ public class AdminController {
     private final MemberService memberService;
     private final ScheduleService scheduleService;
     private final WeatherService weatherService;
+    private final SiteService siteService;
+
+    @ModelAttribute("sites")
+    public List<SiteResponse> scheduleSites() {
+        return siteService.findAllSites().stream().map(SiteResponse::new).toList();
+    }
 
 
     @GetMapping("/login")
@@ -218,18 +226,25 @@ public class AdminController {
         }
 
 
-        scheduleService.createSchedule(
-                form.getMemberId(),
-                form.getScheduleDate(),
-                form.getCourse(),
-                form.getFirstSpotNo(),
-                form.getFirstStartTime(),
-                form.getSecondSpotNo(),
-                form.getSecondStartTime(),
-                form.getWeather(),
-                form.getTemperature(),
-                form.getHumidity()
-        );
+        try {
+            scheduleService.createSchedule(
+                    form.getMemberId(),
+                    form.getScheduleDate(),
+                    form.getSiteId(),
+                    form.getCourseId(),
+                    form.getFirstSpotId(),
+                    form.getFirstStartTime(),
+                    form.getSecondSpotId(),
+                    form.getSecondStartTime(),
+                    form.getWeather(),
+                    form.getTemperature(),
+                    form.getHumidity()
+            );
+        } catch (IllegalArgumentException exception) {
+            bindingResult.rejectValue("firstSpotId", "invalid", exception.getMessage());
+            model.addAttribute("members", memberService.findAllMembers());
+            return "admin/schedule-form";
+        }
 
         return "redirect:/admin";
     }
@@ -256,7 +271,7 @@ public class AdminController {
          * sort 파라미터가 없으면
          * 기본값은 date이다.
          */
-        List<Schedule> schedules =
+        List<ScheduleResponse> schedules =
                 scheduleService.findAllSchedules(sort);
 
 
@@ -291,18 +306,15 @@ public class AdminController {
             Model model
     ) {
 
-        Schedule schedule =
-                scheduleService.findSchedule(scheduleId);
+        ScheduleResponse schedule =
+                scheduleService.findScheduleResponse(scheduleId);
 
         if (schedule == null) {
             return "redirect:/admin/schedules";
         }
 
 
-        List<ScheduleSpot> scheduleSpots =
-                scheduleService.findScheduleSpots(
-                        scheduleId
-                );
+        var scheduleSpots = schedule.getSpots();
 
 
         model.addAttribute(
@@ -346,18 +358,15 @@ public class AdminController {
             Model model
     ) {
 
-        Schedule schedule =
-                scheduleService.findSchedule(scheduleId);
+        ScheduleResponse schedule =
+                scheduleService.findScheduleResponse(scheduleId);
 
         if (schedule == null) {
             return "redirect:/admin/schedules";
         }
 
 
-        List<ScheduleSpot> scheduleSpots =
-                scheduleService.findScheduleSpots(
-                        scheduleId
-                );
+        var scheduleSpots = schedule.getSpots();
 
 
         ScheduleForm form =
@@ -372,9 +381,8 @@ public class AdminController {
                 schedule.getScheduleDate()
         );
 
-        form.setCourse(
-                schedule.getCourse()
-        );
+        form.setSiteId(schedule.getSiteId());
+        form.setCourseId(schedule.getCourseId());
 
         form.setWeather(
                 schedule.getWeather()
@@ -394,11 +402,11 @@ public class AdminController {
          */
         if (scheduleSpots.size() >= 1) {
 
-            ScheduleSpot firstSpot =
+            var firstSpot =
                     scheduleSpots.get(0);
 
-            form.setFirstSpotNo(
-                    firstSpot.getSpotNo()
+            form.setFirstSpotId(
+                    firstSpot.getSpotId()
             );
 
             form.setFirstStartTime(
@@ -412,11 +420,11 @@ public class AdminController {
          */
         if (scheduleSpots.size() >= 2) {
 
-            ScheduleSpot secondSpot =
+            var secondSpot =
                     scheduleSpots.get(1);
 
-            form.setSecondSpotNo(
-                    secondSpot.getSpotNo()
+            form.setSecondSpotId(
+                    secondSpot.getSpotId()
             );
 
             form.setSecondStartTime(
@@ -491,19 +499,28 @@ public class AdminController {
         }
 
 
-        scheduleService.updateSchedule(
-                scheduleId,
-                form.getMemberId(),
-                form.getScheduleDate(),
-                form.getCourse(),
-                form.getFirstSpotNo(),
-                form.getFirstStartTime(),
-                form.getSecondSpotNo(),
-                form.getSecondStartTime(),
-                form.getWeather(),
-                form.getTemperature(),
-                form.getHumidity()
-        );
+        try {
+            scheduleService.updateSchedule(
+                    scheduleId,
+                    form.getMemberId(),
+                    form.getScheduleDate(),
+                    form.getSiteId(),
+                    form.getCourseId(),
+                    form.getFirstSpotId(),
+                    form.getFirstStartTime(),
+                    form.getSecondSpotId(),
+                    form.getSecondStartTime(),
+                    form.getWeather(),
+                    form.getTemperature(),
+                    form.getHumidity()
+            );
+        } catch (IllegalArgumentException exception) {
+            bindingResult.rejectValue("firstSpotId", "invalid", exception.getMessage());
+            model.addAttribute("members", memberService.findAllMembers());
+            model.addAttribute("scheduleId", scheduleId);
+            model.addAttribute("from", from);
+            return "admin/schedule-edit";
+        }
 
 
         /*

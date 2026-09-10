@@ -36,9 +36,9 @@ Kakao Map을 통해 공간 정보를 확인할 수 있는 서비스로 확장하
 
 현재 프로젝트의 주요 데이터 구조는 다음과 같습니다.
 <img width="2136" height="992" alt="ERD" src="https://github.com/user-attachments/assets/cddbf38f-7ecb-4ab6-b724-43059e669d17" />
-현재 기존 일정 구조와 HealingSpot을 연결하는 방향으로 확장하고 있습니다.
+ScheduleSpot은 HealingSpot을 참조하며, 일정의 코스와 사이트는 HealingCourse / Site 관계에서 조회합니다.
 
-※ Schedule / ScheduleSpot과 HealingSpot 간 연관관계는 현재 마이그레이션 진행 예정입니다.
+개발 DB 적용 절차와 변경 내용은 [일정 마이그레이션 안내](docs/schedule-healing-spot-migration.md)를 참고해 주세요.
 
 ---
 
@@ -91,7 +91,6 @@ Healing Course / Healing Spot 데이터는 REST API를 통해 조회하여 Kakao
 
 ## 향후 개발
 
-- ScheduleSpot과 HealingSpot 연관관계 적용
 - 관리자 Site / HealingCourse / HealingSpot 관리 기능
 - Alpha Power 데이터 구조 설계 및 지도 연동
 - Healing Spot 상세 데이터 확장

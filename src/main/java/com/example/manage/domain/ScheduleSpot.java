@@ -19,8 +19,9 @@ public class ScheduleSpot {
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
-    @Column(nullable = false)
-    private Integer spotNo;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "spot_id", nullable = false)
+    private HealingSpot healingSpot;
 
     @Column(nullable = false)
     private LocalTime startTime;
@@ -30,18 +31,18 @@ public class ScheduleSpot {
 
     public ScheduleSpot(
             Schedule schedule,
-            Integer spotNo,
+            HealingSpot healingSpot,
             LocalTime startTime,
             Integer sequence)
     {
         this.schedule = schedule;
-        this.spotNo = spotNo;
+        this.healingSpot = healingSpot;
         this.startTime = startTime;
         this.sequence = sequence;
     }
 
-    public void update(Integer spotNo, LocalTime startTime) {
-        this.spotNo = spotNo;
+    public void update(HealingSpot healingSpot, LocalTime startTime) {
+        this.healingSpot = healingSpot;
         this.startTime = startTime;
     }
 }

@@ -1,6 +1,11 @@
 package com.example.manage.service;
 
 import com.example.manage.domain.Member;
+import com.example.manage.domain.HealingSpot;
+import com.example.manage.dto.ScheduleResponse;
+import com.example.manage.repository.HealingSpotRepository;
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.example.manage.domain.Schedule;
 import com.example.manage.domain.ScheduleSpot;
 import com.example.manage.dto.MemberScheduleDetailResponse;
@@ -21,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleService {
 
+    private final HealingSpotRepository healingSpotRepository;
     private final MemberRepository memberRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
@@ -29,15 +35,19 @@ public class ScheduleService {
     public void createSchedule(
             Long memberId,
             LocalDate scheduleDate,
-            String course,
-            Integer firstSpotNo,
+            Long siteId,
+            Long courseId,
+            Long firstSpotId,
             LocalTime firstStartTime,
-            Integer secondSpotNo,
+            Long secondSpotId,
             LocalTime secondStartTime,
             String weather,
             Double temperature,
             Double humidity
     ) {
+
+        HealingSpot firstHealingSpot = findSelectedSpot(firstSpotId, siteId, courseId);
+        HealingSpot secondHealingSpot = findSelectedSpot(secondSpotId, siteId, courseId);
 
         Member member =
                 memberRepository.findById(memberId)
@@ -53,8 +63,7 @@ public class ScheduleService {
          */
         Schedule schedule = new Schedule(
                 member,
-                scheduleDate,
-                course
+                scheduleDate
         );
 
 
@@ -76,7 +85,7 @@ public class ScheduleService {
          */
         ScheduleSpot firstSpot = new ScheduleSpot(
                 schedule,
-                firstSpotNo,
+                firstHealingSpot,
                 firstStartTime,
                 1
         );
@@ -87,7 +96,7 @@ public class ScheduleService {
          */
         ScheduleSpot secondSpot = new ScheduleSpot(
                 schedule,
-                secondSpotNo,
+                secondHealingSpot,
                 secondStartTime,
                 2
         );
@@ -105,7 +114,7 @@ public class ScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public List<Schedule> findAllSchedules(String sort) {
+    public List<ScheduleResponse> findAllSchedules(String sort) {
 
         Sort scheduleSort;
 
@@ -137,15 +146,15 @@ public class ScheduleService {
             );
         }
 
-        return scheduleRepository.findAll(scheduleSort);
+        return toResponses(scheduleRepository.findAll(scheduleSort));
     }
 
 
     @Transactional(readOnly = true)
-    public List<Schedule> findScheduleByMemberId(Long memberId) {
+    public List<ScheduleResponse> findScheduleByMemberId(Long memberId) {
 
-        return scheduleRepository
-                .findByMemberMemberIdOrderByScheduleDateAsc(memberId);
+        return toResponses(scheduleRepository
+                .findByMemberMemberIdOrderByScheduleDateAsc(memberId));
     }
 
 
@@ -196,26 +205,44 @@ public class ScheduleService {
                         );
 
 
-        List<MemberScheduleDetailResponse.SpotResponse> spots =
-                scheduleSpots.stream()
-                        .map(scheduleSpot ->
-                                new MemberScheduleDetailResponse.SpotResponse(
-                                        scheduleSpot.getSpotNo(),
-                                        scheduleSpot.getStartTime(),
-                                        scheduleSpot.getSequence()
-                                )
-                        )
-                        .toList();
-
-
+        ScheduleResponse response = new ScheduleResponse(schedule, scheduleSpots);
         return new MemberScheduleDetailResponse(
-                schedule.getScheduleId(),
-                schedule.getScheduleDate(),
-                schedule.getCourse(),
-                schedule.getMember().getGroupNo(),
-                schedule.getWeather(),
-                spots
+                response.getScheduleId(), response.getScheduleDate(),
+                response.getSiteId(), response.getSiteName(), response.getCourseId(),
+                response.getCourseCode(), response.getCourseName(),
+                response.getMember().getGroupNo(), response.getWeather(), response.getSpots()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduleResponse findScheduleResponse(Long scheduleId) {
+        Schedule schedule = findSchedule(scheduleId);
+        return schedule == null ? null : new ScheduleResponse(schedule, findScheduleSpots(scheduleId));
+    }
+
+    private List<ScheduleResponse> toResponses(List<Schedule> schedules) {
+        if (schedules.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, List<ScheduleSpot>> spotsBySchedule = scheduleSpotRepository
+                .findByScheduleScheduleIdInOrderBySequenceAsc(
+                        schedules.stream().map(Schedule::getScheduleId).toList())
+                .stream().collect(Collectors.groupingBy(spot -> spot.getSchedule().getScheduleId()));
+        return schedules.stream().map(schedule -> new ScheduleResponse(schedule,
+                spotsBySchedule.getOrDefault(schedule.getScheduleId(), List.of()))).toList();
+    }
+
+    private HealingSpot findSelectedSpot(Long spotId, Long siteId, Long courseId) {
+        if (spotId == null || siteId == null || courseId == null) {
+            throw new IllegalArgumentException("사이트, 코스와 스팟을 선택해 주세요.");
+        }
+        HealingSpot spot = healingSpotRepository.findById(spotId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 스팟입니다."));
+        if (!spot.getHealingCourse().getCourseId().equals(courseId)
+                || !spot.getHealingCourse().getSite().getSiteId().equals(siteId)) {
+            throw new IllegalArgumentException("선택한 사이트와 코스에 속한 스팟을 선택해 주세요.");
+        }
+        return spot;
     }
 
 
@@ -223,10 +250,11 @@ public class ScheduleService {
             Long scheduleId,
             Long memberId,
             LocalDate scheduleDate,
-            String course,
-            Integer firstSpotNo,
+            Long siteId,
+            Long courseId,
+            Long firstSpotId,
             LocalTime firstStartTime,
-            Integer secondSpotNo,
+            Long secondSpotId,
             LocalTime secondStartTime,
             String weather,
             Double temperature,
@@ -248,6 +276,9 @@ public class ScheduleService {
         /*
          * 수정 화면에서 선택한 참가자 조회
          */
+        HealingSpot firstHealingSpot = findSelectedSpot(firstSpotId, siteId, courseId);
+        HealingSpot secondHealingSpot = findSelectedSpot(secondSpotId, siteId, courseId);
+
         Member member =
                 memberRepository.findById(memberId)
                         .orElse(null);
@@ -271,13 +302,18 @@ public class ScheduleService {
                         );
 
 
+        if (scheduleSpots.size() != 2
+                || scheduleSpots.get(0).getSequence() != 1
+                || scheduleSpots.get(1).getSequence() != 2) {
+            throw new IllegalArgumentException("일정에는 순서가 지정된 두 개의 스팟이 필요합니다.");
+        }
+
         /*
          * 일정 기본 정보 수정
          */
         schedule.update(
                 member,
-                scheduleDate,
-                course
+                scheduleDate
         );
 
 
@@ -300,7 +336,7 @@ public class ScheduleService {
                     scheduleSpots.get(0);
 
             firstSpot.update(
-                    firstSpotNo,
+                    firstHealingSpot,
                     firstStartTime
             );
         }
@@ -315,7 +351,7 @@ public class ScheduleService {
                     scheduleSpots.get(1);
 
             secondSpot.update(
-                    secondSpotNo,
+                    secondHealingSpot,
                     secondStartTime
             );
         }

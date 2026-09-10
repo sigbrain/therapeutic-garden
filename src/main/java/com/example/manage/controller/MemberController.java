@@ -1,7 +1,7 @@
 package com.example.manage.controller;
 
 import com.example.manage.domain.Member;
-import com.example.manage.domain.Schedule;
+import com.example.manage.dto.ScheduleResponse;
 import com.example.manage.dto.MemberScheduleDetailResponse;
 import com.example.manage.service.MemberService;
 import com.example.manage.service.ScheduleService;
@@ -53,7 +53,7 @@ public class MemberController {
     ) {
         Long memberId = (Long) session.getAttribute("loginMemberId");
 
-        List<Schedule> schedules = scheduleService.findScheduleByMemberId(memberId);
+        List<ScheduleResponse> schedules = scheduleService.findScheduleByMemberId(memberId);
 
         model.addAttribute("schedules", schedules);
         return "member/home";

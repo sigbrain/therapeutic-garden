@@ -22,31 +22,24 @@ public class Schedule {
     @Column(nullable = false)
     private LocalDate scheduleDate;
 
-    @Column(nullable = false)
-    private String course;
-
     private String weather;
     private Double temperature;
     private Double humidity;
 
     public Schedule(
             Member member,
-            LocalDate scheduleDate,
-            String course)
+            LocalDate scheduleDate)
     {
         this.member = member;
         this.scheduleDate = scheduleDate;
-        this.course = course;
     }
 
     public void update(
             Member member,
-            LocalDate scheduleDate,
-            String course
+            LocalDate scheduleDate
     ) {
         this.member = member;
         this.scheduleDate = scheduleDate;
-        this.course = course;
     }
 
     public void updateWeather(
