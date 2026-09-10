@@ -3615,3 +3615,8 @@ input[type="time"].form-input {
 
     border-radius: 12px;
 }
+
+/* Site 등록 / 수정 폼 */
+.site-form .form-group + .form-group {
+    margin-top: 16px;
+}

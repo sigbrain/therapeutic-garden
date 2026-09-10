@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이트 수정</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body">
+<main class="page-container">
+    <section class="card form-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">사이트 수정</h1>
+        </div>
+        <form class="login-form site-form" th:action="@{/admin/sites/{siteId}/edit(siteId=${siteId})}" th:object="${siteForm}" method="post">
+            <p class="error-message" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            <div th:replace="~{admin/site-form :: siteFields}">
+            </div>
+            <button class="primary-button" type="submit">사이트 수정</button>
+        </form>
+        <a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
+    </section>
+</main>
+</body>
+</html>

@@ -48,4 +48,6 @@ public interface HealingCourseRepository
      * WHERE site_id = 1;
      */
     List<HealingCourse> findBySiteSiteId(Long siteId);
+
+    boolean existsBySiteSiteId(Long siteId);
 }

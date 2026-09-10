@@ -35,4 +35,12 @@ public class Site {
         this.longitude = longitude;
         this.mapLevel = mapLevel;
     }
+
+    public void update(String name, String address, Double latitude, Double longitude, Integer mapLevel) {
+        this.name = name;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.mapLevel = mapLevel;
+    }
 }

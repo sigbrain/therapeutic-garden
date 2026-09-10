@@ -1,5 +1,9 @@
 package com.example.manage.controller;
 
+import com.example.manage.domain.Site;
+import com.example.manage.dto.SiteForm;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.manage.domain.Admin;
 import com.example.manage.domain.Member;
 import com.example.manage.domain.Schedule;
@@ -41,6 +45,109 @@ public class AdminController {
         return siteService.findAllSites().stream().map(SiteResponse::new).toList();
     }
 
+
+    /* ================================
+       사이트 관리
+    ================================= */
+
+    @GetMapping("/sites")
+    public String siteList(Model model) {
+        model.addAttribute("siteList", siteService.findAllSites());
+        return "admin/site-list";
+    }
+
+    @GetMapping("/sites/new")
+    public String siteForm(Model model) {
+        model.addAttribute("siteForm", new SiteForm());
+        return "admin/site-form";
+    }
+
+    @PostMapping("/sites/new")
+    public String createSite(@Valid @ModelAttribute SiteForm siteForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "admin/site-form";
+        }
+        try {
+            siteService.createSite(siteForm.getName(), siteForm.getAddress(),
+                    siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
+        } catch (IllegalArgumentException exception) {
+            bindingResult.rejectValue("name", "duplicate", exception.getMessage());
+            return "admin/site-form";
+        } catch (DataIntegrityViolationException exception) {
+            bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
+            return "admin/site-form";
+        }
+        return "redirect:/admin/sites";
+    }
+
+    @GetMapping("/sites/{siteId}")
+    public String siteDetail(@PathVariable Long siteId, Model model, RedirectAttributes redirectAttributes) {
+        Site site = siteService.findSite(siteId);
+        if (site == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않는 사이트입니다.");
+            return "redirect:/admin/sites";
+        }
+        model.addAttribute("site", site);
+        return "admin/site-detail";
+    }
+
+    @GetMapping("/sites/{siteId}/edit")
+    public String editSiteForm(@PathVariable Long siteId, Model model, RedirectAttributes redirectAttributes) {
+        Site site = siteService.findSite(siteId);
+        if (site == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않는 사이트입니다.");
+            return "redirect:/admin/sites";
+        }
+        SiteForm form = new SiteForm();
+        form.setName(site.getName());
+        form.setAddress(site.getAddress());
+        form.setLatitude(site.getLatitude());
+        form.setLongitude(site.getLongitude());
+        form.setMapLevel(site.getMapLevel());
+        model.addAttribute("siteId", siteId);
+        model.addAttribute("siteForm", form);
+        return "admin/site-edit";
+    }
+
+    @PostMapping("/sites/{siteId}/edit")
+    public String updateSite(@PathVariable Long siteId, @Valid @ModelAttribute SiteForm siteForm,
+                             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+        if (siteService.findSite(siteId) == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않는 사이트입니다.");
+            return "redirect:/admin/sites";
+        }
+        model.addAttribute("siteId", siteId);
+        if (bindingResult.hasErrors()) {
+            return "admin/site-edit";
+        }
+        try {
+            siteService.updateSite(siteId, siteForm.getName(), siteForm.getAddress(),
+                    siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
+        } catch (IllegalArgumentException exception) {
+            bindingResult.rejectValue("name", "invalid", exception.getMessage());
+            return "admin/site-edit";
+        } catch (DataIntegrityViolationException exception) {
+            bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
+            return "admin/site-edit";
+        }
+        return "redirect:/admin/sites/" + siteId;
+    }
+
+    @PostMapping("/sites/{siteId}/delete")
+    public String deleteSite(@PathVariable Long siteId, RedirectAttributes redirectAttributes) {
+        try {
+            siteService.deleteSite(siteId);
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/sites";
+        } catch (DataIntegrityViolationException exception) {
+            // 존재 여부 확인 직후 다른 요청에서 코스를 등록한 경우에도 FK로 삭제를 차단한다.
+            redirectAttributes.addFlashAttribute("errorMessage", "연결된 데이터가 존재하여 사이트를 삭제할 수 없습니다.");
+            return "redirect:/admin/sites";
+        }
+        redirectAttributes.addFlashAttribute("successMessage", "사이트를 삭제했습니다.");
+        return "redirect:/admin/sites";
+    }
 
     @GetMapping("/login")
     public String adminLogin() {

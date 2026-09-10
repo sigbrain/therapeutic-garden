@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이트 목록</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body">
+<main class="page-container">
+    <section class="card list-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">사이트 목록</h1>
+        </div>
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <div class="schedule-list-toolbar">
+            <a class="primary-link-button schedule-create-button" th:href="@{/admin/sites/new}">사이트 등록</a>
+        </div>
+        <div class="table-wrapper">
+            <table class="member-table">
+                <thead><tr><th>ID</th><th>사이트명</th><th>주소</th><th>지도 레벨</th><th>상세</th></tr></thead>
+                <tbody>
+                <tr th:each="site : ${siteList}">
+                    <td th:text="${site.siteId}"></td>
+                    <td th:text="${site.name}"></td>
+                    <td th:text="${site.address}"></td>
+                    <td th:text="${site.mapLevel}"></td>
+                    <td><a class="member-detail-link" th:href="@{/admin/sites/{siteId}(siteId=${site.siteId})}">상세보기</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="empty-message" th:if="${#lists.isEmpty(siteList)}">등록된 사이트가 없습니다.</p>
+        <a class="back-link" th:href="@{/admin}">관리자 메인으로</a>
+    </section>
+</main>
+</body>
+</html>
