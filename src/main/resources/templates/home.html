@@ -13,7 +13,7 @@
 </head>
 
 
-<body class="page-body">
+<body class="page-body home-survey-page">
 
 
 <!-- ================================
@@ -24,17 +24,14 @@
 
     <div class="home-header-inner">
 
-        <div>
-
-            <p class="dashboard-eyebrow">
-                Therapeutic Garden
-            </p>
+        <a class="home-brand" href="/">
+            <img class="home-logo" src="/images/logo/logo.png" alt="Therapeutic Garden">
 
             <h1 class="home-title">
                 치유 공간 모니터링
             </h1>
 
-        </div>
+        </a>
 
 
         <nav class="home-login-navigation">
@@ -71,46 +68,50 @@
 
     <aside class="site-panel">
 
+        <button
+                type="button"
+                class="spot-back-button hidden"
+                id="showSitePanelButton">
+
+            ← Site로 돌아가기
+
+        </button>
+
 
         <!-- ================================
              Site 기본 정보
         ================================= -->
 
+        <div class="site-panel-header">
+
+            <label class="site-panel-label" for="siteSelect">SITE</label>
+
+
+            <select
+                    class="site-select"
+                    id="siteSelect">
+
+                <option
+                        th:each="site : ${sites}"
+                        th:value="${site.siteId}"
+                        th:text="${site.name}"
+                        th:data-name="${site.name}"
+                        th:data-address="${site.address}"
+                        th:data-latitude="${site.latitude}"
+                        th:data-longitude="${site.longitude}"
+                        th:data-map-level="${site.mapLevel}">
+                </option>
+
+            </select>
+
+        </div>
+
+
         <div id="siteInformationPanel">
-
-
-            <div class="site-panel-header">
-
-                <p class="site-panel-label">
-                    SITE
-                </p>
-
-
-                <select
-                        class="site-select"
-                        id="siteSelect">
-
-                    <option
-                            th:each="site : ${sites}"
-                            th:value="${site.siteId}"
-                            th:text="${site.name}"
-                            th:data-name="${site.name}"
-                            th:data-address="${site.address}"
-                            th:data-latitude="${site.latitude}"
-                            th:data-longitude="${site.longitude}"
-                            th:data-map-level="${site.mapLevel}">
-                    </option>
-
-                </select>
-
-            </div>
-
-
             <!-- Site 이미지 -->
             <div class="site-image-placeholder">
                 <img
-                        src="/images/site1/site1.png"
-                        alt="Site Image">
+                        id="siteImage" hidden alt="Site Image"><span id="siteImageEmpty">등록된 이미지가 없습니다.</span>
             </div>
 
 
@@ -120,6 +121,9 @@
                 <h2 id="siteName"></h2>
 
                 <p id="siteAddress"></p>
+                <!-- TEMP: 실제 방문 집계 API 연결 예정 -->
+                <p>방문 참가자 <strong>11명</strong> · 데모</p>
+                <p id="spaceStatus" role="status"></p>
 
             </div>
 
@@ -135,14 +139,7 @@
                 class="hidden">
 
 
-            <button
-                    type="button"
-                    class="spot-back-button"
-                    id="showSitePanelButton">
 
-                ← Site로 돌아가기
-
-            </button>
 
 
             <div class="spot-heading">
@@ -168,8 +165,8 @@
             <div class="site-image-placeholder">
                 <img
                         id="spotImage"
-                        src="/images/site1/healing-spots/hs1.jpeg"
-                        alt="Healing Spot Image">
+                        hidden
+                        alt="Healing Spot Image"><span id="spotImageEmpty">등록된 이미지가 없습니다.</span>
             </div>
 
 
@@ -191,53 +188,27 @@
                 </div>
 
 
-                <!-- Alpha Power -->
-                <div class="spot-information-item">
-
-                    <span>
-                        Alpha Power
-                    </span>
-
-                    <strong id="spotAlphaPower">
-                        --
-                    </strong>
-
-                </div>
-
-
-                <!-- 방문 참가자 -->
-                <div class="spot-information-item">
-
-                    <span>
-                        방문 참가자
-                    </span>
-
-                    <strong>
-                        -- 명
-                    </strong>
-
-                </div>
-
+                <div id="spotAnalysis" aria-live="polite"></div>
+                <!-- TEMP: 실제 방문 집계 API 연결 예정 -->
+                <div class="spot-information-item"><span>방문 참가자 · 데모</span><strong>11명</strong></div>
             </div>
-
-
-            <!-- 최근 방문자 -->
-            <div class="spot-visitor-section">
-
-                <h3>
-                    최근 방문자
-                </h3>
-
-
-                <div class="spot-visitor-placeholder">
-
-                    방문자 정보가 표시될 영역입니다.
-
-                </div>
-
-            </div>
+            <button type="button" id="openAnalysisButton" class="primary-button">상세 분석 보기</button>
 
         </div>
+
+        <section id="analysisControls" class="home-analysis-controls" aria-labelledby="analysisControlsTitle">
+            <h2 id="analysisControlsTitle">분석 설정</h2>
+            <label for="participantSelect">분석 대상</label>
+            <select id="participantSelect" class="site-select"><option value="all">전체 평균</option></select>
+            <label for="metricSelect">분석 항목</label>
+            <select id="metricSelect" class="site-select">
+                <option value="stress">VAS 스트레스 척도</option>
+                <option value="relaxation">VAS 마음 이완 척도</option>
+                <option value="isi">ISI</option>
+                <option value="pss">PSS</option>
+            </select>
+            <p class="survey-note">TEMP / DEMO · 설문 더미 데이터</p>
+        </section>
 
     </aside>
 
@@ -250,31 +221,11 @@
 
         <div id="map"></div>
 
-        <!-- Alpha Power 범례 -->
-        <div class="alpha-legend">
-
-            <p class="alpha-legend-title">
-                Alpha Power
-            </p>
-
-            <div class="alpha-legend-scale">
-
-                <span class="alpha-legend-label">
-                    High
-                </span>
-
-                <div class="alpha-legend-gradient"></div>
-
-                <span class="alpha-legend-label">
-                    Low
-                </span>
-
-            </div>
-
-            <p class="alpha-legend-unit">
-                단위 결정 필요
-            </p>
-
+        <div class="survey-legend" aria-live="polite">
+            <p id="surveyLegendTitle" class="survey-legend-title"></p>
+            <div class="survey-legend-scale"><span class="survey-legend-label">긍정 방향</span><div class="survey-legend-gradient"></div><span class="survey-legend-label">부정 방향</span></div>
+            <p id="surveyLegendRange" class="survey-legend-unit"></p>
+            <p id="surveyLegendContext"></p>
         </div>
 
     </section>
@@ -282,6 +233,15 @@
 
 </main>
 
+
+<div id="analysisModal" class="survey-modal" hidden>
+    <div class="survey-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="analysisModalTitle" tabindex="-1">
+        <div class="survey-modal-heading"><h2 id="analysisModalTitle"></h2><button type="button" id="closeAnalysisButton" aria-label="분석 닫기">×</button></div>
+        <p class="survey-note">현재 데이터는 화면 시연을 위한 데모용 더미 데이터입니다.</p>
+        <p id="analysisModalSite" class="survey-note"></p>
+        <div id="analysisModalContent"></div>
+    </div>
+</div>
 
 <!-- ================================
      Kakao Maps SDK
@@ -297,6 +257,7 @@
      홈 지도 JavaScript
 ================================ -->
 
+<script th:src="@{/js/home-survey-analysis.js}"></script>
 <script
         th:src="@{/js/home-map.js}">
 </script>
