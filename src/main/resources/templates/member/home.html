@@ -123,7 +123,8 @@
                 th:attr="
                     data-id=${schedule.scheduleId},
                     data-date=${schedule.scheduleDate},
-                    data-course=${schedule.course},
+                    data-course-id=${schedule.courseId},
+                    data-course-label=|${schedule.siteName} / ${schedule.courseCode} ${schedule.courseName}|,
                     data-group-no=${schedule.member.groupNo},
                     data-weather=${schedule.weather}">
         </div>
@@ -292,58 +293,14 @@
                          * 코스
                          */
                         const course =
-                            scheduleItem.dataset.course;
+                            scheduleItem.dataset.courseLabel;
 
 
-                        /*
-                         * 코스별 색상
-                         */
-                        let courseColor;
+                        // DB 코스 ID를 기준으로 달력 색상을 일정하게 유지한다.
+                        const courseId = Number(scheduleItem.dataset.courseId || 0);
+                        const courseColor = courseId
+                                ? `hsl(${(courseId * 137) % 360}, 55%, 42%)` : "#64748b";
 
-
-                        /*
-                         * A 코스 - 초록
-                         */
-                        if (course === "A") {
-
-                            courseColor =
-                                "#16a34a";
-                        }
-
-
-                        /*
-                         * B 코스 - 파랑
-                         */
-                        else if (course === "B") {
-
-                            courseColor =
-                                "#2563eb";
-                        }
-
-
-                        /*
-                         * C 코스 - 주황
-                         */
-                        else if (course === "C") {
-
-                            courseColor =
-                                "#f97316";
-                        }
-
-
-                        /*
-                         * 혹시 A/B/C가 아닌 경우
-                         */
-                        else {
-
-                            courseColor =
-                                "#64748b";
-                        }
-
-
-                        /*
-                         * FullCalendar event 반환
-                         */
                         return {
 
                             /*
@@ -544,8 +501,8 @@
                                          * 코스
                                          */
                                         selectedCourse.textContent =
-                                            "코스 "
-                                            + scheduleDetail.course;
+                                            scheduleDetail.siteName + " / "
+                                            + scheduleDetail.courseCode + " " + scheduleDetail.courseName;
 
 
                                         /*
@@ -649,8 +606,7 @@
                                                 );
 
                                                 spotElement.textContent =
-                                                    "HS"
-                                                    + spot.spotNo;
+                                                    spot.code + " " + spot.name;
 
 
                                                 /*
