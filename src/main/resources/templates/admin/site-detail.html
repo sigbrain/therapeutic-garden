@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이트 상세 정보</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body">
+<main class="page-container">
+    <section class="card member-detail-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">사이트 상세 정보</h1>
+        </div>
+        <dl class="member-detail-list">
+            <div class="member-detail-item"><dt>ID</dt><dd th:text="${site.siteId}"></dd></div>
+            <div class="member-detail-item"><dt>사이트명</dt><dd th:text="${site.name}"></dd></div>
+            <div class="member-detail-item"><dt>주소</dt><dd th:text="${site.address}"></dd></div>
+            <div class="member-detail-item"><dt>위도</dt><dd th:text="${site.latitude}"></dd></div>
+            <div class="member-detail-item"><dt>경도</dt><dd th:text="${site.longitude}"></dd></div>
+            <div class="member-detail-item"><dt>지도 레벨</dt><dd th:text="${site.mapLevel}"></dd></div>
+        </dl>
+        <p class="card-description">등록된 HealingCourse가 존재하는 사이트는 삭제할 수 없습니다.</p>
+        <div class="detail-action-list">
+            <a class="primary-button" th:href="@{/admin/sites/{siteId}/edit(siteId=${site.siteId})}">사이트 수정</a>
+            <form class="delete-form" th:action="@{/admin/sites/{siteId}/delete(siteId=${site.siteId})}"
+                  method="post" onsubmit="return confirm('정말 이 사이트를 삭제하시겠습니까?');">
+                <button class="delete-button" type="submit">사이트 삭제</button>
+            </form>
+            <a class="secondary-link-button" th:href="@{/admin/sites}">사이트 목록으로</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

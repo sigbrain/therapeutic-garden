@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사이트 등록</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body">
+<main class="page-container">
+    <section class="card form-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">사이트 등록</h1>
+        </div>
+        <form class="login-form site-form" th:action="@{/admin/sites/new}" th:object="${siteForm}" method="post">
+            <p class="error-message" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+            <div th:fragment="siteFields">
+            <div class="form-group">
+                <label class="form-label" for="name">사이트명</label>
+                <input class="form-input" id="name" th:field="*{name}" type="text" maxlength="255" required>
+                <p class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="address">주소</label>
+                <input class="form-input" id="address" th:field="*{address}" type="text" maxlength="255" required>
+                <p class="error-message" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="latitude">위도</label>
+                <input class="form-input" id="latitude" th:field="*{latitude}" type="number" step="any" min="-90" max="90" required>
+                <p class="error-message" th:if="${#fields.hasErrors('latitude')}" th:errors="*{latitude}"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="longitude">경도</label>
+                <input class="form-input" id="longitude" th:field="*{longitude}" type="number" step="any" min="-180" max="180" required>
+                <p class="error-message" th:if="${#fields.hasErrors('longitude')}" th:errors="*{longitude}"></p>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="mapLevel">지도 레벨</label>
+                <input class="form-input" id="mapLevel" th:field="*{mapLevel}" type="number" min="1" max="14" step="1" required>
+                <p class="error-message" th:if="${#fields.hasErrors('mapLevel')}" th:errors="*{mapLevel}"></p>
+            </div>
+            </div>
+            <button class="primary-button" type="submit">사이트 등록</button>
+        </form>
+        <a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
+    </section>
+</main>
+</body>
+</html>
