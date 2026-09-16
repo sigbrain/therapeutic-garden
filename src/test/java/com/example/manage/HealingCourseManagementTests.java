@@ -128,7 +128,7 @@ class HealingCourseManagementTests {
         mvc.perform(get("/api/sites/" + site.getSiteId() + "/courses"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].code").value("HC-A"));
         mvc.perform(get("/api/sites/" + site.getSiteId() + "/spots")).andExpect(status().isOk());
-        mvc.perform(get("/")).andExpect(status().isOk());
+        mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L)).andExpect(status().isOk());
         service.updateHealingCourse(course.getCourseId(), site.getSiteId(), "HC-A", "빈 좌표", null, null, null);
         mvc.perform(get("/admin/courses/" + course.getCourseId() + "/edit").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk());

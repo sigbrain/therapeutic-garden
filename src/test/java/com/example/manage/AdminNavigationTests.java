@@ -26,8 +26,10 @@ class AdminNavigationTests {
     }
 
     private String header(MockHttpSession session) throws Exception {
-        String html = mvc.perform(get("/").session(session))
-                .andExpect(status().isOk()).andExpect(view().name("home"))
+        String path = session.getAttribute("loginAdminId") != null ? "/admin/monitoring"
+                : session.getAttribute("loginMemberId") != null ? "/member" : "/";
+        String html = mvc.perform(get(path).session(session))
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return html.substring(html.indexOf("<header"), html.indexOf("</header>"));
     }
@@ -56,8 +58,8 @@ class AdminNavigationTests {
     void participantSessionDoesNotGainAdminNavigationOrCalendarAccess() throws Exception {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("loginMemberId", 1L);
-        assertThat(header(session)).contains("href=\"/admin/login\"", "href=\"/member/login\"")
-                .doesNotContain("href=\"/admin\"", "href=\"/admin/logout\"");
+        assertThat(header(session)).contains("href=\"/member\"", "href=\"/member/logout\"")
+                .doesNotContain("href=\"/admin\"", "href=\"/admin/logout\"", "href=\"/admin/login\"", "href=\"/member/login\"");
         mvc.perform(get("/admin/schedules/calendar").session(session))
                 .andExpect(redirectedUrl("/admin/login"));
     }

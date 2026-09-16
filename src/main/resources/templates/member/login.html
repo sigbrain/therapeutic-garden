@@ -6,7 +6,8 @@
     <title>참가자 로그인</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="page-body">
+<body class="page-body service-page">
+<header th:replace="~{fragments/header :: header}"></header>
 
 <main class="page-container">
     <section class="card login-card">
@@ -18,7 +19,7 @@
             </p>
         </div>
 
-        <!-- 실제 로그인 처리는 다음 단계에서 연결 -->
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
         <form class="login-form"
               th:action="@{/member/login}"
               method="post">

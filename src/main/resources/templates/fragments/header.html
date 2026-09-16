@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="home-header" th:fragment="header">
+    <div class="home-header-inner">
+        <a class="home-brand" th:href="${session.loginAdminId != null} ? @{/admin/monitoring} : (${session.loginMemberId != null} ? @{/member} : @{/})">
+            <img class="home-logo" th:src="@{/images/logo/logo.png}" alt="THE H × RecoSync">
+            <span class="home-title">치유 공간 모니터링</span>
+        </a>
+        <nav class="home-login-navigation" aria-label="서비스 메뉴">
+            <a class="home-login-link" th:if="${session.loginAdminId == null and session.loginMemberId == null}" th:href="@{/admin/login}">관리자 로그인</a>
+            <a class="home-login-link" th:if="${session.loginAdminId == null and session.loginMemberId == null}" th:href="@{/member/login}">참가자 로그인</a>
+            <a class="home-login-link" th:if="${session.loginAdminId != null}" th:href="@{/admin}">관리자 페이지</a>
+            <a class="home-login-link" th:if="${session.loginAdminId != null}" th:href="@{/admin/logout}">로그아웃</a>
+            <a class="home-login-link" th:if="${session.loginAdminId == null and session.loginMemberId != null}" th:href="@{/member/logout}">로그아웃</a>
+        </nav>
+    </div>
+</header>
+</body>
+</html>

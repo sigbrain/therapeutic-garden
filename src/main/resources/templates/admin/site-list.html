@@ -6,7 +6,8 @@
     <title>사이트 목록</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body service-page">
+<header th:replace="~{fragments/header :: header}"></header>
 <main class="dashboard-container admin-list-container">
     <nav class="admin-page-navigation" aria-label="관리자 화면 이동">
         <a class="logout-link" th:href="@{/admin}">관리자 메인</a>

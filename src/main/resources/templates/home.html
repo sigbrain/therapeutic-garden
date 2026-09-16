@@ -20,47 +20,7 @@
      Header
 ================================ -->
 
-<header class="home-header">
-
-    <div class="home-header-inner">
-
-        <a class="home-brand" href="/">
-            <img class="home-logo" src="/images/logo/logo.png" alt="Therapeutic Garden">
-
-            <h1 class="home-title">
-                치유 공간 모니터링
-            </h1>
-
-        </a>
-
-
-        <nav class="home-login-navigation">
-
-            <a
-                    class="home-login-link"
-                    th:if="${session.loginAdminId == null}"
-                    th:href="@{/admin/login}">
-                관리자 로그인
-            </a>
-
-            <a
-                    class="home-login-link"
-                    th:if="${session.loginAdminId == null}"
-                    th:href="@{/member/login}">
-                참가자 로그인
-            </a>
-
-            <a class="home-login-link" th:if="${session.loginAdminId != null}"
-               th:href="@{/admin}">관리자 페이지</a>
-
-            <a class="home-login-link" th:if="${session.loginAdminId != null}"
-               th:href="@{/admin/logout}">로그아웃</a>
-
-        </nav>
-
-    </div>
-
-</header>
+<header th:replace="~{fragments/header :: header}"></header>
 
 
 <!-- ================================

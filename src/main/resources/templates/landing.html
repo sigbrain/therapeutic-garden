@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="치유 공간의 이용 현황과 측정 데이터를 연결해 공간의 경험을 한눈에 확인하고 관리합니다.">
+    <title>치유 공간 모니터링</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script defer th:src="@{/js/landing.js}"></script>
+</head>
+<body class="page-body service-page landing-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main>
+    <section class="landing-hero" aria-labelledby="landing-hero-title">
+        <div class="landing-hero-copy">
+            <p class="landing-eyebrow">THERAPEUTIC GARDEN</p>
+            <h1 id="landing-hero-title">공간이<br>회복의 경험이<br class="landing-hero-break">되도록<span class="landing-period">.</span></h1>
+            <p class="landing-description">치유 공간의 이용 현황과 측정 데이터를 연결해<br class="landing-desktop-break"> 공간의 경험을 한눈에 확인하고 관리합니다.</p>
+        </div>
+        <div class="landing-hero-image">
+            <img th:src="@{/images/landing/HS2_3.jpeg}" width="3000" height="2000"
+                 fetchpriority="high" alt="디에이치 방배의 나무와 식생 사이로 깊이 이어지는 정원 데크">
+        </div>
+        <a class="landing-scroll" href="#therapeutic-space"><span aria-hidden="true">↓</span> SCROLL TO EXPLORE</a>
+    </section>
+
+    <section id="therapeutic-space" class="landing-section landing-space" aria-labelledby="landing-space-title">
+        <p class="landing-eyebrow" data-reveal>01 / THERAPEUTIC SPACE</p>
+        <div class="landing-space-layout">
+            <div class="landing-space-image landing-photo" data-reveal>
+                <img th:src="@{/images/landing/HS5_1.png}" width="666" height="454" loading="lazy" decoding="async"
+                     alt="디에이치 방배 정원의 흰 조형물과 이를 둘러싼 식생, 곡선형 수공간">
+            </div>
+            <div class="landing-space-copy" data-reveal>
+                <h2 id="landing-space-title">치유 공간을<br>데이터로 바라보다.</h2>
+                <p class="landing-description">하나의 공간 안에도<br>서로 다른 이용의 흐름이 있습니다.</p>
+                <p class="landing-body-copy">치유 공간의 이용 흐름과 측정 정보를 공간 단위로 연결해 확인합니다. 공간 전체에서 개별 스팟까지, 필요한 맥락을 함께 살펴봅니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="landing-section landing-monitoring" aria-labelledby="landing-monitoring-title">
+        <div data-reveal>
+            <p class="landing-eyebrow">02 / MONITORING</p>
+            <h2 id="landing-monitoring-title">공간의 흐름을<br>한눈에 확인합니다.</h2>
+            <p class="landing-description">공간을 선택하고, 코스를 살펴보고,<br>스팟에 연결된 측정 정보를 확인합니다.</p>
+        </div>
+        <ol class="landing-monitoring-list">
+            <li data-reveal><span class="landing-step-label">SITE</span><div><h3>살펴볼 공간을 선택합니다.</h3><p>Site를 기준으로 모니터링을 시작합니다.</p></div></li>
+            <li data-reveal><span class="landing-step-label">HEALING COURSE</span><div><h3>공간 안의 코스를 파악합니다.</h3><p>HealingCourse와 소속 스팟을 확인합니다.</p></div></li>
+            <li data-reveal><span class="landing-step-label">HEALING SPOT</span><div><h3>개별 스팟을 자세히 봅니다.</h3><p>선택한 HealingSpot의 상세 정보를 살펴봅니다.</p></div></li>
+            <li data-reveal><span class="landing-step-label">MEASUREMENT</span><div><h3>측정 정보에서 분석까지.</h3><p>공간에 연결된 측정 데이터와 상세 분석을 확인합니다.</p></div></li>
+        </ol>
+    </section>
+
+    <section class="landing-section landing-structure" aria-labelledby="landing-structure-title">
+        <div class="landing-section-intro" data-reveal>
+            <p class="landing-eyebrow">03 / SPACE STRUCTURE</p>
+            <h2 id="landing-structure-title">하나의 공간에서,<br>하나의 스팟까지.</h2>
+            <p class="landing-description">공간을 이해하는 세 가지 단위.</p>
+        </div>
+        <div class="landing-structure-layout">
+            <div class="landing-structure-image landing-photo" data-reveal>
+                <img th:src="@{/images/landing/HS4_1.jpg}" width="2544" height="1696" loading="lazy" decoding="async"
+                     alt="위에서 바라본 디에이치 방배 정원의 원형 동선과 잔디, 휴게 공간의 배치">
+            </div>
+            <ol class="landing-structure-list" aria-label="공간에서 코스, 개별 스팟으로 이어지는 구조" data-reveal>
+                <li><div class="landing-domain-label"><span>SITE</span><h3>치유 공간</h3><p>코스와 스팟을 담는 전체 공간</p></div></li>
+                <li><div class="landing-domain-label"><span>HEALING COURSE</span><h3>공간별 치유 코스</h3><p>공간 안에 구성된 코스</p></div></li>
+                <li><div class="landing-domain-label"><span>HEALING SPOT</span><h3>개별 측정 스팟</h3></div></li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="landing-section landing-connection" aria-labelledby="landing-connection-title">
+        <div class="landing-connection-layout">
+            <div class="landing-connection-copy" data-reveal>
+                <p class="landing-eyebrow">04 / EXPERIENCE &amp; DATA</p>
+                <h2 id="landing-connection-title">공간과 데이터를<br>하나의 흐름으로.</h2>
+                <p class="landing-description">일정으로 이어지는 공간의 경험,<br>측정 정보로 살펴보는 공간의 맥락.</p>
+            </div>
+            <div class="landing-connection-image landing-photo" data-reveal>
+                <img th:src="@{/images/landing/HS4_2.jpg}" width="3384" height="2450" loading="lazy" decoding="async"
+                     alt="디에이치 방배의 넓은 잔디 정원과 소나무, 곡선형 산책로를 밝히는 야간 조명">
+            </div>
+        </div>
+        <ol class="landing-connection-flow" aria-label="공간의 경험과 데이터의 연결">
+            <li data-reveal><span class="landing-step-label">01 / SPACE</span><h3>공간</h3><p>HealingCourse · HealingSpot</p></li>
+            <li data-reveal><span class="landing-step-label">02 / EXPERIENCE</span><h3>이용</h3><p>참가자 일정 · 공간 이용</p></li>
+            <li data-reveal><span class="landing-step-label">03 / DATA</span><h3>측정 정보</h3><p>측정 데이터 · 상세 분석</p></li>
+        </ol>
+    </section>
+
+    <section class="landing-section landing-final-cta" aria-labelledby="landing-cta-title">
+        <div class="landing-final-image" aria-hidden="true">
+            <img th:src="@{/images/landing/HS3_1.png}" width="1164" height="792" loading="lazy" decoding="async" alt="">
+        </div>
+        <div class="landing-final-copy" data-reveal>
+            <p class="landing-eyebrow">THERAPEUTIC GARDEN MONITORING</p>
+            <h2 id="landing-cta-title">치유 공간의<br>경험을 확인하세요.</h2>
+        </div>
+    </section>
+</main>
+</body>
+</html>
