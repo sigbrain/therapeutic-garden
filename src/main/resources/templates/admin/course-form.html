@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HealingCourse 관리</title><link rel="stylesheet" th:href="@{/css/style.css}">
-</head><body class="page-body admin-course-page"><main class="page-container">
+</head><body class="page-body admin-course-page service-page">
+<header th:replace="~{fragments/header :: header}"></header><main class="page-container">
 <section class="card form-card">
 <div class="card-header"><p class="card-eyebrow">Administrator</p><h1 class="card-title" th:text="${courseId == null ? 'HC 등록' : 'HC 수정'}"></h1></div>
 <form class="login-form site-form" th:object="${healingCourseForm}" method="post"

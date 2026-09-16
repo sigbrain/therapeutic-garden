@@ -82,7 +82,7 @@ class SiteManagementTests {
         assertThat(updated.getLatitude()).isEqualTo(38.5);
         assertThat(updated.getLongitude()).isEqualTo(128.5);
         assertThat(updated.getMapLevel()).isEqualTo(5);
-        mvc.perform(get("/"))
+        mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("변경 사이트")))
                 .andExpect(content().string(containsString("data-latitude=\"38.5\"")))

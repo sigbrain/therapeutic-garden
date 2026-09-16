@@ -1,5 +1,6 @@
 package com.example.manage.controller;
 
+import jakarta.servlet.http.HttpSession;
 import com.example.manage.domain.Site;
 import com.example.manage.service.SiteService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,17 @@ public class HomeController {
     private String kakaoMapsJavaScriptKey;
 
     @GetMapping("/")
+    public String landing(HttpSession session) {
+        if (session.getAttribute("loginAdminId") != null) {
+            return "redirect:/admin/monitoring";
+        }
+        if (session.getAttribute("loginMemberId") != null) {
+            return "redirect:/member";
+        }
+        return "landing";
+    }
+
+    @GetMapping("/admin/monitoring")
     public String home(Model model) {
 
         List<Site> sites = siteService.findAllSites();

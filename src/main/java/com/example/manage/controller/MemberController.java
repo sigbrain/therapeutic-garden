@@ -41,6 +41,7 @@ public class MemberController {
             return "member/login";
         }
 
+        session.removeAttribute("loginAdminId");
         session.setAttribute("loginMemberId", member.getMemberId());
 
         return "redirect:/member";

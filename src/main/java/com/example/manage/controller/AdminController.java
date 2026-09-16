@@ -286,12 +286,13 @@ public class AdminController {
             return "admin/login";
         }
 
+        session.removeAttribute("loginMemberId");
         session.setAttribute(
                 "loginAdminId",
                 admin.getAdminId()
         );
 
-        return "redirect:/admin";
+        return "redirect:/admin/monitoring";
     }
 
 
