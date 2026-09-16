@@ -11,30 +11,22 @@
             th:href="@{/css/style.css}">
 </head>
 
-<body class="page-body">
+<body class="dashboard-body">
 
-<main class="page-container">
+<main class="dashboard-container admin-list-container">
+    <nav class="admin-page-navigation" aria-label="관리자 화면 이동">
+        <a class="logout-link" th:href="@{/admin}">관리자 메인</a>
+    </nav>
 
-    <section class="card list-card">
-
-        <!-- ================================
-             페이지 제목
-        ================================= -->
-        <div class="card-header">
-
-            <p class="card-eyebrow">
-                Administrator
-            </p>
-
-            <h1 class="card-title">
-                일정 목록
-            </h1>
-
-            <p class="card-description">
-                현재 등록된 참가자별 일정을 확인합니다.
-            </p>
-
+    <header class="section-heading">
+        <div>
+            <p class="section-label">ADMINISTRATOR</p>
+            <h1 class="section-title">일정 목록</h1>
+            <p class="card-description">현재 등록된 참가자별 일정을 확인합니다.</p>
         </div>
+    </header>
+
+    <section class="card" aria-label="일정 목록 콘텐츠">
 
 
         <!-- ================================
@@ -186,16 +178,6 @@
                 th:if="${#lists.isEmpty(schedules)}">
             등록된 일정이 없습니다.
         </p>
-
-
-        <!-- ================================
-             관리자 메인
-        ================================= -->
-        <a
-                class="back-link"
-                th:href="@{/admin}">
-            관리자 메인으로
-        </a>
 
     </section>
 

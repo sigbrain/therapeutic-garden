@@ -50,4 +50,6 @@ public interface HealingCourseRepository
     List<HealingCourse> findBySiteSiteId(Long siteId);
 
     boolean existsBySiteSiteId(Long siteId);
+    boolean existsBySiteSiteIdAndCode(Long siteId, String code);
+    boolean existsBySiteSiteIdAndCodeAndCourseIdNot(Long siteId, String code, Long courseId);
 }

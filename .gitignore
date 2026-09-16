@@ -43,3 +43,6 @@ out/
 src/main/resources/application.yaml
 src/main/resources/application.yml
 src/main/resources/application.properties
+
+# Local database backup
+manage-backup.sql

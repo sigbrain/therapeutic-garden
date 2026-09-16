@@ -11,27 +11,22 @@
             th:href="@{/css/style.css}">
 </head>
 
-<body class="page-body">
+<body class="dashboard-body">
 
-<main class="page-container">
+<main class="dashboard-container admin-list-container">
+    <nav class="admin-page-navigation" aria-label="관리자 화면 이동">
+        <a class="logout-link" th:href="@{/admin}">관리자 메인</a>
+    </nav>
 
-    <section class="card list-card">
-
-        <div class="card-header">
-
-            <p class="card-eyebrow">
-                Administrator
-            </p>
-
-            <h1 class="card-title">
-                참가자 목록
-            </h1>
-
-            <p class="card-description">
-                현재 등록된 참가자 목록입니다.
-            </p>
-
+    <header class="section-heading">
+        <div>
+            <p class="section-label">ADMINISTRATOR</p>
+            <h1 class="section-title">참가자 목록</h1>
+            <p class="card-description">현재 등록된 참가자 목록입니다.</p>
         </div>
+    </header>
+
+    <section class="card" aria-label="참가자 목록 콘텐츠">
 
 
         <div class="table-wrapper">
@@ -99,13 +94,6 @@
             </table>
 
         </div>
-
-
-        <a
-                th:href="@{/admin}"
-                class="back-link">
-            관리자 메인으로
-        </a>
 
     </section>
 
