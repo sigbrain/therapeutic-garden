@@ -37,4 +37,13 @@ public class HealingCourse {
         this.centerLongitude = centerLongitude;
         this.radius = radius;
     }
+
+    public void update(Site site, String code, String name, Double centerLatitude, Double centerLongitude, Double radius) {
+        this.site = site;
+        this.code = code;
+        this.name = name;
+        this.centerLatitude = centerLatitude;
+        this.centerLongitude = centerLongitude;
+        this.radius = radius;
+    }
 }

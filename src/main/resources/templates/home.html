@@ -38,15 +38,23 @@
 
             <a
                     class="home-login-link"
+                    th:if="${session.loginAdminId == null}"
                     th:href="@{/admin/login}">
                 관리자 로그인
             </a>
 
             <a
                     class="home-login-link"
+                    th:if="${session.loginAdminId == null}"
                     th:href="@{/member/login}">
                 참가자 로그인
             </a>
+
+            <a class="home-login-link" th:if="${session.loginAdminId != null}"
+               th:href="@{/admin}">관리자 페이지</a>
+
+            <a class="home-login-link" th:if="${session.loginAdminId != null}"
+               th:href="@{/admin/logout}">로그아웃</a>
 
         </nav>
 

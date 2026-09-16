@@ -20,11 +20,11 @@
             </h1>
 
             <p class="card-description">
-                일정 관리 시스템 관리자 화면입니다.
+                사이트, 참가자와 일정을 관리합니다.
             </p>
         </div>
 
-        <div class="login-type-list">
+        <nav class="admin-menu" aria-label="관리 기능">
 
             <a th:href="@{/admin/sites}"
                class="secondary-link-button">
@@ -32,7 +32,7 @@
             </a>
 
             <a th:href="@{/admin/members}"
-               class="primary-link-button">
+               class="secondary-link-button">
                 참가자 관리
             </a>
 
@@ -46,10 +46,10 @@
                 달력 보기
             </a>
 
-        </div>
+        </nav>
 
         <a th:href="@{/admin/logout}"
-           class="back-link">
+           class="back-link admin-hub-logout">
             로그아웃
         </a>
 

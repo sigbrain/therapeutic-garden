@@ -7200,3 +7200,175 @@ input[type="time"].form-input {
     .survey-modal-heading h2 { font-size: 18px; }
     .survey-spot-grid { grid-template-columns: 1fr; }
 }
+
+/* HealingCourse 관리자 화면에만 적용 */
+.admin-course-page .course-filter {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 12px;
+}
+.admin-course-page .course-site-field { flex: 1; min-width: 0; }
+.admin-course-page .course-filter .primary-button,
+.admin-course-page .course-list-toolbar .primary-link-button {
+    width: auto;
+    min-width: 120px;
+    padding: 0 20px;
+    margin: 0;
+    flex-shrink: 0;
+}
+.admin-course-page .course-list-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+    margin: 24px 0 16px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+.admin-course-page .course-list-note {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.admin-course-page .course-row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.admin-course-page .course-row-actions .delete-form { margin: 0; }
+.admin-course-page .course-row-actions .course-action {
+    width: auto;
+    min-width: 60px;
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.admin-course-page .course-row-actions .delete-button {
+    border: 1px solid #fecaca;
+    background-color: #fff1f2;
+    color: #b91c1c;
+}
+.admin-course-page .course-row-actions .delete-button:hover { background-color: #fee2e2; }
+.admin-course-page .member-table td:nth-child(2) {
+    min-width: 140px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+.admin-course-page .course-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 24px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+.admin-course-page .course-footer .back-link { margin: 0; padding: 6px 0; }
+.admin-course-page .course-map-section {
+    min-width: 0;
+    margin-top: 4px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+.admin-course-page .course-map-section h2 { margin: 0 0 12px; }
+.admin-course-page .course-map-steps {
+    margin: 0 0 12px;
+    padding-left: 20px;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.admin-course-page .course-map-note,
+.admin-course-page #course-map-status {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.admin-course-page #course-map-status:empty { display: none; }
+.admin-course-page .course-map {
+    width: 100%;
+    height: 360px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+@media (max-width: 520px) {
+    .admin-course-page .course-filter { flex-direction: column; align-items: stretch; }
+    .admin-course-page .course-filter .primary-button,
+    .admin-course-page .course-list-toolbar .primary-link-button { width: 100%; }
+    .admin-course-page .course-list-toolbar { align-items: stretch; }
+}
+
+/* 관리자 허브 및 Site 상세 액션: 다른 상세 화면에는 적용하지 않음 */
+.admin-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+.admin-menu .secondary-link-button {
+    padding: 12px;
+    border-color: #bfdbfe;
+    background-color: #eff6ff;
+    color: #1d4ed8;
+}
+.admin-menu .secondary-link-button:hover {
+    border-color: #2563eb;
+    background-color: #dbeafe;
+}
+.admin-hub-logout {
+    width: 100%;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+.site-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+}
+.site-detail-actions .site-course-link,
+.site-detail-actions .site-list-link { grid-column: 1 / -1; }
+.site-detail-actions a,
+.site-detail-actions button { white-space: nowrap; }
+.site-detail-actions .delete-form { margin: 0; }
+.site-detail-actions .delete-button {
+    border: 1px solid #fecaca;
+    background-color: #fff1f2;
+    color: #b91c1c;
+    font-family: inherit;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.site-detail-actions .delete-button:hover {
+    border-color: #f87171;
+    background-color: #fee2e2;
+}
+.site-detail-actions .site-list-link {
+    margin: 4px auto 0;
+    padding: 12px;
+}
+.admin-menu a:focus-visible,
+.site-detail-actions a:focus-visible,
+.site-detail-actions button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 3px;
+}
+.admin-calendar-container,
+.admin-list-container { padding-top: 20px; }
+.admin-calendar-navigation,
+.admin-page-navigation {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+@media (max-width: 520px) {
+    .admin-menu,
+    .site-detail-actions { grid-template-columns: minmax(0, 1fr); }
+}

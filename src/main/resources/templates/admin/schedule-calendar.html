@@ -32,52 +32,11 @@
 <body class="dashboard-body">
 
 
-<header class="dashboard-header">
+<main class="dashboard-container admin-calendar-container">
 
-    <div class="dashboard-header-inner">
-
-        <div>
-
-            <p class="dashboard-eyebrow">
-                Administrator
-            </p>
-
-            <h1 class="dashboard-title">
-                관리자 일정 달력
-            </h1>
-
-        </div>
-
-
-        <div class="dashboard-user">
-
-            <div class="user-information">
-
-                <strong>
-                    관리자
-                </strong>
-
-                <span>
-                    전체 참가자의 일정을 확인합니다.
-                </span>
-
-            </div>
-
-
-            <a
-                    class="logout-link"
-                    th:href="@{/admin}">
-                관리자 메인
-            </a>
-
-        </div>
-
-    </div>
-
-</header>
-
-
-<main class="dashboard-container">
+    <nav class="admin-calendar-navigation" aria-label="관리자 화면 이동">
+        <a class="logout-link" th:href="@{/admin}">관리자 메인</a>
+    </nav>
 
 
     <!-- ================================

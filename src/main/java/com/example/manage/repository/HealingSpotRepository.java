@@ -78,4 +78,6 @@ public interface HealingSpotRepository
      */
     @EntityGraph(attributePaths = "healingCourse")
     List<HealingSpot> findByHealingCourseSiteSiteId(Long siteId);
+
+    boolean existsByHealingCourseCourseId(Long courseId);
 }
