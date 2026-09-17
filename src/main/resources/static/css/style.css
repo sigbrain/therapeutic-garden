@@ -7391,7 +7391,7 @@ input[type="time"].form-input {
 .landing-page main { width: 100%; }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page p { margin: 0; word-break: keep-all; overflow-wrap: break-word; }
 .landing-page h2 { font-size: clamp(32px, 4.3vw, 62px); line-height: 1.26; letter-spacing: -.055em; font-weight: 600; }
-.landing-page .landing-eyebrow { font-size: 11px; letter-spacing: .16em; font-weight: 700; line-height: 1.7; margin-bottom: 32px; }
+.landing-page .landing-eyebrow { font-size: 32px; letter-spacing: .16em; font-weight: 700; line-height: 1.7; margin-bottom: 32px; }
 .landing-page .landing-description { font-size: clamp(16px, 1.5vw, 20px); line-height: 1.9; color: var(--landing-muted); margin-top: 30px; }
 .landing-page .landing-body-copy { font-size: 16px; line-height: 1.9; color: var(--landing-muted); margin-top: 20px; max-width: 360px; }
 .landing-page .landing-section { padding: 120px max(6vw, calc((100vw - 1280px) / 2)); }
