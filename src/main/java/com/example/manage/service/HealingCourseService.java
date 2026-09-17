@@ -52,6 +52,11 @@ public class HealingCourseService {
     }
 
     @Transactional(readOnly = true)
+    public List<HealingCourse> findAllHealingCourses() {
+        return healingCourseRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<HealingCourse> findBySiteId(Long siteId) {
         return healingCourseRepository.findBySiteSiteId(siteId);
     }

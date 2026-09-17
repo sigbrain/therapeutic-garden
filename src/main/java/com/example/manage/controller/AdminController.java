@@ -1,6 +1,9 @@
 package com.example.manage.controller;
 
 import com.example.manage.domain.Site;
+import com.example.manage.domain.HealingSpot;
+import com.example.manage.dto.HealingSpotForm;
+import com.example.manage.service.HealingSpotService;
 import com.example.manage.domain.HealingCourse;
 import com.example.manage.dto.HealingCourseForm;
 import com.example.manage.service.HealingCourseService;
@@ -45,6 +48,7 @@ public class AdminController {
     private final SiteService siteService;
 
     private final HealingCourseService healingCourseService;
+    private final HealingSpotService healingSpotService;
 
     @Value("${kakao.maps.javascript-key}")
     private String kakaoMapsJavaScriptKey;
@@ -83,6 +87,17 @@ public class AdminController {
         form.setSiteId(siteId);
         model.addAttribute("healingCourseForm", form);
         return courseForm(model, null);
+    }
+
+    @GetMapping("/courses/{courseId}")
+    public String courseDetail(@PathVariable Long courseId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            model.addAttribute("course", healingCourseService.findHealingCourse(courseId));
+            return "admin/course-detail";
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/courses";
+        }
     }
 
     @GetMapping("/courses/{courseId}/edit")
@@ -148,6 +163,127 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("errorMessage", "연결된 데이터가 존재하여 HealingCourse를 삭제할 수 없습니다.");
         }
         return "redirect:/admin/courses" + (siteId == null ? "" : "?siteId=" + siteId);
+    }
+
+    private String spotForm(Model model, Long spotId) {
+        model.addAttribute("spotId", spotId);
+        model.addAttribute("spotCourses", healingCourseService.findAllHealingCourses());
+        model.addAttribute("kakaoMapsJavaScriptKey", kakaoMapsJavaScriptKey);
+        return "admin/spot-form";
+    }
+
+    private HealingCourse spotCourse(Long courseId, Long siteId) {
+        HealingCourse course = healingCourseService.findHealingCourse(courseId);
+        if (siteId != null && !siteId.equals(course.getSite().getSiteId())) {
+            throw new IllegalArgumentException("선택한 사이트에 속한 코스가 아닙니다.");
+        }
+        return course;
+    }
+
+    @GetMapping("/spots")
+    public String spotList(@RequestParam(required = false) Long courseId,
+                           @RequestParam(required = false) Long siteId,
+                           Model model, RedirectAttributes redirectAttributes) {
+        if (courseId == null) return "redirect:/admin/courses";
+        try {
+            model.addAttribute("selectedCourse", spotCourse(courseId, siteId));
+            model.addAttribute("spots", healingSpotService.findByCourseId(courseId));
+            return "admin/spot-list";
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/courses";
+        }
+    }
+
+    @GetMapping("/spots/new")
+    public String newSpot(@RequestParam(required = false) Long courseId,
+                          @RequestParam(required = false) Long siteId,
+                          Model model, RedirectAttributes redirectAttributes) {
+        try {
+            if (courseId != null) spotCourse(courseId, siteId);
+            HealingSpotForm form = new HealingSpotForm();
+            form.setCourseId(courseId);
+            model.addAttribute("healingSpotForm", form);
+            return spotForm(model, null);
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/courses";
+        }
+    }
+
+    @GetMapping("/spots/{spotId}")
+    public String spotDetail(@PathVariable Long spotId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            model.addAttribute("spot", healingSpotService.findHealingSpot(spotId));
+            return "admin/spot-detail";
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/courses";
+        }
+    }
+
+    @GetMapping("/spots/{spotId}/edit")
+    public String editSpot(@PathVariable Long spotId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            HealingSpot spot = healingSpotService.findHealingSpot(spotId);
+            HealingSpotForm form = new HealingSpotForm();
+            form.setCourseId(spot.getHealingCourse().getCourseId());
+            form.setCode(spot.getCode());
+            form.setName(spot.getName());
+            form.setLatitude(spot.getLatitude());
+            form.setLongitude(spot.getLongitude());
+            model.addAttribute("healingSpotForm", form);
+            return spotForm(model, spotId);
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+            return "redirect:/admin/courses";
+        }
+    }
+
+    @PostMapping("/spots/new")
+    public String createSpot(@Valid @ModelAttribute HealingSpotForm form, BindingResult result, Model model) {
+        return saveSpot(null, form, result, model);
+    }
+
+    @PostMapping("/spots/{spotId}/edit")
+    public String updateSpot(@PathVariable Long spotId, @Valid @ModelAttribute HealingSpotForm form,
+                             BindingResult result, Model model) {
+        return saveSpot(spotId, form, result, model);
+    }
+
+    private String saveSpot(Long spotId, HealingSpotForm form, BindingResult result, Model model) {
+        if (!result.hasErrors()) {
+            try {
+                if (spotId == null) {
+                    healingSpotService.createHealingSpot(form.getCourseId(), form.getCode(), form.getName(),
+                            form.getLatitude(), form.getLongitude());
+                } else {
+                    healingSpotService.updateHealingSpot(spotId, form.getCourseId(), form.getCode(), form.getName(),
+                            form.getLatitude(), form.getLongitude());
+                }
+                return "redirect:/admin/spots?courseId=" + form.getCourseId();
+            } catch (IllegalArgumentException exception) {
+                result.reject("invalid", exception.getMessage());
+            } catch (DataIntegrityViolationException exception) {
+                result.reject("conflict", "저장하지 못했습니다. 연결된 코스와 입력값을 확인하고 다시 시도해 주세요.");
+            }
+        }
+        return spotForm(model, spotId);
+    }
+
+    @PostMapping("/spots/{spotId}/delete")
+    public String deleteSpot(@PathVariable Long spotId, RedirectAttributes redirectAttributes) {
+        Long courseId = null;
+        try {
+            courseId = healingSpotService.findHealingSpot(spotId).getHealingCourse().getCourseId();
+            healingSpotService.deleteHealingSpot(spotId);
+            redirectAttributes.addFlashAttribute("successMessage", "HealingSpot을 삭제했습니다.");
+        } catch (IllegalArgumentException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
+        } catch (DataIntegrityViolationException exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", "연결된 데이터가 존재하여 HealingSpot을 삭제할 수 없습니다.");
+        }
+        return courseId == null ? "redirect:/admin/courses" : "redirect:/admin/spots?courseId=" + courseId;
     }
 
     @ModelAttribute("sites")

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC 상세 정보</title><link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="page-container">
+    <section class="card member-detail-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">HC 상세 정보</h1>
+        </div>
+        <dl class="member-detail-list">
+            <div class="member-detail-item"><dt>HC 코드</dt><dd th:text="${course.code}"></dd></div>
+            <div class="member-detail-item"><dt>코스명</dt><dd th:text="${course.name}"></dd></div>
+            <div class="member-detail-item"><dt>소속 Site</dt><dd><a class="member-detail-link" th:href="@{/admin/sites/{id}(id=${course.site.siteId})}" th:text="${course.site.name}"></a></dd></div>
+            <div class="member-detail-item"><dt>반경</dt><dd th:text="${course.radius != null ? course.radius + ' m' : '미설정'}"></dd></div>
+        </dl>
+        <p class="card-description">등록된 HS가 존재하는 HC는 삭제할 수 없습니다.</p>
+        <div class="site-detail-actions">
+            <a class="primary-link-button site-course-link" th:href="@{/admin/spots(courseId=${course.courseId},siteId=${course.site.siteId})}">HS 관리</a>
+            <a class="secondary-link-button" th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}">HC 수정</a>
+            <form class="delete-form" th:action="@{/admin/courses/{id}/delete(id=${course.courseId})}"
+                  method="post" onsubmit="return confirm('정말 이 HC를 삭제하시겠습니까?');">
+                <button class="delete-button" type="submit">HC 삭제</button>
+            </form>
+            <a class="back-link site-list-link" th:href="@{/admin/courses(siteId=${course.site.siteId})}">HC 목록으로</a>
+        </div>
+    </section>
+</main>
+</body></html>
