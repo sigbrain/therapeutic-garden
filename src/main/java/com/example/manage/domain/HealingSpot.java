@@ -36,4 +36,12 @@ public class HealingSpot {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+
+    public void update(HealingCourse healingCourse, String code, String name, Double latitude, Double longitude) {
+        this.healingCourse = healingCourse;
+        this.code = code;
+        this.name = name;
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
 }

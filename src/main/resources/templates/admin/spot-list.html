@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HS 목록</title><link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="dashboard-body admin-course-page service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="dashboard-container admin-list-container">
+    <nav class="admin-page-navigation" aria-label="관리자 화면 이동">
+        <a class="logout-link" th:href="@{/admin}">관리자 메인</a>
+    </nav>
+    <header class="section-heading">
+        <div>
+            <p class="section-label">ADMINISTRATOR</p>
+            <h1 class="section-title">HS 목록</h1>
+            <p class="card-description" th:text="|${selectedCourse.site.name} / ${selectedCourse.code} ${selectedCourse.name}|"></p>
+        </div>
+    </header>
+    <section class="card" aria-label="HS 목록 콘텐츠">
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <div class="schedule-list-toolbar">
+            <a class="primary-link-button schedule-create-button" th:href="@{/admin/spots/new(courseId=${selectedCourse.courseId},siteId=${selectedCourse.site.siteId})}">HS 등록</a>
+        </div>
+        <div class="table-wrapper"><table class="member-table">
+            <thead><tr><th>스팟명</th><th>HS 코드</th></tr></thead>
+            <tbody><tr th:each="spot : ${spots}">
+                <td><a class="member-detail-link" th:href="@{/admin/spots/{id}(id=${spot.spotId})}" th:text="${spot.name}"></a></td>
+                <td th:text="${spot.code}"></td>
+            </tr></tbody>
+        </table></div>
+        <p class="empty-message" th:if="${#lists.isEmpty(spots)}">등록된 HS가 없습니다.</p>
+        <nav class="course-footer" aria-label="상위 관리 화면 이동">
+            <a class="back-link" th:href="@{/admin/courses/{id}(id=${selectedCourse.courseId})}">HC 상세로</a>
+            <a class="back-link" th:href="@{/admin/courses(siteId=${selectedCourse.site.siteId})}">HC 목록으로</a>
+        </nav>
+    </section>
+</main>
+</body></html>

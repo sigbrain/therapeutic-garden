@@ -1,34 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HealingCourse 관리</title><link rel="stylesheet" th:href="@{/css/style.css}">
-</head><body class="page-body admin-course-page service-page">
-<header th:replace="~{fragments/header :: header}"></header><main class="page-container">
-<section class="card list-card">
-<div class="card-header"><p class="card-eyebrow">Administrator</p><h1 class="card-title">HealingCourse 관리</h1></div>
-<p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
-<p role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
-<form method="get" th:action="@{/admin/courses}" class="login-form course-filter">
-<div class="form-group course-site-field">
-<label class="form-label" for="siteId">사이트</label>
-<select class="form-input" id="siteId" name="siteId" required>
-<option value="">사이트를 선택해 주세요</option>
-<option th:each="site : ${courseSites}" th:value="${site.siteId}" th:text="${site.name}" th:selected="${selectedSite != null and selectedSite.siteId == site.siteId}"></option>
-</select></div><button class="primary-button" type="submit">코스 조회</button></form>
-<p class="empty-message" th:if="${#lists.isEmpty(courseSites)}">먼저 사이트를 등록해 주세요.</p>
-<div th:if="${selectedSite != null}">
-<div class="course-list-toolbar"><a class="primary-link-button" th:href="@{/admin/courses/new(siteId=${selectedSite.siteId})}">HC 등록</a>
-<p class="card-description course-list-note">HealingSpot이 있는 코스는 삭제할 수 없습니다.</p></div>
-<div class="table-wrapper"><table class="member-table">
-<thead><tr><th>코드</th><th>코스명</th><th>중심 위도</th><th>중심 경도</th><th>반경(m)</th><th>관리</th></tr></thead>
-<tbody><tr th:each="course : ${courses}">
-<td th:text="${course.code}"></td><td th:text="${course.name}"></td>
-<td th:text="${course.centerLatitude}"></td><td th:text="${course.centerLongitude}"></td><td th:text="${course.radius}"></td>
-<td><div class="course-row-actions"><a class="secondary-link-button course-action" th:href="@{/admin/courses/{id}/edit(id=${course.courseId})}">수정</a>
-<form class="delete-form" method="post" th:action="@{/admin/courses/{id}/delete(id=${course.courseId})}" onsubmit="return confirm('정말 이 HealingCourse를 삭제하시겠습니까?');"><button class="delete-button course-action" type="submit">삭제</button></form></div></td>
-</tr></tbody></table></div>
-<p class="empty-message" th:if="${#lists.isEmpty(courses)}">등록된 HealingCourse가 없습니다.</p>
-</div><nav class="course-footer" aria-label="관리자 화면 이동"><a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
-<a class="back-link" th:href="@{/admin}">관리자 메인으로</a></nav>
-</section></main></body></html>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC 목록</title><link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="dashboard-body admin-course-page service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="dashboard-container admin-list-container">
+    <nav class="admin-page-navigation" aria-label="관리자 화면 이동">
+        <a class="logout-link" th:href="@{/admin}">관리자 메인</a>
+    </nav>
+    <header class="section-heading">
+        <div>
+            <p class="section-label">ADMINISTRATOR</p>
+            <h1 class="section-title">HC 목록</h1>
+            <p class="card-description" th:if="${selectedSite != null}" th:text="${selectedSite.name}"></p>
+        </div>
+    </header>
+    <section class="card" aria-label="HC 목록 콘텐츠">
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <form method="get" th:action="@{/admin/courses}" class="login-form course-filter">
+            <div class="form-group course-site-field">
+                <label class="form-label" for="siteId">사이트</label>
+                <select class="form-input" id="siteId" name="siteId" required>
+                    <option value="">사이트를 선택해 주세요</option>
+                    <option th:each="site : ${courseSites}" th:value="${site.siteId}" th:text="${site.name}"
+                            th:selected="${selectedSite != null and selectedSite.siteId == site.siteId}"></option>
+                </select>
+            </div>
+            <button class="primary-button" type="submit">코스 조회</button>
+        </form>
+        <p class="empty-message" th:if="${#lists.isEmpty(courseSites)}">먼저 사이트를 등록해 주세요.</p>
+        <div th:if="${selectedSite != null}">
+            <div class="schedule-list-toolbar course-create-toolbar">
+                <a class="primary-link-button schedule-create-button" th:href="@{/admin/courses/new(siteId=${selectedSite.siteId})}">HC 등록</a>
+            </div>
+            <div class="table-wrapper"><table class="member-table">
+                <thead><tr><th>코스명</th><th>HC 코드</th><th>반경(m)</th></tr></thead>
+                <tbody><tr th:each="course : ${courses}">
+                    <td><a class="member-detail-link" th:href="@{/admin/courses/{id}(id=${course.courseId})}" th:text="${course.name}"></a></td>
+                    <td th:text="${course.code}"></td>
+                    <td th:text="${course.radius != null ? course.radius : '미설정'}"></td>
+                </tr></tbody>
+            </table></div>
+            <p class="empty-message" th:if="${#lists.isEmpty(courses)}">등록된 HC가 없습니다.</p>
+        </div>
+        <nav class="course-footer" aria-label="상위 관리 화면 이동">
+            <a class="back-link" th:if="${selectedSite != null}" th:href="@{/admin/sites/{id}(id=${selectedSite.siteId})}">Site 상세로</a>
+            <a class="back-link" th:href="@{/admin/sites}">Site 목록으로</a>
+        </nav>
+    </section>
+</main>
+</body></html>

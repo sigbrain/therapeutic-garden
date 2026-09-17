@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface HealingSpotRepository
         extends JpaRepository<HealingSpot, Long> {
@@ -79,5 +80,17 @@ public interface HealingSpotRepository
     @EntityGraph(attributePaths = "healingCourse")
     List<HealingSpot> findByHealingCourseSiteSiteId(Long siteId);
 
+    @Override
+    @EntityGraph(attributePaths = "healingCourse.site")
+    Optional<HealingSpot> findById(Long spotId);
+
+    List<HealingSpot> findByHealingCourseCourseId(Long courseId);
+
     boolean existsByHealingCourseCourseId(Long courseId);
+
+    // 등록할 때
+    boolean existsByHealingCourseSiteSiteIdAndCode(Long siteId, String code);
+
+    // 수정할 때
+    boolean existsByHealingCourseSiteSiteIdAndCodeAndSpotIdNot(Long siteId, String code, Long spotId);
 }

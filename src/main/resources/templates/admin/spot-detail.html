@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HS 상세 정보</title><link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="page-container">
+    <section class="card member-detail-card">
+        <div class="card-header">
+            <p class="card-eyebrow">Administrator</p>
+            <h1 class="card-title">HS 상세 정보</h1>
+        </div>
+        <dl class="member-detail-list">
+            <div class="member-detail-item"><dt>HS 코드</dt><dd th:text="${spot.code}"></dd></div>
+            <div class="member-detail-item"><dt>스팟명</dt><dd th:text="${spot.name}"></dd></div>
+            <div class="member-detail-item"><dt>소속 HC</dt><dd><a class="member-detail-link" th:href="@{/admin/courses/{id}(id=${spot.healingCourse.courseId})}" th:text="|${spot.healingCourse.code} ${spot.healingCourse.name}|"></a></dd></div>
+            <div class="member-detail-item"><dt>소속 Site</dt><dd><a class="member-detail-link" th:href="@{/admin/sites/{id}(id=${spot.healingCourse.site.siteId})}" th:text="${spot.healingCourse.site.name}"></a></dd></div>
+        </dl>
+        <p class="card-description">일정에 사용 중인 HS는 삭제할 수 없습니다.</p>
+        <div class="site-detail-actions">
+            <a class="secondary-link-button" th:href="@{/admin/spots/{id}/edit(id=${spot.spotId})}">HS 수정</a>
+            <form class="delete-form" th:action="@{/admin/spots/{id}/delete(id=${spot.spotId})}"
+                  method="post" onsubmit="return confirm('정말 이 HS를 삭제하시겠습니까?');">
+                <button class="delete-button" type="submit">HS 삭제</button>
+            </form>
+            <a class="back-link site-list-link" th:href="@{/admin/spots(courseId=${spot.healingCourse.courseId})}">HS 목록으로</a>
+        </div>
+    </section>
+</main>
+</body></html>

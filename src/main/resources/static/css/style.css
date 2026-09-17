@@ -7207,6 +7207,7 @@ input[type="time"].form-input {
     align-items: flex-end;
     gap: 12px;
 }
+.admin-course-page .admin-list-container .course-create-toolbar { margin-top: 24px; }
 .admin-course-page .course-site-field { flex: 1; min-width: 0; }
 .admin-course-page .course-filter .primary-button,
 .admin-course-page .course-list-toolbar .primary-link-button {
@@ -7567,3 +7568,5 @@ input[type="time"].form-input {
 }
 
 .site-form .site-location-status:empty { display: none; }
+
+.admin-course-page #spot-map-status:empty { display: none; }

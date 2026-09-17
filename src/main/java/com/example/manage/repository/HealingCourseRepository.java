@@ -4,6 +4,8 @@ import com.example.manage.domain.HealingCourse;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface HealingCourseRepository
         extends JpaRepository<HealingCourse, Long> {
@@ -48,6 +50,14 @@ public interface HealingCourseRepository
      * WHERE site_id = 1;
      */
     List<HealingCourse> findBySiteSiteId(Long siteId);
+
+    @Override
+    @EntityGraph(attributePaths = "site")
+    Optional<HealingCourse> findById(Long courseId);
+
+    @Override
+    @EntityGraph(attributePaths = "site")
+    List<HealingCourse> findAll();
 
     boolean existsBySiteSiteId(Long siteId);
     boolean existsBySiteSiteIdAndCode(Long siteId, String code);

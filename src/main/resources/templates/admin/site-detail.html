@@ -22,15 +22,15 @@
             <div class="member-detail-item"><dt>경도</dt><dd th:text="${site.longitude}"></dd></div>
             <div class="member-detail-item"><dt>지도 레벨</dt><dd th:text="${site.mapLevel}"></dd></div>
         </dl>
-        <p class="card-description">등록된 HealingCourse가 존재하는 사이트는 삭제할 수 없습니다.</p>
+        <p class="card-description">등록된 HC가 존재하는 사이트는 삭제할 수 없습니다.</p>
         <div class="site-detail-actions">
-            <a class="primary-link-button site-course-link" th:href="@{/admin/courses(siteId=${site.siteId})}">HealingCourse 관리</a>
-            <a class="secondary-link-button" th:href="@{/admin/sites/{siteId}/edit(siteId=${site.siteId})}">사이트 수정</a>
+            <a class="primary-link-button site-course-link" th:href="@{/admin/courses(siteId=${site.siteId})}">HC 관리</a>
+            <a class="secondary-link-button" th:href="@{/admin/sites/{siteId}/edit(siteId=${site.siteId})}">Site 수정</a>
             <form class="delete-form" th:action="@{/admin/sites/{siteId}/delete(siteId=${site.siteId})}"
                   method="post" onsubmit="return confirm('정말 이 사이트를 삭제하시겠습니까?');">
-                <button class="delete-button" type="submit">사이트 삭제</button>
+                <button class="delete-button" type="submit">Site 삭제</button>
             </form>
-            <a class="back-link site-list-link" th:href="@{/admin/sites}">사이트 목록으로</a>
+            <a class="back-link site-list-link" th:href="@{/admin/sites}">Site 목록으로</a>
         </div>
     </section>
 </main>

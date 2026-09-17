@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HS 관리</title><link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="page-body admin-course-page service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="page-container"><section class="card form-card">
+    <div class="card-header">
+        <p class="card-eyebrow">Administrator</p>
+        <h1 class="card-title" th:text="${spotId == null ? 'HS 등록' : 'HS 수정'}"></h1>
+    </div>
+    <form class="login-form site-form" th:object="${healingSpotForm}" method="post"
+          th:action="${spotId == null} ? @{/admin/spots/new} : @{/admin/spots/{id}/edit(id=${spotId})}">
+        <p class="error-message" role="alert" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
+        <div class="form-group">
+            <label class="form-label" for="courseId">소속 코스</label>
+            <select class="form-input" th:field="*{courseId}" required>
+                <option value="">코스를 선택해 주세요</option>
+                <option th:each="course : ${spotCourses}" th:value="${course.courseId}"
+                        th:text="|${course.site.name} / ${course.code} ${course.name}|"
+                        th:attr="data-latitude=${course.site.latitude},data-longitude=${course.site.longitude},data-map-level=${course.site.mapLevel},data-center-latitude=${course.centerLatitude},data-center-longitude=${course.centerLongitude}"></option>
+            </select>
+            <p class="error-message" th:errors="*{courseId}"></p>
+            <p class="empty-message" th:if="${#lists.isEmpty(spotCourses)}">먼저 HealingCourse를 등록해 주세요.</p>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="code">HS 코드</label>
+            <input class="form-input" th:field="*{code}" type="text" maxlength="255" required>
+            <p class="error-message" th:errors="*{code}"></p>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="name">스팟명</label>
+            <input class="form-input" th:field="*{name}" type="text" maxlength="255" required>
+            <p class="error-message" th:errors="*{name}"></p>
+        </div>
+        <input th:field="*{latitude}" type="hidden">
+        <input th:field="*{longitude}" type="hidden">
+        <p class="error-message" role="alert" th:if="${#fields.hasErrors('latitude') or #fields.hasErrors('longitude')}">지도를 클릭해 스팟의 위치를 지정해 주세요.</p>
+        <section class="course-map-section" aria-labelledby="spot-map-heading">
+            <h2 id="spot-map-heading" class="form-label">지도에서 위치 설정</h2>
+            <p class="card-description course-map-note">지도를 클릭해 스팟의 위치를 지정할 수 있습니다.</p>
+            <p id="spot-map-status" class="error-message" role="alert"></p>
+            <div id="spot-map" class="course-map" aria-label="HealingSpot 위치 설정"></div>
+        </section>
+        <button class="primary-button" type="submit" th:text="${spotId == null ? 'HS 등록' : 'HS 수정'}"></button>
+    </form>
+    <nav class="course-footer" aria-label="HealingSpot 목록 이동">
+        <a class="back-link" th:href="@{/admin/spots(courseId=${healingSpotForm.courseId})}">HS 목록으로</a>
+        <a class="back-link" th:href="@{/admin/courses}">HC 목록으로</a>
+    </nav>
+</section></main>
+<script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}|"></script>
+<script th:src="@{/js/admin-spot-map.js}"></script>
+</body></html>

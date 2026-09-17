@@ -15,5 +15,7 @@ public interface ScheduleSpotRepository extends JpaRepository<ScheduleSpot, Long
     @EntityGraph(attributePaths = {"healingSpot.healingCourse.site"})
     List<ScheduleSpot> findByScheduleScheduleIdInOrderBySequenceAsc(List<Long> scheduleIds);
 
+    boolean existsByHealingSpotSpotId(Long spotId);
+
     void deleteByScheduleScheduleId(Long scheduleId);
 }
