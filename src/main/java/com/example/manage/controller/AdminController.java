@@ -166,26 +166,32 @@ public class AdminController {
         return "admin/site-list";
     }
 
+    private String renderSiteForm(Model model, Long siteId) {
+        model.addAttribute("kakaoMapsJavaScriptKey", kakaoMapsJavaScriptKey);
+        if (siteId != null) model.addAttribute("siteId", siteId);
+        return siteId == null ? "admin/site-form" : "admin/site-edit";
+    }
+
     @GetMapping("/sites/new")
     public String siteForm(Model model) {
         model.addAttribute("siteForm", new SiteForm());
-        return "admin/site-form";
+        return renderSiteForm(model, null);
     }
 
     @PostMapping("/sites/new")
-    public String createSite(@Valid @ModelAttribute SiteForm siteForm, BindingResult bindingResult) {
+    public String createSite(@Valid @ModelAttribute SiteForm siteForm, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
-            return "admin/site-form";
+            return renderSiteForm(model, null);
         }
         try {
             siteService.createSite(siteForm.getName(), siteForm.getAddress(),
                     siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
         } catch (IllegalArgumentException exception) {
             bindingResult.rejectValue("name", "duplicate", exception.getMessage());
-            return "admin/site-form";
+            return renderSiteForm(model, null);
         } catch (DataIntegrityViolationException exception) {
             bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
-            return "admin/site-form";
+            return renderSiteForm(model, null);
         }
         return "redirect:/admin/sites";
     }
@@ -216,7 +222,7 @@ public class AdminController {
         form.setMapLevel(site.getMapLevel());
         model.addAttribute("siteId", siteId);
         model.addAttribute("siteForm", form);
-        return "admin/site-edit";
+        return renderSiteForm(model, siteId);
     }
 
     @PostMapping("/sites/{siteId}/edit")
@@ -228,17 +234,17 @@ public class AdminController {
         }
         model.addAttribute("siteId", siteId);
         if (bindingResult.hasErrors()) {
-            return "admin/site-edit";
+            return renderSiteForm(model, siteId);
         }
         try {
             siteService.updateSite(siteId, siteForm.getName(), siteForm.getAddress(),
                     siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
         } catch (IllegalArgumentException exception) {
             bindingResult.rejectValue("name", "invalid", exception.getMessage());
-            return "admin/site-edit";
+            return renderSiteForm(model, siteId);
         } catch (DataIntegrityViolationException exception) {
             bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
-            return "admin/site-edit";
+            return renderSiteForm(model, siteId);
         }
         return "redirect:/admin/sites/" + siteId;
     }

@@ -6,7 +6,7 @@
     const radius = document.getElementById('radius');
     const status = document.getElementById('course-map-status');
     if (!window.kakao || !window.kakao.maps) {
-        status.textContent = '지도를 불러오지 못했습니다. 좌표와 반경은 직접 입력할 수 있습니다.';
+        status.textContent = '지도를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
         return;
     }
     let map, marker, circle;
@@ -31,7 +31,7 @@
     function selectSite(initial) {
         const option = site.options[site.selectedIndex];
         if (!option || !option.value) {
-            status.textContent = '사이트를 선택하면 지도를 표시합니다.';
+            status.textContent = '';
             document.getElementById('course-map').style.visibility = 'hidden';
             return;
         }
@@ -50,12 +50,10 @@
             map.setCenter(center);
             map.setLevel(level);
         }
-        status.textContent = '지도를 클릭하면 HC 중심 좌표가 입력됩니다.';
+        status.textContent = '';
         preview(initial);
     }
     site.addEventListener('change', function () { selectSite(false); });
-    [latitude, longitude, radius].forEach(function (input) {
-        input.addEventListener('input', function () { preview(input !== radius); });
-    });
+    radius.addEventListener('input', function () { preview(false); });
     selectSite(true);
 })();

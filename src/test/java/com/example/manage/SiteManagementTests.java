@@ -52,6 +52,65 @@ class SiteManagementTests {
                 .param("latitude", "38.5").param("longitude", "128.5").param("mapLevel", "5");
     }
 
+    private org.springframework.test.web.servlet.ResultActions expectLocationForm(
+            MockHttpServletRequestBuilder request) throws Exception {
+        return mvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("kakaoMapsJavaScriptKey"))
+                .andExpect(inputAttributes("address", "readonly"))
+                .andExpect(inputAttributes("latitude", "type=\"hidden\""))
+                .andExpect(inputAttributes("longitude", "type=\"hidden\""))
+                .andExpect(content().string(containsString("id=\"site-location-map\"")))
+                .andExpect(content().string(containsString("id=\"site-location-search\" type=\"button\"")))
+                .andExpect(content().string(containsString("id=\"site-postcode-modal\"")))
+                .andExpect(content().string(containsString("aria-labelledby=\"site-postcode-title\"")))
+                .andExpect(content().string(containsString("id=\"site-postcode-embed\"")))
+                .andExpect(content().string(containsString("id=\"site-postcode-close\" type=\"button\"")))
+                .andExpect(content().string(containsString("https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js")))
+                .andExpect(content().string(containsString("libraries=services")))
+                .andExpect(content().string(containsString("/js/admin-site-map.js")));
+    }
+
+    private org.springframework.test.web.servlet.ResultMatcher inputAttributes(String name, String... attributes) {
+        return result -> {
+            String input = java.util.regex.Pattern.compile("<input\\b[^>]*>")
+                    .matcher(result.getResponse().getContentAsString()).results()
+                    .map(java.util.regex.MatchResult::group)
+                    .filter(tag -> tag.contains("name=\"" + name + "\""))
+                    .findFirst().orElseThrow(() -> new AssertionError("Missing input: " + name));
+            assertThat(input).contains(attributes).doesNotContain("disabled");
+        };
+    }
+
+    @Test
+    void locationFormsRetainConfigurationAndExistingValues() throws Exception {
+        expectLocationForm(get("/admin/sites/new").sessionAttr("loginAdminId", 1L))
+                .andExpect(view().name("admin/site-form"))
+                .andExpect(inputAttributes("mapLevel", "value=\"3\""));
+        service.updateSite(site.getSiteId(), site.getName(), site.getAddress(), 37.0, 127.0, 7);
+        expectLocationForm(get("/admin/sites/" + site.getSiteId() + "/edit").sessionAttr("loginAdminId", 1L))
+                .andExpect(view().name("admin/site-edit"))
+                .andExpect(content().string(containsString("value=\"37.0\"")))
+                .andExpect(content().string(containsString("value=\"127.0\"")))
+                .andExpect(content().string(containsString("value=\"서울 주소\"")))
+                .andExpect(inputAttributes("mapLevel", "value=\"7\""));
+    }
+
+    @Test
+    void locationConfigurationSurvivesValidationAndDuplicateErrors() throws Exception {
+        Site other = service.createSite("중복 대상", "주소", 0.0, 0.0, 1);
+        for (String path : new String[]{"/admin/sites/new", "/admin/sites/" + site.getSiteId() + "/edit"}) {
+            expectLocationForm(post(path).sessionAttr("loginAdminId", 1L))
+                    .andExpect(model().attributeHasFieldErrors("siteForm", "latitude", "longitude"));
+            expectLocationForm(form(path, other.getName()))
+                    .andExpect(model().attributeHasFieldErrors("siteForm", "name"))
+                    .andExpect(content().string(containsString("value=\"38.5\"")))
+                    .andExpect(content().string(containsString("value=\"128.5\"")))
+                    .andExpect(content().string(containsString("value=\"수정 주소\"")))
+                    .andExpect(inputAttributes("mapLevel", "value=\"5\""));
+        }
+    }
+
     @Test
     void createsAndReadsSite() {
         reload();
@@ -145,9 +204,10 @@ class SiteManagementTests {
     @Test
     void validatesMissingAndOutOfRangeInputsOnCreateAndEdit() throws Exception {
         for (String path : new String[]{"/admin/sites/new", "/admin/sites/" + site.getSiteId() + "/edit"}) {
-            mvc.perform(post(path).sessionAttr("loginAdminId", 1L))
+            mvc.perform(post(path).sessionAttr("loginAdminId", 1L).param("mapLevel", ""))
                     .andExpect(status().isOk())
-                    .andExpect(model().attributeHasFieldErrors("siteForm", "name", "address", "latitude", "longitude", "mapLevel"));
+                    .andExpect(model().attributeHasFieldErrors("siteForm", "name", "address", "latitude", "longitude", "mapLevel"))
+                    .andExpect(inputAttributes("mapLevel", "value=\"\""));
             mvc.perform(post(path).sessionAttr("loginAdminId", 1L)
                             .param("name", " ").param("address", " ")
                             .param("latitude", "91").param("longitude", "-181").param("mapLevel", "15"))
@@ -157,7 +217,7 @@ class SiteManagementTests {
                             .param("latitude", "not-a-number").param("longitude", "181").param("mapLevel", "1.5"))
                     .andExpect(status().isOk())
                     .andExpect(model().attributeHasFieldErrors("siteForm", "latitude", "longitude", "mapLevel"))
-                    .andExpect(content().string(containsString("위도는 숫자로 입력해 주세요.")));
+                    .andExpect(content().string(containsString("주소를 검색하거나 지도를 클릭해 위치를 다시 지정해 주세요.")));
         }
         assertThat(sites.count()).isEqualTo(1);
         assertThat(service.findSite(site.getSiteId()).getName()).isEqualTo("기준 사이트");
@@ -167,10 +227,15 @@ class SiteManagementTests {
     void createsUpdatesAndDeletesThroughAdmin() throws Exception {
         mvc.perform(form("/admin/sites/new", "새 사이트")).andExpect(redirectedUrl("/admin/sites"));
         Long id = sites.findAll().stream().filter(s -> s.getName().equals("새 사이트")).findFirst().orElseThrow().getSiteId();
+        reload();
+        assertThat(service.findSite(id).getLatitude()).isEqualTo(38.5);
+        assertThat(service.findSite(id).getLongitude()).isEqualTo(128.5);
         mvc.perform(form("/admin/sites/" + id + "/edit", "수정 사이트"))
                 .andExpect(redirectedUrl("/admin/sites/" + id));
         reload();
         assertThat(service.findSite(id).getName()).isEqualTo("수정 사이트");
+        assertThat(service.findSite(id).getLatitude()).isEqualTo(38.5);
+        assertThat(service.findSite(id).getLongitude()).isEqualTo(128.5);
         mvc.perform(post("/admin/sites/" + id + "/delete").sessionAttr("loginAdminId", 1L))
                 .andExpect(redirectedUrl("/admin/sites"));
         reload();

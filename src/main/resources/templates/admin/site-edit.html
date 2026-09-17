@@ -23,5 +23,8 @@
         <a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
     </section>
 </main>
+<script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}&libraries=services|"></script>
+<script defer src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script th:src="@{/js/admin-site-map.js}"></script>
 </body>
 </html>

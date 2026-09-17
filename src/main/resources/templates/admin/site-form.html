@@ -24,22 +24,33 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="address">주소</label>
-                <input class="form-input" id="address" th:field="*{address}" type="text" maxlength="255" required>
+                <div class="site-location-search">
+                    <input class="form-input" id="address" th:field="*{address}" type="text" maxlength="255" readonly required>
+                    <button class="site-location-search-button" id="site-location-search" type="button" aria-haspopup="dialog" aria-controls="site-postcode-modal">주소 검색</button>
+                </div>
                 <p class="error-message" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></p>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="latitude">위도</label>
-                <input class="form-input" id="latitude" th:field="*{latitude}" type="number" step="any" min="-90" max="90" required>
-                <p class="error-message" th:if="${#fields.hasErrors('latitude')}" th:errors="*{latitude}"></p>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="longitude">경도</label>
-                <input class="form-input" id="longitude" th:field="*{longitude}" type="number" step="any" min="-180" max="180" required>
-                <p class="error-message" th:if="${#fields.hasErrors('longitude')}" th:errors="*{longitude}"></p>
-            </div>
+            <dialog class="site-postcode-modal" id="site-postcode-modal" aria-modal="true" aria-labelledby="site-postcode-title">
+                <div class="site-postcode-header">
+                    <h2 id="site-postcode-title">주소 검색</h2>
+                    <button class="site-postcode-close" id="site-postcode-close" type="button" aria-label="주소 검색 닫기" autofocus>×</button>
+                </div>
+                <p class="site-postcode-status" id="site-postcode-status" role="status" aria-atomic="true"></p>
+                <div class="site-postcode-embed" id="site-postcode-embed"></div>
+            </dialog>
+            <section class="site-location-section" aria-labelledby="site-location-heading">
+                <h2 class="form-label" id="site-location-heading">지도에서 위치 확인</h2>
+                <p class="site-location-note">지도 클릭으로 세부 위치를 조정할 수 있습니다.</p>
+                <p class="site-location-status" id="site-location-status" role="status" aria-atomic="true"></p>
+                <div class="site-location-map" id="site-location-map" aria-label="Site 위치 지도"></div>
+            </section>
+            <input id="latitude" th:field="*{latitude}" type="hidden">
+            <input id="longitude" th:field="*{longitude}" type="hidden">
+            <p class="error-message" th:if="${#fields.hasErrors('latitude') or #fields.hasErrors('longitude')}">주소를 검색하거나 지도를 클릭해 위치를 다시 지정해 주세요.</p>
             <div class="form-group">
                 <label class="form-label" for="mapLevel">지도 레벨</label>
-                <input class="form-input" id="mapLevel" th:field="*{mapLevel}" type="number" min="1" max="14" step="1" required>
+                <input class="form-input" id="mapLevel" aria-describedby="site-map-level-help" th:field="*{mapLevel}" type="number" min="1" max="14" step="1" required>
+                <p class="site-location-note" id="site-map-level-help">숫자가 작을수록 지도가 더 확대되어 표시됩니다.</p>
                 <p class="error-message" th:if="${#fields.hasErrors('mapLevel')}" th:errors="*{mapLevel}"></p>
             </div>
             </div>
@@ -48,5 +59,8 @@
         <a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
     </section>
 </main>
+<script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}&libraries=services|"></script>
+<script defer src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script th:src="@{/js/admin-site-map.js}"></script>
 </body>
 </html>

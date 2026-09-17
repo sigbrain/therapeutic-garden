@@ -29,5 +29,5 @@ public class SiteForm {
     @NotNull(message = "지도 레벨을 입력해 주세요.")
     @Min(value = 1, message = "지도 레벨은 1 이상이어야 합니다.")
     @Max(value = 14, message = "지도 레벨은 14 이하여야 합니다.")
-    private Integer mapLevel;
+    private Integer mapLevel = 3;
 }

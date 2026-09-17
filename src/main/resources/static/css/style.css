@@ -7514,3 +7514,56 @@ input[type="time"].form-input {
     .landing-reveal-enabled .landing-page [data-reveal] { opacity: 1; transform: none; transition: none; }
     .landing-page *, .landing-page *::before, .landing-page *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Site 등록/수정 위치 입력 */
+.site-form .site-location-search { display: flex; align-items: stretch; gap: 10px; }
+.site-form .site-location-search .form-input { flex: 1; min-width: 0; }
+.site-form .site-location-search-button {
+    flex-shrink: 0; padding: 10px 16px; border: 1px solid #cbd5e1;
+    border-radius: 8px; background: #f8fafc; color: #334155;
+    font: inherit; font-size: 14px; cursor: pointer;
+}
+.site-form .site-location-search-button:hover { background: #e2e8f0; }
+.site-form .site-location-search-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.site-form .site-location-section { min-width: 0; margin: 20px 0; }
+.site-form .site-location-section h2 { margin: 0 0 8px; }
+.site-form .site-location-note,
+.site-form .site-location-status { margin: 0 0 10px; color: #64748b; font-size: 13px; line-height: 1.7; }
+.site-form .site-location-map {
+    width: 100%; height: 340px; border: 1px solid #e5e7eb;
+    border-radius: 12px; overflow: hidden;
+}
+@media (max-width: 520px) {
+    .site-form .site-location-search { flex-direction: column; }
+    .site-form .site-location-map { height: 280px; }
+}
+
+/* Site 주소 검색: 공식 Postcode iframe 바깥의 modal shell만 스타일링한다. */
+.site-postcode-modal {
+    width: min(560px, calc(100vw - 32px)); max-width: none;
+    max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #d8ded2;
+    border-radius: 16px; background: #f6f5ef; color: #294535;
+    box-shadow: 0 24px 80px #172d2859; overflow: auto;
+}
+.site-postcode-modal::backdrop { background: #172d2873; }
+.site-postcode-modal .site-postcode-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 12px 20px; position: sticky; top: 0;
+    background: #f6f5ef; z-index: 1; border-bottom: 1px solid #d8ded2;
+}
+.site-postcode-modal .site-postcode-header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+.site-postcode-modal .site-postcode-close {
+    width: 44px; height: 44px; padding: 0; border: 1px solid #d8ded2;
+    border-radius: 50%; background: #fff; color: #294535; font-size: 28px; cursor: pointer;
+}
+.site-postcode-modal .site-postcode-close:hover { background: #e8eddf; }
+.site-postcode-modal .site-postcode-close:focus-visible { outline: 2px solid #426649; outline-offset: 2px; }
+.site-postcode-modal .site-postcode-status { margin: 0; padding: 12px 20px; font-size: 13px; line-height: 1.6; }
+.site-postcode-modal .site-postcode-status:empty { display: none; }
+.site-postcode-modal .site-postcode-embed { height: clamp(400px, 65dvh, 600px); background: #fff; }
+@media (max-width: 520px) {
+    .site-postcode-modal { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); border-radius: 12px; }
+    .site-postcode-modal .site-postcode-header { padding: 8px 12px; }
+}
+
+.site-form .site-location-status:empty { display: none; }

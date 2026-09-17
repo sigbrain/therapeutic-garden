@@ -52,6 +52,17 @@ class HealingCourseManagementTests {
                 .param("centerLatitude", "37.5").param("centerLongitude", "127.5").param("radius", "25.5");
     }
 
+    private org.springframework.test.web.servlet.ResultMatcher inputAttributes(String name, String... attributes) {
+        return result -> {
+            String input = java.util.regex.Pattern.compile("<input\\b[^>]*>")
+                    .matcher(result.getResponse().getContentAsString()).results()
+                    .map(java.util.regex.MatchResult::group)
+                    .filter(tag -> tag.contains("name=\"" + name + "\""))
+                    .findFirst().orElseThrow(() -> new AssertionError("Missing input: " + name));
+            assertThat(input).contains(attributes).doesNotContain("disabled");
+        };
+    }
+
     @Test
     void duplicateCodesAreScopedToSite() {
         assertThatThrownBy(() -> create(site, "HC-A")).isInstanceOf(IllegalArgumentException.class);
@@ -135,6 +146,19 @@ class HealingCourseManagementTests {
     }
 
     @Test
+    void courseFormsKeepHiddenCentersAndMapControls() throws Exception {
+        for (String path : new String[]{"/admin/courses/new", "/admin/courses/" + course.getCourseId() + "/edit"}) {
+            mvc.perform(get(path).sessionAttr("loginAdminId", 1L))
+                    .andExpect(status().isOk())
+                    .andExpect(inputAttributes("centerLatitude", "type=\"hidden\""))
+                    .andExpect(inputAttributes("centerLongitude", "type=\"hidden\""))
+                    .andExpect(inputAttributes("radius", "type=\"number\""))
+                    .andExpect(content().string(containsString("/js/admin-course-map.js")))
+                    .andExpect(content().string(containsString("지도를 클릭해 코스의 중심 위치를 지정하고, 반경을 입력해 영역을 설정할 수 있습니다.")));
+        }
+    }
+
+    @Test
     void validatesNumbersAndDuplicatesOnBothForms() throws Exception {
         create(site, "HC-B");
         for (String path : new String[]{"/admin/courses/new", "/admin/courses/" + course.getCourseId() + "/edit"}) {
@@ -147,7 +171,7 @@ class HealingCourseManagementTests {
                             .param("centerLongitude", "181").param("radius", "-1"))
                     .andExpect(status().isOk())
                     .andExpect(model().attributeHasFieldErrors("healingCourseForm", "centerLatitude", "centerLongitude", "radius"))
-                    .andExpect(content().string(containsString("위도는 숫자로 입력해 주세요.")));
+                    .andExpect(content().string(containsString("지도를 클릭해 코스의 중심 위치를 다시 지정해 주세요.")));
         }
     }
 
