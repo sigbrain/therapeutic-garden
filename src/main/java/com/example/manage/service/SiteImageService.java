@@ -17,6 +17,7 @@ import java.util.*;
 public class SiteImageService {
     private final SiteRepository parents;
     private final SiteImageRepository images;
+    private final SiteImageSpotPositionRepository positions;
     private final ImageStorage storage;
     private final ImageStorageTransactions storageTransactions;
     private final ImageFilePolicy files;
@@ -24,12 +25,21 @@ public class SiteImageService {
     @Transactional(readOnly = true)
     public List<ImageResponse> list(Long parentId) {
         requireParent(parentId);
-        return ordered(parentId).stream().map(image -> {
-            String url = storage.createReadUrl(image.getObjectKey(),
-                    "/admin/sites/" + parentId + "/images/" + image.getImageId() + "/content");
-            return new ImageResponse(image.getImageId(), image.getOriginalFileName(), image.getContentType(),
-                    image.getDisplayOrder(), image.isRepresentative(), url);
-        }).toList();
+        return ordered(parentId).stream().map(image -> response(parentId, image)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String representativeReadUrl(Long parentId) {
+        requireParent(parentId);
+        return ordered(parentId).stream().filter(SiteImage::isRepresentative).findFirst()
+                .map(image -> response(parentId, image).readUrl()).orElse(null);
+    }
+
+    private ImageResponse response(Long parentId, SiteImage image) {
+        String url = storage.createReadUrl(image.getObjectKey(),
+                "/admin/sites/" + parentId + "/images/" + image.getImageId() + "/content");
+        return new ImageResponse(image.getImageId(), image.getOriginalFileName(), image.getContentType(),
+                image.getDisplayOrder(), image.isRepresentative(), url, image.isSpatial());
     }
 
     public void upload(Long parentId, List<MultipartFile> uploads) {
@@ -53,6 +63,20 @@ public class SiteImageService {
         lockParent(parentId);
         List<SiteImage> current = ordered(parentId);
         ImageEditPlan plan = ImageEditPlan.validate(form, current, uploads.size());
+        String spatial = form.getImageSpatial();
+        if (spatial == null) spatial = current.stream().filter(SiteImage::isSpatial)
+                .map(image -> "e:" + image.getImageId()).findFirst().orElse("");
+        if (plan.deleted().contains(spatial)) spatial = "";
+        if (!spatial.isEmpty() && !plan.order().contains(spatial))
+            throw new IllegalArgumentException("모니터링 이미지 정보가 올바르지 않습니다. 화면을 다시 열어 주세요.");
+        String previous = current.stream().filter(SiteImage::isSpatial)
+                .map(image -> "e:" + image.getImageId()).findFirst().orElse("");
+        if (!previous.equals(spatial)) lockParent(parentId).advanceSpatialRevision();
+        // Release the unique role before assigning another image, regardless of flush ordering.
+        if (!previous.isEmpty() && !previous.equals(spatial)) {
+            current.forEach(image -> image.changeSpatial(false));
+            images.flush();
+        }
         Map<String, SiteImage> resolved = new HashMap<>();
         current.forEach(image -> resolved.put("e:" + image.getImageId(), image));
         // Upload first: invalid files or unavailable storage cannot touch existing objects.
@@ -66,6 +90,7 @@ public class SiteImageService {
         for (String key : plan.deleted()) {
             SiteImage image = resolved.get(key);
             storageTransactions.delete(image.getObjectKey(), image.getContentType());
+            positions.deleteBySiteImageImageId(image.getImageId());
             images.delete(image);
         }
         for (int i = 0; i < plan.order().size(); i++) {
@@ -73,6 +98,7 @@ public class SiteImageService {
             SiteImage image = resolved.get(key);
             image.changeDisplayOrder(i + 1);
             image.changeRepresentative(key.equals(plan.representative()));
+            image.changeSpatial(key.equals(spatial));
         }
         images.flush();
     }
@@ -102,6 +128,8 @@ public class SiteImageService {
         List<SiteImage> current = ordered(parentId);
         SiteImage selected = owned(current, imageId);
         storageTransactions.delete(selected.getObjectKey(), selected.getContentType());
+        positions.deleteBySiteImageImageId(selected.getImageId());
+        if (selected.isSpatial()) lockParent(parentId).advanceSpatialRevision();
         images.delete(selected);
         current.remove(selected);
         if (selected.isRepresentative() && !current.isEmpty()) {
@@ -118,6 +146,7 @@ public class SiteImageService {
         List<SiteImage> current = ordered(parentId);
         for (SiteImage image : current) {
             storageTransactions.delete(image.getObjectKey(), image.getContentType());
+            positions.deleteBySiteImageImageId(image.getImageId());
             images.delete(image);
         }
         images.flush();

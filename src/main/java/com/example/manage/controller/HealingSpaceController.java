@@ -19,6 +19,7 @@ public class HealingSpaceController {
 
     private final HealingCourseService healingCourseService;
     private final HealingSpotService healingSpotService;
+    private final com.example.manage.service.HealingSpotImageService spotImages;
 
 
     /*
@@ -51,13 +52,14 @@ public class HealingSpaceController {
      */
     @GetMapping("/{siteId}/spots")
     public List<HealingSpotResponse> getHealingSpots(
-            @PathVariable Long siteId
+            @PathVariable Long siteId, jakarta.servlet.http.HttpSession session
     ) {
 
         return healingSpotService
                 .findBySiteId(siteId)
                 .stream()
-                .map(HealingSpotResponse::new)
+                .map(spot -> new HealingSpotResponse(spot, session.getAttribute("loginAdminId") != null
+                        ? spotImages.representativeReadUrl(spot.getSpotId()) : null))
                 .toList();
     }
 }

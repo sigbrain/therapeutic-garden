@@ -16,7 +16,14 @@ public class HealingSpotResponse {
     private final String courseCode;
     private final String courseName;
 
+    private final String representativeImageUrl;
+
     public HealingSpotResponse(HealingSpot healingSpot) {
+        this(healingSpot, null);
+    }
+
+    public HealingSpotResponse(HealingSpot healingSpot, String representativeImageUrl) {
+        this.representativeImageUrl = representativeImageUrl;
 
         this.spotId = healingSpot.getSpotId();
         this.code = healingSpot.getCode();

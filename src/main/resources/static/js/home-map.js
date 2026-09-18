@@ -276,10 +276,8 @@ function showSpotInformation(spot) {
 
     selectedSpot = spot;
     showSitePanelButton.classList.remove('hidden');
-    // TEMP: 방배 HS 이미지 규칙. 향후 DB imagePath로 교체한다.
-    var imagePath = getSiteImage(selectedSite) === '/images/site1/site1.png' && spot.code
-        ? '/images/site1/healing-spots/' + encodeURIComponent(spot.code.toLowerCase()) + '.jpeg' : null;
-    setImage(spotImage, document.getElementById('spotImageEmpty'), imagePath, spot.code + ' ' + spot.name);
+    setImage(spotImage, document.getElementById('spotImageEmpty'),
+        spot.representativeImageUrl, spot.code + ' ' + spot.name);
     updateAnalysis();
 
     /*
@@ -406,22 +404,17 @@ async function loadHealingSpace(siteId) {
     }
 }
 
-// TODO: Site imagePath가 DB에 추가되면 이 임시 이름 매핑 제거.
-// 알 수 없는 Site를 PK/목록 순서로 추정하지 않는다.
 function getSiteImage(site) {
-    if (!site) return null;
-    var images = {
-        '디에이치 방배': '/images/site1/site1.png',
-        '세브란스 병원': '/images/site2/site2.jpeg'
-    };
-    return images[site.dataset.name] || null;
+    return site ? site.dataset.representativeImageUrl || null : null;
 }
 function setImage(image, empty, path, alt) {
     image.hidden = true;
     empty.hidden = false;
+    empty.textContent = alt + ' · 등록된 이미지가 없습니다.';
     image.onload = function() { image.hidden = false; empty.hidden = true; };
     image.onerror = function() { image.hidden = true; empty.hidden = false; };
     image.alt = alt;
+    image.referrerPolicy = 'no-referrer';
     if (path) image.src = path;
     else image.removeAttribute('src');
 }

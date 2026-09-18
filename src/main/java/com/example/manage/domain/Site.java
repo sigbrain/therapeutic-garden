@@ -28,6 +28,11 @@ public class Site {
     @Column(nullable = false)
     private Integer mapLevel;
 
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long spatialRevision;
+
+    public void advanceSpatialRevision() { spatialRevision++; }
+
     public Site(String name, String address, Double latitude, Double longitude, Integer mapLevel) {
         this.name = name;
         this.address = address;

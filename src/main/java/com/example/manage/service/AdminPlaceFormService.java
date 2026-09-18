@@ -46,6 +46,7 @@ public class AdminPlaceFormService {
     }
 
     public void updateSpot(Long id, HealingSpotForm form, List<MultipartFile> files) {
+        siteRepository.lockForMembershipChange();
         spotRepository.findLockedById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 HealingSpot입니다."));
         spots.updateHealingSpot(id, form.getCourseId(), form.getCode(), form.getName(),
                 form.getLatitude(), form.getLongitude());

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공간 모니터링 설정</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/spatial-layout.css}">
+</head>
+<body class="page-body service-page">
+<header th:replace="~{fragments/header :: header}"></header>
+<main class="page-container spatial-page">
+    <section class="card">
+        <p class="card-eyebrow">Administrator</p>
+        <h1 class="card-title">공간 모니터링 설정</h1>
+        <h2 class="spatial-site-name" th:if="${layout != null}" th:text="${layout.name}"></h2>
+        <p class="card-description">모니터링 이미지 위에 각 HS의 위치를 지정합니다. Site 대표 이미지와는 별도로 관리됩니다.</p>
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <nav class="spatial-navigation" aria-label="Site 관리">
+            <a class="secondary-link-button" th:href="@{/admin/sites/{id}(id=${siteId})}">Site 상세</a>
+            <a class="secondary-link-button" th:if="${layout == null or layout.image != null}"
+               th:href="@{/admin/sites/{id}/edit(id=${siteId})} + '#place-images'">이미지 변경</a>
+        </nav>
+        <th:block th:if="${layout != null}">
+            <div class="spatial-empty" th:if="${layout.image == null}">
+                <h2>모니터링 이미지</h2>
+                <p>모니터링 이미지가 아직 지정되지 않았습니다.</p>
+                <p class="card-description">Site 수정 화면에서 공간 모니터링에 사용할 이미지를 선택한 뒤 ‘사이트 수정’을 눌러 저장해 주세요.</p>
+                <a class="secondary-link-button" th:href="@{/admin/sites/{id}/edit(id=${siteId})} + '#place-images'">모니터링 이미지 지정</a>
+            </div>
+            <form th:if="${layout.image != null}" id="spatial-form" method="post"
+                  th:action="@{/admin/sites/{id}/spatial-layout(id=${siteId})}">
+                <input type="hidden" name="siteImageId" th:value="${layout.image.imageId}">
+                <input type="hidden" name="revision" th:value="${layout.revision}">
+                <h2 class="spatial-section-title">HS 위치 설정</h2>
+                <p class="card-description">HS를 선택하고 이미지를 클릭하세요. 편집을 마친 뒤 ‘HS 위치 저장’을 눌러 주세요.</p>
+                <noscript>HS 위치 편집에는 JavaScript가 필요합니다.</noscript>
+                <p th:if="${#lists.isEmpty(layout.spots)}">등록된 HealingSpot이 없습니다. HC/HS 관리에서 먼저 등록해 주세요.</p>
+                <div class="spatial-editor">
+                    <aside class="spatial-spots" aria-label="HealingSpot 선택">
+                        <h3 class="spatial-column-title">HS 목록</h3>
+                        <div th:each="spot, state : ${layout.spots}" data-spot
+                             th:attr="data-spot-id=${spot.spotId},data-code=${spot.code},data-name=${spot.name},data-url=${spot.readUrl}">
+                            <p class="spatial-course" th:if="${state.first or layout.spots[state.index - 1].course != spot.course}" th:text="${spot.course}"></p>
+                            <button type="button" data-select aria-pressed="false" th:text="|${spot.code} · ${spot.name}|"></button>
+                            <span data-position-status></span>
+                            <button type="button" data-clear>위치 해제</button>
+                            <input type="hidden" th:name="|positions[${state.index}].spotId|" th:value="${spot.spotId}">
+                            <input type="hidden" data-x th:name="|positions[${state.index}].xPercent|" th:value="${spot.xPercent}">
+                            <input type="hidden" data-y th:name="|positions[${state.index}].yPercent|" th:value="${spot.yPercent}">
+                        </div>
+                    </aside>
+                    <div class="spatial-canvas-area">
+                        <h3 class="spatial-column-title">모니터링 이미지</h3>
+                        <p id="spatial-status" role="status" aria-live="polite">HS를 선택해 주세요.</p>
+                        <div class="spatial-canvas">
+                            <img id="spatial-image" th:src="${layout.image.readUrl}" alt="Site 모니터링 이미지" referrerpolicy="no-referrer" draggable="false">
+                            <div id="spatial-markers" aria-label="위치가 지정된 HealingSpot"></div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="primary-button" id="spatial-save" disabled>HS 위치 저장</button>
+            </form>
+        </th:block>
+    </section>
+</main>
+<script th:src="@{/js/admin-spatial-layout.js}"></script>
+</body>
+</html>

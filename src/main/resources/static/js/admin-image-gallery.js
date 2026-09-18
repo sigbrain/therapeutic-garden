@@ -4,6 +4,7 @@
         const main = gallery.querySelector('[data-gallery-main]');
         if (!main) return;
         const badge = gallery.querySelector('[data-gallery-badge]');
+        const spatial = gallery.querySelector('[data-gallery-spatial]');
         const caption = gallery.querySelector('[data-gallery-caption]');
         const thumbnails = gallery.querySelectorAll('.image-thumbnail');
         thumbnails.forEach(button => {
@@ -11,6 +12,7 @@
                 main.src = button.dataset.imageUrl;
                 main.alt = button.dataset.imageName;
                 caption.textContent = button.dataset.imageName;
+                if (spatial) spatial.hidden = button.dataset.spatial !== 'true';
                 badge.hidden = button.dataset.representative !== 'true';
                 thumbnails.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
             });

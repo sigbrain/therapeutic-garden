@@ -24,12 +24,21 @@ public class HealingSpotImageService {
     @Transactional(readOnly = true)
     public List<ImageResponse> list(Long parentId) {
         requireParent(parentId);
-        return ordered(parentId).stream().map(image -> {
-            String url = storage.createReadUrl(image.getObjectKey(),
-                    "/admin/spots/" + parentId + "/images/" + image.getImageId() + "/content");
-            return new ImageResponse(image.getImageId(), image.getOriginalFileName(), image.getContentType(),
-                    image.getDisplayOrder(), image.isRepresentative(), url);
-        }).toList();
+        return ordered(parentId).stream().map(image -> response(parentId, image)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String representativeReadUrl(Long parentId) {
+        requireParent(parentId);
+        return ordered(parentId).stream().filter(HealingSpotImage::isRepresentative).findFirst()
+                .map(image -> response(parentId, image).readUrl()).orElse(null);
+    }
+
+    private ImageResponse response(Long parentId, HealingSpotImage image) {
+        String url = storage.createReadUrl(image.getObjectKey(),
+                "/admin/spots/" + parentId + "/images/" + image.getImageId() + "/content");
+        return new ImageResponse(image.getImageId(), image.getOriginalFileName(), image.getContentType(),
+                image.getDisplayOrder(), image.isRepresentative(), url);
     }
 
     public void upload(Long parentId, List<MultipartFile> uploads) {
