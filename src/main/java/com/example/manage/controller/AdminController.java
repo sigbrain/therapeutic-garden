@@ -10,6 +10,14 @@ import com.example.manage.service.HealingCourseService;
 import org.springframework.beans.factory.annotation.Value;
 import com.example.manage.dto.SiteForm;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.TransactionException;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.manage.dto.ImageResponse;
+import com.example.manage.storage.ImageStorageException;
+import com.example.manage.service.AdminPlaceFormService;
+import com.example.manage.service.SiteImageService;
+import com.example.manage.service.HealingSpotImageService;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.manage.domain.Admin;
 import com.example.manage.domain.Member;
@@ -46,6 +54,9 @@ public class AdminController {
     private final ScheduleService scheduleService;
     private final WeatherService weatherService;
     private final SiteService siteService;
+    private final AdminPlaceFormService placeForms;
+    private final SiteImageService siteImages;
+    private final HealingSpotImageService spotImages;
 
     private final HealingCourseService healingCourseService;
     private final HealingSpotService healingSpotService;
@@ -169,6 +180,7 @@ public class AdminController {
         model.addAttribute("spotId", spotId);
         model.addAttribute("spotCourses", healingCourseService.findAllHealingCourses());
         model.addAttribute("kakaoMapsJavaScriptKey", kakaoMapsJavaScriptKey);
+        imageModel(model, false, spotId, false);
         return "admin/spot-form";
     }
 
@@ -215,6 +227,7 @@ public class AdminController {
     public String spotDetail(@PathVariable Long spotId, Model model, RedirectAttributes redirectAttributes) {
         try {
             model.addAttribute("spot", healingSpotService.findHealingSpot(spotId));
+            imageModel(model, false, spotId, true);
             return "admin/spot-detail";
         } catch (IllegalArgumentException exception) {
             redirectAttributes.addFlashAttribute("errorMessage", exception.getMessage());
@@ -241,33 +254,38 @@ public class AdminController {
     }
 
     @PostMapping("/spots/new")
-    public String createSpot(@Valid @ModelAttribute HealingSpotForm form, BindingResult result, Model model) {
-        return saveSpot(null, form, result, model);
+    public String createSpot(@Valid @ModelAttribute HealingSpotForm form, BindingResult result, Model model,
+                             @RequestParam(name = "files", required = false) List<MultipartFile> files) {
+        return saveSpot(null, form, result, model, files);
     }
 
     @PostMapping("/spots/{spotId}/edit")
     public String updateSpot(@PathVariable Long spotId, @Valid @ModelAttribute HealingSpotForm form,
-                             BindingResult result, Model model) {
-        return saveSpot(spotId, form, result, model);
+                             BindingResult result, Model model,
+                             @RequestParam(name = "files", required = false) List<MultipartFile> files) {
+        return saveSpot(spotId, form, result, model, files);
     }
 
-    private String saveSpot(Long spotId, HealingSpotForm form, BindingResult result, Model model) {
+    private String saveSpot(Long spotId, HealingSpotForm form, BindingResult result, Model model,
+                            List<MultipartFile> files) {
         if (!result.hasErrors()) {
             try {
                 if (spotId == null) {
-                    healingSpotService.createHealingSpot(form.getCourseId(), form.getCode(), form.getName(),
-                            form.getLatitude(), form.getLongitude());
+                    HealingSpot created = placeForms.createSpot(form, files);
+                    return "redirect:/admin/spots/" + created.getSpotId();
                 } else {
-                    healingSpotService.updateHealingSpot(spotId, form.getCourseId(), form.getCode(), form.getName(),
-                            form.getLatitude(), form.getLongitude());
+                    placeForms.updateSpot(spotId, form, files);
                 }
-                return "redirect:/admin/spots?courseId=" + form.getCourseId();
+                return "redirect:/admin/spots/" + spotId;
+            } catch (ImageStorageException exception) {
+                result.reject("image", "이미지 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
             } catch (IllegalArgumentException exception) {
                 result.reject("invalid", exception.getMessage());
-            } catch (DataIntegrityViolationException exception) {
+            } catch (DataAccessException | TransactionException exception) {
                 result.reject("conflict", "저장하지 못했습니다. 연결된 코스와 입력값을 확인하고 다시 시도해 주세요.");
             }
         }
+        model.addAttribute("imageSelectionNotice", "저장하지 못했습니다. 기존 이미지 편집은 저장 전 상태로 돌아갑니다. 입력값을 확인하고 새 이미지는 다시 선택해 주세요.");
         return spotForm(model, spotId);
     }
 
@@ -305,6 +323,7 @@ public class AdminController {
     private String renderSiteForm(Model model, Long siteId) {
         model.addAttribute("kakaoMapsJavaScriptKey", kakaoMapsJavaScriptKey);
         if (siteId != null) model.addAttribute("siteId", siteId);
+        imageModel(model, true, siteId, false);
         return siteId == null ? "admin/site-form" : "admin/site-edit";
     }
 
@@ -315,21 +334,24 @@ public class AdminController {
     }
 
     @PostMapping("/sites/new")
-    public String createSite(@Valid @ModelAttribute SiteForm siteForm, BindingResult bindingResult, Model model) {
-        if (bindingResult.hasErrors()) {
-            return renderSiteForm(model, null);
+    public String createSite(@Valid @ModelAttribute SiteForm siteForm, BindingResult bindingResult, Model model,
+                             @RequestParam(name = "files", required = false) List<MultipartFile> files) {
+        if (!bindingResult.hasErrors()) {
+            try {
+                Site created = placeForms.createSite(siteForm, files);
+                return "redirect:/admin/sites/" + created.getSiteId();
+            } catch (AdminPlaceFormService.ImageEditException exception) {
+                bindingResult.reject("image", exception.getMessage());
+            } catch (ImageStorageException exception) {
+                bindingResult.reject("image", "이미지 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            } catch (IllegalArgumentException exception) {
+                bindingResult.rejectValue("name", "invalid", exception.getMessage());
+            } catch (DataAccessException | TransactionException exception) {
+                bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명과 입력값을 확인하고 다시 시도해 주세요.");
+            }
         }
-        try {
-            siteService.createSite(siteForm.getName(), siteForm.getAddress(),
-                    siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
-        } catch (IllegalArgumentException exception) {
-            bindingResult.rejectValue("name", "duplicate", exception.getMessage());
-            return renderSiteForm(model, null);
-        } catch (DataIntegrityViolationException exception) {
-            bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
-            return renderSiteForm(model, null);
-        }
-        return "redirect:/admin/sites";
+        model.addAttribute("imageSelectionNotice", "저장하지 못했습니다. 기존 이미지 편집은 저장 전 상태로 돌아갑니다. 입력값을 확인하고 새 이미지는 다시 선택해 주세요.");
+        return renderSiteForm(model, null);
     }
 
     @GetMapping("/sites/{siteId}")
@@ -340,6 +362,7 @@ public class AdminController {
             return "redirect:/admin/sites";
         }
         model.addAttribute("site", site);
+        imageModel(model, true, siteId, true);
         return "admin/site-detail";
     }
 
@@ -363,26 +386,45 @@ public class AdminController {
 
     @PostMapping("/sites/{siteId}/edit")
     public String updateSite(@PathVariable Long siteId, @Valid @ModelAttribute SiteForm siteForm,
-                             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes) {
+                             BindingResult bindingResult, Model model, RedirectAttributes redirectAttributes,
+                             @RequestParam(name = "files", required = false) List<MultipartFile> files) {
         if (siteService.findSite(siteId) == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않는 사이트입니다.");
             return "redirect:/admin/sites";
         }
-        model.addAttribute("siteId", siteId);
-        if (bindingResult.hasErrors()) {
-            return renderSiteForm(model, siteId);
+        if (!bindingResult.hasErrors()) {
+            try {
+                placeForms.updateSite(siteId, siteForm, files);
+                return "redirect:/admin/sites/" + siteId;
+            } catch (AdminPlaceFormService.ImageEditException exception) {
+                bindingResult.reject("image", exception.getMessage());
+            } catch (ImageStorageException exception) {
+                bindingResult.reject("image", "이미지 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+            } catch (IllegalArgumentException exception) {
+                bindingResult.rejectValue("name", "invalid", exception.getMessage());
+            } catch (DataAccessException | TransactionException exception) {
+                bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명과 입력값을 확인하고 다시 시도해 주세요.");
+            }
         }
-        try {
-            siteService.updateSite(siteId, siteForm.getName(), siteForm.getAddress(),
-                    siteForm.getLatitude(), siteForm.getLongitude(), siteForm.getMapLevel());
-        } catch (IllegalArgumentException exception) {
-            bindingResult.rejectValue("name", "invalid", exception.getMessage());
-            return renderSiteForm(model, siteId);
-        } catch (DataIntegrityViolationException exception) {
-            bindingResult.reject("conflict", "저장하지 못했습니다. 사이트명 중복 여부를 확인하고 다시 시도해 주세요.");
-            return renderSiteForm(model, siteId);
+        model.addAttribute("imageSelectionNotice", "저장하지 못했습니다. 기존 이미지 편집은 저장 전 상태로 돌아갑니다. 입력값을 확인하고 새 이미지는 다시 선택해 주세요.");
+        return renderSiteForm(model, siteId);
+    }
+
+    private void imageModel(Model model, boolean site, Long id, boolean gallery) {
+        model.addAttribute("imageTitle", site ? "사이트 이미지" : "HS 이미지");
+        model.addAttribute("imageBasePath", id == null ? null : "/admin/" + (site ? "sites/" : "spots/") + id + "/images");
+        List<ImageResponse> images = List.of();
+        if (id != null) {
+            try {
+                images = site ? siteImages.list(id) : spotImages.list(id);
+            } catch (IllegalArgumentException exception) {
+                // Storage problems should not prevent reading or editing the parent's basic information.
+                model.addAttribute("imageError", "이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
+            }
         }
-        return "redirect:/admin/sites/" + siteId;
+        if (gallery) images = images.stream()
+                .sorted(java.util.Comparator.comparing(ImageResponse::representative).reversed()).toList();
+        model.addAttribute("images", images);
     }
 
     @PostMapping("/sites/{siteId}/delete")

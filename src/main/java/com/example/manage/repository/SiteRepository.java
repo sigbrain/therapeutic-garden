@@ -4,6 +4,10 @@ import com.example.manage.domain.Site;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SiteRepository extends JpaRepository<Site, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select p from Site p where p.siteId = :id")
+    java.util.Optional<Site> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
+
 
     boolean existsByName(String name);
 

@@ -1,4 +1,9 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 105MB
+      resolve-lazily: true
   application:
     name: manage
 
@@ -23,3 +28,14 @@ kakao:
 
 server:
   port: ${PORT:8080}
+
+storage:
+  mode: ${STORAGE_MODE:s3}
+  bucket: ${BUCKET:}
+  access-key-id: ${ACCESS_KEY_ID:}
+  secret-access-key: ${SECRET_ACCESS_KEY:}
+  region: ${REGION:auto}
+  endpoint: ${ENDPOINT:}
+  read-url-duration: 1h
+  local-directory: ${STORAGE_LOCAL_DIRECTORY:.local/uploads}
+  recovery-directory: ${STORAGE_RECOVERY_DIRECTORY:.local/image-recovery}

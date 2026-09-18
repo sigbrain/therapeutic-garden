@@ -225,8 +225,9 @@ class SiteManagementTests {
 
     @Test
     void createsUpdatesAndDeletesThroughAdmin() throws Exception {
-        mvc.perform(form("/admin/sites/new", "새 사이트")).andExpect(redirectedUrl("/admin/sites"));
+        var created = mvc.perform(form("/admin/sites/new", "새 사이트")).andExpect(status().is3xxRedirection()).andReturn();
         Long id = sites.findAll().stream().filter(s -> s.getName().equals("새 사이트")).findFirst().orElseThrow().getSiteId();
+        assertThat(created.getResponse().getRedirectedUrl()).isEqualTo("/admin/sites/" + id);
         reload();
         assertThat(service.findSite(id).getLatitude()).isEqualTo(38.5);
         assertThat(service.findSite(id).getLongitude()).isEqualTo(128.5);

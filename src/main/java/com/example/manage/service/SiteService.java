@@ -15,6 +15,7 @@ import java.util.List;
 public class SiteService {
 
     private final SiteRepository siteRepository;
+    private final SiteImageService siteImageService;
     private final HealingCourseRepository healingCourseRepository;
 
     // 실제 Site 등록
@@ -61,11 +62,13 @@ public class SiteService {
     }
 
     public void deleteSite(Long siteId) {
-        Site site = siteRepository.findById(siteId)
+        Site site = siteRepository.findLockedById(siteId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사이트입니다."));
         if (healingCourseRepository.existsBySiteSiteId(siteId)) {
             throw new IllegalArgumentException("등록된 HealingCourse가 존재하는 사이트는 삭제할 수 없습니다.");
         }
+        siteImageService.deleteAll(siteId);
         siteRepository.delete(site);
+        siteRepository.flush();
     }
 }

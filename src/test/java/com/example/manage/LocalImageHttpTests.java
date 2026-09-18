@@ -1,0 +1,150 @@
+package com.example.manage;
+
+import com.example.manage.domain.*;
+import com.example.manage.repository.*;
+import com.example.manage.service.*;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.web.bind.annotation.*;
+import java.net.*;
+import java.net.http.*;
+import java.nio.file.*;
+import java.util.*;
+import static org.assertj.core.api.Assertions.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.datasource.url=jdbc:h2:mem:local-image-http;MODE=MySQL;NON_KEYWORDS=SEQUENCE;DB_CLOSE_DELAY=-1",
+        "spring.jpa.show-sql=false"})
+@ActiveProfiles({"test", "local"})
+@Import(LocalImageHttpTests.TestEndpoints.class)
+class LocalImageHttpTests {
+    private static final Path ROOT;
+    static { try { ROOT = Files.createTempDirectory("manage-local-image-http-"); }
+        catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); } }
+    @DynamicPropertySource static void properties(DynamicPropertyRegistry registry) {
+        registry.add("storage.local-directory", () -> ROOT.resolve("uploads").toString());
+        registry.add("storage.recovery-directory", () -> ROOT.resolve("recovery").toString());
+    }
+    @org.springframework.beans.factory.annotation.Value("${local.server.port}") int port;
+    @Autowired SiteRepository sites;
+    @Autowired HealingCourseRepository courses;
+    @Autowired HealingSpotRepository spots;
+    @Autowired SiteImageService siteImages;
+    @Autowired HealingSpotImageService spotImages;
+    HttpClient client;
+    String csrf;
+
+    // Test-only endpoint: the production application never imports this configuration.
+    @TestConfiguration static class TestEndpoints {
+        @Bean TestLogin testLogin() { return new TestLogin(); }
+    }
+    @RestController static class TestLogin {
+        @GetMapping("/test-image-session") String login(HttpServletRequest request) {
+            request.getSession().setAttribute("loginAdminId", 1L);
+            return ((CsrfToken) request.getAttribute(CsrfToken.class.getName())).getToken();
+        }
+    }
+    @BeforeEach void setup() throws Exception {
+        client = HttpClient.newBuilder().cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL)).build();
+        csrf = get("/test-image-session").body();
+    }
+    HttpResponse<String> get(String path) throws Exception {
+        return client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+    }
+    Long parent(boolean site) {
+        Site s = sites.saveAndFlush(new Site("HTTP " + UUID.randomUUID(), "주소", 37.0, 127.0, 3));
+        if (site) return s.getSiteId();
+        var c = courses.saveAndFlush(new HealingCourse(s, "HC-A", "회복", 37.0, 127.0, 40.0));
+        return spots.saveAndFlush(new HealingSpot(c, "HS1", "곶자왈원", 37.0, 127.0)).getSpotId();
+    }
+    HttpResponse<String> upload(String path, int bytes, boolean headerToken) throws Exception {
+        return upload(path, bytes, headerToken, Map.of());
+    }
+    HttpResponse<String> upload(String path, int bytes, boolean headerToken, Map<String, String> fields) throws Exception {
+        String boundary = "ImageTestBoundary";
+        StringBuilder parameters = new StringBuilder();
+        fields.forEach((name, value) -> parameters.append("--").append(boundary)
+                .append("\r\nContent-Disposition: form-data; name=\"").append(name).append("\"\r\n\r\n")
+                .append(value).append("\r\n"));
+        String body = parameters + "--" + boundary + "\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n" + csrf
+                + "\r\n--" + boundary + "\r\nContent-Disposition: form-data; name=\"files\"; filename=\"test.png\"\r\n"
+                + "Content-Type: image/png\r\n\r\n" + "a".repeat(bytes) + "\r\n--" + boundary + "--\r\n";
+        var builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .header("Accept", "text/html");
+        if (headerToken) builder.header("X-CSRF-TOKEN", csrf);
+        return client.send(builder.POST(HttpRequest.BodyPublishers.ofString(body)).build(), HttpResponse.BodyHandlers.ofString());
+    }
+    @ParameterizedTest @ValueSource(booleans = {true, false})
+    void localMultipartAndAuthenticatedContentWork(boolean site) throws Exception {
+        Long id = parent(site); String path = "/admin/" + (site ? "sites/" : "spots/") + id + "/images";
+        assertThat(upload(path, 30, false).statusCode()).isEqualTo(302);
+        var images = site ? siteImages.list(id) : spotImages.list(id);
+        assertThat(images).hasSize(1);
+        var content = get(images.getFirst().readUrl());
+        assertThat(content.statusCode()).isEqualTo(200);
+        assertThat(content.body()).isEqualTo("a".repeat(30));
+        assertThat(content.headers().firstValue("Content-Type")).contains("image/png");
+        assertThat(content.headers().firstValue("Cache-Control")).contains("no-store");
+        assertThat(content.headers().firstValue("X-Content-Type-Options")).contains("nosniff");
+        Long other = parent(site);
+        assertThat(get("/admin/" + (site ? "sites/" : "spots/") + other + "/images/"
+                + images.getFirst().imageId() + "/content").statusCode()).isEqualTo(404);
+        var anonymous = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                URI.create("http://localhost:" + port + images.getFirst().readUrl())).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(anonymous.statusCode()).isEqualTo(302);
+        assertThat(get(path.replace("/images", "/edit")).body()).contains("새 이미지 추가", "test.png", "대표 이미지");
+    }
+    @Test void oversizedMultipartShowsFriendlyError() throws Exception {
+        String path = "/admin/sites/" + parent(true) + "/images";
+        var response = upload(path, 10 * 1024 * 1024 + 1, false);
+        assertThat(response.statusCode()).isEqualTo(413);
+        assertThat(response.body()).contains("10MB", "파일 크기를 확인해 주세요");
+    }
+    @ParameterizedTest @ValueSource(booleans = {true, false})
+    void integratedParentRegistrationAndEditUseRealMultipart(boolean site) throws Exception {
+        Map<String, String> fields = new HashMap<>();
+        fields.put("name", "HTTP 등록 " + UUID.randomUUID());
+        fields.put("latitude", "37.0"); fields.put("longitude", "127.0");
+        if (site) { fields.put("address", "주소"); fields.put("mapLevel", "3"); }
+        else {
+            Long existing = parent(false);
+            fields.put("courseId", spots.findById(existing).orElseThrow().getHealingCourse().getCourseId().toString());
+            fields.put("code", "HS2");
+        }
+        String base = "/admin/" + (site ? "sites" : "spots");
+        HttpResponse<String> created = upload(base + "/new", 30, false, fields);
+        assertThat(created.statusCode()).isEqualTo(302);
+        String detail = created.headers().firstValue("Location").orElseThrow();
+        Long id = Long.valueOf(detail.substring(detail.lastIndexOf('/') + 1));
+        String path = base + "/" + id;
+        assertThat(get(path).body()).contains("data-gallery-main", "test.png").doesNotContain(">이미지 관리</a>");
+        fields.put("name", "HTTP 수정 " + UUID.randomUUID());
+        var existingImages = site ? siteImages.list(id) : spotImages.list(id);
+        fields.put("imageOrder", "n:0,e:" + existingImages.getFirst().imageId());
+        fields.put("imageRepresentative", "n:0");
+        assertThat(upload(path + "/edit", 40, false, fields).statusCode()).isEqualTo(302);
+        assertThat(site ? siteImages.list(id) : spotImages.list(id)).hasSize(2);
+        assertThat(get(path).body()).contains(fields.get("name"), "class=\"image-thumbnails\"");
+        assertThat(get(path + "/edit").body()).contains("data-image-editor", "새 이미지 추가").doesNotContain("data-image-action");
+    }
+
+    @AfterAll static void cleanup() throws Exception {
+        // Only this test's isolated temporary directory is removed.
+        try (var paths = Files.walk(ROOT)) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
+        }
+    }
+}

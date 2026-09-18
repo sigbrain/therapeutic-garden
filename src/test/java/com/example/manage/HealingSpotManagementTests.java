@@ -254,10 +254,12 @@ class HealingSpotManagementTests {
         for (String path : new String[]{"/admin/spots/new", "/admin/spots/" + spot.getSpotId() + "/edit", "/admin/spots/" + spot.getSpotId() + "/delete"}) {
             mvc.perform(post(path)).andExpect(redirectedUrl("/admin/login"));
         }
-        mvc.perform(form("/admin/spots/new", other.getCourseId(), "HS1"))
-                .andExpect(redirectedUrl("/admin/spots?courseId=" + other.getCourseId()));
+        var created = mvc.perform(form("/admin/spots/new", other.getCourseId(), "HS1"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        Long createdId = service.findByCourseId(other.getCourseId()).getFirst().getSpotId();
+        assertThat(created.getResponse().getRedirectedUrl()).isEqualTo("/admin/spots/" + createdId);
         mvc.perform(form("/admin/spots/" + spot.getSpotId() + "/edit", sibling.getCourseId(), "HS1"))
-                .andExpect(redirectedUrl("/admin/spots?courseId=" + sibling.getCourseId()));
+                .andExpect(redirectedUrl("/admin/spots/" + spot.getSpotId()));
         reload();
         assertThat(service.findHealingSpot(spot.getSpotId()).getLatitude()).isEqualTo(37.5);
         mvc.perform(post("/admin/spots/" + spot.getSpotId() + "/delete").sessionAttr("loginAdminId", 1L))

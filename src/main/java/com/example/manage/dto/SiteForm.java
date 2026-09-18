@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SiteForm {
+public class SiteForm extends ImageEditForm {
 
     @NotBlank(message = "사이트명을 입력해 주세요.")
     @Size(max = 255, message = "사이트명은 255자 이하여야 합니다.")

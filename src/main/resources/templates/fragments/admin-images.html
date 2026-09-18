@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="editor" id="place-images" class="place-images" aria-labelledby="place-images-title">
+    <h2 id="place-images-title" class="form-label" th:text="${imageTitle}"></h2>
+    <p class="error-message" role="alert" th:if="${imageError}" th:text="${imageError}"></p>
+    <p class="card-description" th:if="${imageBasePath != null}">대표 이미지, 순서, 삭제 및 새 이미지는 수정 버튼을 누르면 함께 저장됩니다.</p>
+    <p data-image-empty class="card-description" th:hidden="${!#lists.isEmpty(images)}">등록된 이미지가 없습니다.</p>
+    <div class="image-grid" data-image-editor th:attr="data-unavailable=${imageError != null}">
+        <article class="image-item" th:each="image : ${images}"
+                 th:attr="data-key=|e:${image.imageId}|,data-representative=${image.representative}">
+            <img class="image-preview" th:src="@{${image.readUrl}}" th:alt="${image.originalFileName}" loading="lazy" referrerpolicy="no-referrer">
+            <p class="image-name" th:text="${image.originalFileName}"></p>
+        </article>
+    </div>
+    <div class="form-group image-upload-field">
+        <label class="form-label" for="image-files" th:text="${imageBasePath == null ? '이미지 선택' : '새 이미지 추가'}"></label>
+        <input class="form-input" id="image-files" name="files" type="file" multiple accept="image/jpeg,image/png,image/webp" aria-describedby="image-help">
+        <p id="image-help" class="card-description">JPEG, PNG, WebP / 파일당 최대 10MB. 여러 장을 선택할 수 있습니다(한 번에 최대 10장). 선택한 이미지의 대표와 순서를 저장 전에 변경할 수 있습니다.</p>
+        <p class="card-description" th:if="${imageSelectionNotice}" th:text="${imageSelectionNotice}"></p>
+    </div>
+</section>
+
+<section th:fragment="gallery" class="place-images image-gallery" data-image-gallery aria-labelledby="gallery-title">
+    <h2 id="gallery-title" class="form-label" th:text="${imageTitle}"></h2>
+    <p class="error-message" role="alert" th:if="${imageError}" th:text="${imageError}"></p>
+    <p class="card-description" th:if="${#lists.isEmpty(images) and imageError == null}">등록된 이미지가 없습니다.</p>
+    <th:block th:if="${!#lists.isEmpty(images)}" th:with="first=${images[0]}">
+        <div class="image-gallery-stage">
+            <img data-gallery-main class="image-gallery-main" th:src="@{${first.readUrl}}" th:alt="${first.originalFileName}" referrerpolicy="no-referrer">
+            <strong data-gallery-badge class="image-representative image-gallery-badge" th:hidden="${!first.representative}">대표</strong>
+        </div>
+        <p data-gallery-caption class="image-name" aria-live="polite" th:text="${first.originalFileName}"></p>
+        <div class="image-thumbnails" th:if="${#lists.size(images) > 1}" role="group" aria-label="이미지 선택">
+            <button class="image-thumbnail" th:each="image, state : ${images}" type="button"
+                    th:attr="data-image-url=@{${image.readUrl}},data-image-name=${image.originalFileName},data-representative=${image.representative},aria-pressed=${state.first}"
+                    th:aria-label="|${state.count}번째 이미지: ${image.originalFileName}${image.representative ? ' (대표)' : ''}|">
+                <img th:src="@{${image.readUrl}}" alt="" loading="lazy" referrerpolicy="no-referrer">
+                <span class="image-thumbnail-badge" th:if="${image.representative}">대표</span>
+            </button>
+        </div>
+    </th:block>
+</section>
+</body>
+</html>
