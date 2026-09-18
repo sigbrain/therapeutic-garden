@@ -32,7 +32,14 @@ function validPosition(latitude, longitude) {
         && Math.abs(Number(latitude)) <= 90 && Math.abs(Number(longitude)) <= 180;
 }
 function moveSiteMap(site) {
-    if (!site || !validPosition(site.dataset.latitude, site.dataset.longitude)) return;
+    if (mapModal.hidden) return;
+    var container = document.getElementById('map');
+    if (!site || !validPosition(site.dataset.latitude, site.dataset.longitude)) {
+        container.hidden = true;
+        document.getElementById('mapSelectionStatus').textContent = 'Site의 지도 좌표가 설정되지 않았습니다.';
+        return;
+    }
+    container.hidden = false;
     if (!window.kakao || !window.kakao.maps) {
         document.getElementById('map').textContent = '지도를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.';
         return;
@@ -40,7 +47,7 @@ function moveSiteMap(site) {
     var center = new kakao.maps.LatLng(Number(site.dataset.latitude), Number(site.dataset.longitude));
     var level = validNumber(site.dataset.mapLevel) ? Number(site.dataset.mapLevel) : 3;
     if (!map) map = new kakao.maps.Map(document.getElementById('map'), {center: center, level: level});
-    else { map.setCenter(center); map.setLevel(level); }
+    else { map.relayout(); map.setCenter(center); map.setLevel(level); }
 }
 
 /* ================================
@@ -268,13 +275,11 @@ function showSpotInformation(spot) {
      * HealingSpotResponse에 담긴
      * HC 정보 사용
      */
-    spotCourse.textContent =
-        spot.courseCode
-        + ' · '
-        + spot.courseName;
+    spotCourse.textContent = spot.course || (spot.courseCode + ' · ' + spot.courseName);
 
 
     selectedSpot = spot;
+    spatial.select(spot.spotId);
     showSitePanelButton.classList.remove('hidden');
     setImage(spotImage, document.getElementById('spotImageEmpty'),
         spot.representativeImageUrl, spot.code + ' ' + spot.name);
@@ -351,9 +356,9 @@ function drawHealingSpots() {
                 'click',
                 function() {
 
-                    showSpotInformation(
-                        spot
-                    );
+                    showSpotInformation(spot);
+                    document.getElementById('mapSelectionStatus').textContent = spot.code + ' · ' + spot.name
+                        + ' 선택됨 · 지도를 닫으면 왼쪽 패널에서 정보를 볼 수 있습니다.';
 
                 }
             );
@@ -436,6 +441,7 @@ function updateAnalysis() {
 }
 function showSitePanel() {
     selectedSpot = null;
+    spatial.select(null);
     showSitePanelButton.classList.add('hidden');
     spotInformationPanel.classList.add('hidden');
     siteInformationPanel.classList.remove('hidden');
@@ -451,6 +457,9 @@ siteSelect.addEventListener('change', function() {
     closeAnalysisModal();
     showSitePanel();
     showSiteInformation(selectedSite);
+    spatial.load(selectedSite);
+    document.getElementById('mapModalTitle').textContent = selectedSite ? selectedSite.dataset.name + ' · 지도' : '지도';
+    document.getElementById('mapSelectionStatus').textContent = '';
     moveSiteMap(selectedSite);
     if (selectedSite) loadHealingSpace(selectedSite.value);
 });
@@ -497,12 +506,68 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
+var spatial = window.HomeSpatial(showSpotInformation);
+var mapModal = document.getElementById('mapModal');
+var mapDialog = mapModal.querySelector('[role="dialog"]');
+var mapPreviousFocus = null;
+var mapPreviousOverflow = '';
+function closeMapModal() {
+    if (mapModal.hidden) return;
+    mapModal.hidden = true;
+    document.body.style.overflow = mapPreviousOverflow;
+    if (mapPreviousFocus) mapPreviousFocus.focus();
+}
+function resizeMap() {
+    if (mapModal.hidden || !map) return;
+    var center = map.getCenter();
+    map.relayout();
+    map.setCenter(center);
+}
+document.getElementById('openMapButton').addEventListener('click', function() {
+    closeAnalysisModal();
+    mapPreviousFocus = document.activeElement;
+    mapPreviousOverflow = document.body.style.overflow;
+    document.getElementById('mapModalTitle').textContent = selectedSite ? selectedSite.dataset.name + ' · 지도' : '지도';
+    document.getElementById('mapSelectionStatus').textContent = '';
+    mapModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('closeMapButton').focus();
+    // Wait for the visible dialog's layout before creating or relaying out the SDK map.
+    window.requestAnimationFrame(function() {
+        if (mapModal.hidden) return;
+        moveSiteMap(selectedSite);
+        clearHealingSpaceMap();
+        drawHealingCourses();
+        drawHealingSpots();
+        updateAnalysis();
+    });
+});
+document.getElementById('closeMapButton').addEventListener('click', closeMapModal);
+mapModal.addEventListener('click', event => { if (event.target === mapModal) closeMapModal(); });
+document.addEventListener('keydown', function(event) {
+    if (mapModal.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeMapModal(); }
+    if (event.key === 'Tab') {
+        var controls = Array.from(mapDialog.querySelectorAll('button, a[href], input, select, [tabindex]'))
+            .filter(control => control.tabIndex >= 0 && control.getClientRects().length);
+        var first = controls[0], last = controls[controls.length - 1];
+        if (!first) { event.preventDefault(); mapDialog.focus(); }
+        else if (event.shiftKey && (document.activeElement === first || document.activeElement === mapDialog)) {
+            event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault(); first.focus();
+        }
+    }
+});
+window.addEventListener('resize', resizeMap);
+if (window.ResizeObserver) new window.ResizeObserver(resizeMap).observe(document.getElementById('map'));
 showSiteInformation(selectedSite);
+spatial.load(selectedSite);
 updateAnalysis();
 if (selectedSite) {
-    moveSiteMap(selectedSite);
     loadHealingSpace(selectedSite.value);
 } else {
     siteSelect.disabled = true;
+    document.getElementById('openMapButton').disabled = true;
     document.getElementById('map').textContent = '등록된 Site가 없습니다.';
 }

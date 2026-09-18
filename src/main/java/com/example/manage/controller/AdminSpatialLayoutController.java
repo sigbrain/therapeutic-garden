@@ -4,6 +4,8 @@ import com.example.manage.dto.SpatialLayoutForm;
 import com.example.manage.service.SpatialLayoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.BindingResult;
@@ -15,6 +17,17 @@ import org.springframework.transaction.TransactionException;
 @RequestMapping("/admin/sites/{siteId}/spatial-layout")
 public class AdminSpatialLayoutController {
     private final SpatialLayoutService layouts;
+
+    @GetMapping("/data")
+    @ResponseBody
+    public ResponseEntity<SpatialLayoutService.Layout> data(@PathVariable Long siteId) {
+        try {
+            return ResponseEntity.ok()
+                    .cacheControl(CacheControl.noStore()).body(layouts.load(siteId));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
     @GetMapping
     public String page(@PathVariable Long siteId, Model model) {

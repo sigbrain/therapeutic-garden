@@ -381,6 +381,73 @@ class SpatialLayoutTests {
                 .andExpect(content().string(containsString("Site 수정 화면에서")));
     }
 
+    @Test void monitoringLayoutApiUsesSpatialImageAndOnlyItsSavedPositions() throws Exception {
+        save(draft());
+        select(b);
+        var form = draft(); form.setSiteImageId(b);
+        form.setPositions(List.of(point(first.getSpotId(), "76", "12"), point(second.getSpotId(), null, null)));
+        save(form);
+        spotImages.upload(first.getSpotId(), List.of(file("old.png"), file("representative.png")));
+        var representative = spotImages.list(first.getSpotId()).getLast();
+        spotImages.setRepresentative(first.getSpotId(), representative.imageId());
+        String spatialUrl = siteImages.list(site.getSiteId()).stream().filter(ImageResponse::spatial).findFirst().orElseThrow().readUrl();
+        assertThat(spatialUrl).isNotEqualTo(siteImages.representativeReadUrl(site.getSiteId()));
+        mvc.perform(get(path() + "/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.image.imageId").value(b))
+                .andExpect(jsonPath("$.image.readUrl").value(spatialUrl))
+                .andExpect(jsonPath("$.image.spatial").value(true))
+                .andExpect(jsonPath("$.image.representative").value(false))
+                .andExpect(jsonPath("$.spots[0].spotId").value(first.getSpotId()))
+                .andExpect(jsonPath("$.spots[0].xPercent").value(76))
+                .andExpect(jsonPath("$.spots[0].yPercent").value(12))
+                .andExpect(jsonPath("$.spots[0].readUrl").value(representative.readUrl()))
+                .andExpect(jsonPath("$.spots[1].xPercent").isEmpty())
+                .andExpect(jsonPath("$.spots[1].readUrl").isEmpty());
+        select(a);
+        mvc.perform(get(path() + "/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(jsonPath("$.spots[0].xPercent").value(20.1235));
+    }
+
+    @Test void monitoringLayoutApiHandlesMissingImageAndUnplacedSpotsWithoutFallback() throws Exception {
+        mvc.perform(get(path() + "/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.image.imageId").value(a))
+                .andExpect(jsonPath("$.spots[0].xPercent").isEmpty());
+        select(null);
+        mvc.perform(get(path() + "/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.image").isEmpty())
+                .andExpect(jsonPath("$.spots[0].xPercent").isEmpty());
+        assertThat(siteImages.representativeReadUrl(site.getSiteId())).isNotNull();
+    }
+
+    @Test void monitoringLayoutApiRequiresAdminAndReturnsNotFoundForMissingSite() throws Exception {
+        mvc.perform(get(path() + "/data")).andExpect(redirectedUrl("/admin/login"));
+        mvc.perform(get(path() + "/data").sessionAttr("loginMemberId", 1L)).andExpect(redirectedUrl("/admin/login"));
+        mvc.perform(get("/admin/sites/9223372036854775807/spatial-layout/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test void monitoringLayoutApiIsolatesSitesAndUsesStorageReadUrls() throws Exception {
+        save(draft());
+        Site other = sites.saveAndFlush(new Site("Other", "주소", 38.0, 128.0, 4));
+        mvc.perform(get("/admin/sites/" + other.getSiteId() + "/spatial-layout/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.siteId").value(other.getSiteId()))
+                .andExpect(jsonPath("$.image").isEmpty()).andExpect(jsonPath("$.spots").isEmpty());
+        when(storage.createReadUrl(anyString(), anyString())).thenReturn("https://storage.example/signed?token=opaque");
+        mvc.perform(get(path() + "/data").sessionAttr("loginAdminId", 1L))
+                .andExpect(jsonPath("$.image.readUrl").value("https://storage.example/signed?token=opaque"));
+    }
+
+    @Test void monitoringTemplatePlacesMapAndLegendInsideSecondaryDialog() throws Exception {
+        String html = monitoringHtml();
+        assertThat(html).contains("공간 모니터링", "지도 보기", "id=\"monitoringCanvas\"", "/js/home-spatial.js", "/css/home-spatial.css");
+        int dialogStart = html.indexOf("id=\"mapModal\"");
+        assertThat(html.indexOf("id=\"map\"")).isGreaterThan(dialogStart);
+        assertThat(html.indexOf("id=\"surveyLegendTitle\"")).isGreaterThan(dialogStart);
+        assertThat(html.indexOf("id=\"monitoringCanvas\"")).isLessThan(dialogStart);
+        assertThat(html).contains("id=\"closeMapButton\"", "aria-labelledby=\"mapModalTitle\"");
+    }
+
     private String monitoringHtml() throws Exception {
         return mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);

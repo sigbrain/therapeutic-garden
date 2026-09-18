@@ -10,6 +10,7 @@
     <link
             rel="stylesheet"
             th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/home-spatial.css}">
 </head>
 
 
@@ -182,25 +183,40 @@
     </aside>
 
 
-    <!-- ================================
-         Kakao Map
-    ================================= -->
-
-    <section class="map-section">
-
-        <div id="map"></div>
-
-        <div class="survey-legend" aria-live="polite">
-            <p id="surveyLegendTitle" class="survey-legend-title"></p>
-            <div class="survey-legend-scale"><span class="survey-legend-label">긍정 방향</span><div class="survey-legend-gradient"></div><span class="survey-legend-label">부정 방향</span></div>
-            <p id="surveyLegendRange" class="survey-legend-unit"></p>
-            <p id="surveyLegendContext"></p>
+    <section class="monitoring-space" aria-labelledby="spatialTitle">
+        <div class="monitoring-heading">
+            <h1 id="spatialTitle">공간 모니터링</h1>
+            <button type="button" id="openMapButton" aria-haspopup="dialog">지도 보기</button>
         </div>
-
+        <div class="monitoring-content">
+            <p id="monitoringStatus" role="status">공간 정보를 불러오는 중입니다.</p>
+            <a id="monitoringSettings" hidden>공간 모니터링 설정</a>
+            <div id="monitoringCanvas" class="monitoring-canvas" hidden></div>
+        </div>
     </section>
-
-
 </main>
+
+<div id="mapModal" class="survey-modal" hidden>
+    <div class="monitoring-map-dialog" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle" tabindex="-1">
+        <div class="monitoring-heading">
+            <h2 id="mapModalTitle">지도</h2>
+            <button type="button" id="closeMapButton" aria-label="지도 닫기">×</button>
+        </div>
+        <section class="map-section">
+
+            <div id="map"></div>
+
+            <div class="survey-legend" aria-live="polite">
+                <p id="surveyLegendTitle" class="survey-legend-title"></p>
+                <div class="survey-legend-scale"><span class="survey-legend-label">긍정 방향</span><div class="survey-legend-gradient"></div><span class="survey-legend-label">부정 방향</span></div>
+                <p id="surveyLegendRange" class="survey-legend-unit"></p>
+                <p id="surveyLegendContext"></p>
+            </div>
+
+        </section>
+        <p id="mapSelectionStatus" role="status"></p>
+    </div>
+</div>
 
 
 <div id="analysisModal" class="survey-modal" hidden>
@@ -227,6 +243,7 @@
 ================================ -->
 
 <script th:src="@{/js/home-survey-analysis.js}"></script>
+<script th:src="@{/js/home-spatial.js}"></script>
 <script
         th:src="@{/js/home-map.js}">
 </script>

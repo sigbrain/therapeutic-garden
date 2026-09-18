@@ -1,0 +1,35 @@
+.monitoring-space { min-width: 0; overflow-y: auto; background: #f7f8f2; }
+.monitoring-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; }
+.monitoring-heading h1, .monitoring-heading h2 { margin: 0; font-size: 20px; color: #244b3b; overflow-wrap: anywhere; }
+.monitoring-heading button { flex-shrink: 0; padding: 9px 15px; border: 1px solid #cbd8cf; border-radius: 8px; background: #fff; color: #365647; font: inherit; font-size: 13px; cursor: pointer; }
+.monitoring-heading button:hover { background: #eef3ed; }
+.monitoring-content { padding: 0 36px 44px; }
+#monitoringStatus { margin: 0 0 16px; color: #66776c; font-size: 13px; line-height: 1.7; }
+#monitoringStatus:empty { display: none; }
+#monitoringSettings { display: inline-block; color: #36644d; font-size: 13px; margin-bottom: 18px; text-underline-offset: 4px; }
+.monitoring-canvas { position: relative; width: 100%; margin-top: 12px; }
+.monitoring-image { display: block; width: 100%; height: auto; border-radius: 6px; }
+.monitoring-hotspots { position: absolute; inset: 0; pointer-events: none; }
+.monitoring-hotspot { position: absolute; transform: translate(-50%, -50%); padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
+.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(42px, 4.5vw, 62px); height: clamp(42px, 4.5vw, 62px); box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 3px 10px #182d3540; transition: transform .16s, box-shadow .16s; }
+.monitoring-hotspot-circle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.monitoring-hotspot-label { position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); padding: 2px 6px; border-radius: 4px; background: #fffffff0; color: #244b3b; font-size: 11px; font-weight: 600; white-space: nowrap; box-shadow: 0 1px 4px #182d3520; }
+.monitoring-hotspot-label.above { top: auto; bottom: calc(100% + 5px); }
+.monitoring-hotspot:hover, .monitoring-hotspot:focus-visible, .monitoring-hotspot[aria-pressed="true"] { z-index: 2; }
+.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.07); box-shadow: 0 5px 14px #182d3555; }
+.monitoring-hotspot[aria-pressed="true"] .monitoring-hotspot-circle { outline: 2px solid #427e5c; outline-offset: 3px; }
+.monitoring-hotspot:focus-visible { outline: 2px solid #427e5c; outline-offset: 4px; border-radius: 50%; }
+.monitoring-map-dialog { display: flex; flex-direction: column; width: 88vw; height: 88vh; height: 88dvh; max-width: 1600px; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px #0f172a33; }
+.monitoring-map-dialog .map-section { flex: 1; min-height: 0; position: relative; }
+.monitoring-map-dialog #map { width: 100%; height: 100%; }
+.monitoring-map-dialog #closeMapButton { width: 38px; height: 38px; padding: 0; font-size: 26px; }
+#mapSelectionStatus { margin: 0; padding: 10px 24px; color: #526657; font-size: 13px; }
+#mapSelectionStatus:empty { display: none; }
+@media (max-width: 900px) { .monitoring-space { overflow: visible; min-height: 300px; } }
+@media (max-width: 520px) {
+    .monitoring-heading { padding: 18px; gap: 10px; }
+    .monitoring-heading h1, .monitoring-heading h2 { font-size: 18px; }
+    .monitoring-content { padding: 0 28px 40px; }
+    .monitoring-map-dialog { width: 100%; height: 90vh; height: 90dvh; }
+}
+@media (prefers-reduced-motion: reduce) { .monitoring-hotspot-circle { transition: none; } }
