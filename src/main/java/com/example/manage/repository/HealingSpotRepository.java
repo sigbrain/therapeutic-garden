@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public interface HealingSpotRepository
         extends JpaRepository<HealingSpot, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select p from HealingSpot p where p.spotId = :id")
+    java.util.Optional<HealingSpot> findLockedById(@org.springframework.data.repository.query.Param("id") Long id);
+
 
     /*
      * 특정 Site에 속한 HealingSpot들을 조회한다.

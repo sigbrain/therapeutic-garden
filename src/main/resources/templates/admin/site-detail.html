@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사이트 상세 정보</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-images.css}">
 </head>
 <body class="page-body service-page">
 <header th:replace="~{fragments/header :: header}"></header>
 <main class="page-container">
-    <section class="card member-detail-card">
+    <section class="card member-detail-card place-image-card">
         <div class="card-header">
             <p class="card-eyebrow">Administrator</p>
             <h1 class="card-title">사이트 상세 정보</h1>
@@ -22,6 +23,7 @@
             <div class="member-detail-item"><dt>경도</dt><dd th:text="${site.longitude}"></dd></div>
             <div class="member-detail-item"><dt>지도 레벨</dt><dd th:text="${site.mapLevel}"></dd></div>
         </dl>
+        <section th:replace="~{fragments/admin-images :: gallery}"></section>
         <p class="card-description">등록된 HC가 존재하는 사이트는 삭제할 수 없습니다.</p>
         <div class="site-detail-actions">
             <a class="primary-link-button site-course-link" th:href="@{/admin/courses(siteId=${site.siteId})}">HC 관리</a>
@@ -34,5 +36,6 @@
         </div>
     </section>
 </main>
+<script th:src="@{/js/admin-image-gallery.js}"></script>
 </body>
 </html>

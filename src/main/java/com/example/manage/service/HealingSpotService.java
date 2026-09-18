@@ -16,6 +16,7 @@ import java.util.List;
 @Transactional
 public class HealingSpotService {
     private final HealingSpotRepository healingSpotRepository;
+    private final HealingSpotImageService healingSpotImageService;
     private final HealingCourseRepository healingCourseRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
 
@@ -62,11 +63,14 @@ public class HealingSpotService {
     }
 
     public void deleteHealingSpot(Long spotId) {
-        HealingSpot spot = findHealingSpot(spotId);
+        HealingSpot spot = healingSpotRepository.findLockedById(spotId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 HealingSpot입니다."));
         if (scheduleSpotRepository.existsByHealingSpotSpotId(spotId)) {
             throw new IllegalArgumentException("일정에 사용 중인 HealingSpot은 삭제할 수 없습니다.");
         }
+        healingSpotImageService.deleteAll(spotId);
         healingSpotRepository.delete(spot);
+        healingSpotRepository.flush();
     }
 
     private HealingCourse requireCourse(Long courseId) {

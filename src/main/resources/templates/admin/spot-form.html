@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HS 관리</title><link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-images.css}">
 </head>
 <body class="page-body admin-course-page service-page">
 <header th:replace="~{fragments/header :: header}"></header>
-<main class="page-container"><section class="card form-card">
+<main class="page-container"><section class="card form-card place-image-card">
     <div class="card-header">
         <p class="card-eyebrow">Administrator</p>
         <h1 class="card-title" th:text="${spotId == null ? 'HS 등록' : 'HS 수정'}"></h1>
     </div>
-    <form class="login-form site-form" th:object="${healingSpotForm}" method="post"
+    <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p class="image-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <form id="place-form" enctype="multipart/form-data" class="login-form site-form" th:object="${healingSpotForm}" method="post"
           th:action="${spotId == null} ? @{/admin/spots/new} : @{/admin/spots/{id}/edit(id=${spotId})}">
         <p class="error-message" role="alert" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
         <div class="form-group">
@@ -44,8 +47,10 @@
             <p id="spot-map-status" class="error-message" role="alert"></p>
             <div id="spot-map" class="course-map" aria-label="HealingSpot 위치 설정"></div>
         </section>
+        <section th:replace="~{fragments/admin-images :: editor}"></section>
         <button class="primary-button" type="submit" th:text="${spotId == null ? 'HS 등록' : 'HS 수정'}"></button>
     </form>
+    <a class="back-link" th:if="${spotId != null}" th:href="@{/admin/spots/{id}(id=${spotId})}">HS 상세로 돌아가기</a>
     <nav class="course-footer" aria-label="HealingSpot 목록 이동">
         <a class="back-link" th:href="@{/admin/spots(courseId=${healingSpotForm.courseId})}">HS 목록으로</a>
         <a class="back-link" th:href="@{/admin/courses}">HC 목록으로</a>
@@ -53,4 +58,5 @@
 </section></main>
 <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}|"></script>
 <script th:src="@{/js/admin-spot-map.js}"></script>
+<script th:src="@{/js/admin-image-form.js}"></script>
 </body></html>

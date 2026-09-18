@@ -1,0 +1,11 @@
+# Optional local image storage; existing datasource configuration is retained.
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 105MB
+      resolve-lazily: true
+storage:
+  mode: local
+  local-directory: ${STORAGE_LOCAL_DIRECTORY:.local/uploads}
+  recovery-directory: ${STORAGE_RECOVERY_DIRECTORY:.local/image-recovery}

@@ -5,26 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>사이트 수정</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-images.css}">
 </head>
 <body class="page-body service-page">
 <header th:replace="~{fragments/header :: header}"></header>
 <main class="page-container">
-    <section class="card form-card">
+    <section class="card form-card place-image-card">
         <div class="card-header">
             <p class="card-eyebrow">Administrator</p>
             <h1 class="card-title">사이트 수정</h1>
         </div>
-        <form class="login-form site-form" th:action="@{/admin/sites/{siteId}/edit(siteId=${siteId})}" th:object="${siteForm}" method="post">
+        <p class="error-message" role="alert" th:if="${errorMessage}" th:text="${errorMessage}"></p>
+        <p class="image-success" role="status" th:if="${successMessage}" th:text="${successMessage}"></p>
+        <form id="place-form" enctype="multipart/form-data" class="login-form site-form" th:action="@{/admin/sites/{siteId}/edit(siteId=${siteId})}" th:object="${siteForm}" method="post">
             <p class="error-message" th:each="error : ${#fields.globalErrors()}" th:text="${error}"></p>
             <div th:replace="~{admin/site-form :: siteFields}">
             </div>
+            <section th:replace="~{fragments/admin-images :: editor}"></section>
             <button class="primary-button" type="submit">사이트 수정</button>
         </form>
-        <a class="back-link" th:href="@{/admin/sites}">사이트 목록으로</a>
+        <a class="back-link" th:href="@{/admin/sites/{id}(id=${siteId})}">Site 상세로 돌아가기</a>
     </section>
 </main>
 <script th:src="|//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapsJavaScriptKey}&libraries=services|"></script>
 <script defer src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script th:src="@{/js/admin-site-map.js}"></script>
+<script th:src="@{/js/admin-image-form.js}"></script>
 </body>
 </html>
