@@ -79,30 +79,6 @@ var spotMarkers = [];
    왼쪽 정보 패널 요소
 ================================ */
 
-var sitePanel =
-    document.querySelector(
-        '.site-panel'
-    );
-
-
-var siteInformationPanel =
-    document.getElementById(
-        'siteInformationPanel'
-    );
-
-
-var spotInformationPanel =
-    document.getElementById(
-        'spotInformationPanel'
-    );
-
-
-var showSitePanelButton =
-    document.getElementById(
-        'showSitePanelButton'
-    );
-
-
 /*
  * Site 정보
  */
@@ -256,55 +232,139 @@ function drawHealingCourses() {
    HS 상세 정보 표시
 ================================ */
 
-function showSpotInformation(spot) {
-
-
-    /*
-     * DB의 code
-     * 예: HS1
-     */
-    spotId.textContent =
-        spot.code;
-
-
-    spotName.textContent =
-        spot.name;
-
-
-    /*
-     * HealingSpotResponse에 담긴
-     * HC 정보 사용
-     */
-    spotCourse.textContent = spot.course || (spot.courseCode + ' · ' + spot.courseName);
-
-
+var spotModal = document.getElementById('spotDetailModal');
+var spotDialog = spotModal.querySelector('[role="dialog"]');
+var spotPreviousFocus = null;
+var spotPreviousOverflow = '';
+var spotRequestVersion = 0;
+function renderSpotInformation(spot) {
+    spotId.textContent = spot.code;
+    spotName.textContent = spot.name;
+    spotCourse.textContent = spot.course || [spot.courseCode, spot.courseName].filter(Boolean).join(' · ');
+    document.getElementById('spotDetailTitle').textContent = [spot.code, spot.name].filter(Boolean).join(' · ');
+    document.getElementById('spotDetailCourse').textContent = spotCourse.textContent;
+}
+function showSpotGalleryImage(url, alt, message) {
+    var empty = document.getElementById('spotImageEmpty');
+    spotImage.hidden = true;
+    empty.hidden = false;
+    empty.textContent = message;
+    spotImage.onload = function() { spotImage.hidden = false; empty.hidden = true; };
+    spotImage.onerror = function() {
+        spotImage.hidden = true;
+        empty.hidden = false;
+        empty.textContent = '이미지를 불러오지 못했습니다. 닫은 뒤 다시 열어 주세요.';
+    };
+    spotImage.alt = alt;
+    spotImage.referrerPolicy = 'no-referrer';
+    if (url) spotImage.src = url;
+    else spotImage.removeAttribute('src');
+}
+function resetSpotGallery(spot, message, previewUrl) {
+    var thumbnails = document.getElementById('spotThumbnails');
+    thumbnails.replaceChildren();
+    thumbnails.hidden = true;
+    showSpotGalleryImage(previewUrl, spot.code + ' ' + spot.name, message);
+}
+function renderSpotGallery(spot) {
+    var thumbnails = document.getElementById('spotThumbnails');
+    thumbnails.replaceChildren();
+    // A missing gallery field is an invalid/old API response, never an empty gallery.
+    if (!Array.isArray(spot.images) || spot.images.some(image => !image || typeof image.readUrl !== 'string' || !image.readUrl.trim())
+            || (!spot.images.length && spot.representativeImageUrl)) throw new Error('잘못된 이미지 응답');
+    var images = spot.images.slice().sort((a, b) => a.displayOrder - b.displayOrder || a.imageId - b.imageId);
+    var initial = images.find(image => image.representative) || images[0];
+    var controls = [];
+    function choose(image) {
+        showSpotGalleryImage(image ? image.readUrl : null, spot.code + ' ' + spot.name,
+            image ? '이미지를 불러오는 중입니다.' : spot.code + ' ' + spot.name + ' · 등록된 이미지가 없습니다.');
+        controls.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.image === image)));
+    }
+    images.forEach((image, index) => {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', spot.code + ' 이미지 ' + (index + 1) + (image.representative ? ' · 대표' : ''));
+        var photo = document.createElement('img');
+        photo.alt = '이미지 ' + (index + 1);
+        photo.referrerPolicy = 'no-referrer';
+        photo.src = image.readUrl;
+        button.append(photo);
+        button.addEventListener('click', () => choose(image));
+        controls.push({button: button, image: image});
+        thumbnails.append(button);
+    });
+    thumbnails.hidden = images.length < 2;
+    choose(initial);
+}
+async function openSpotDetail(spot) {
+    if (!selectedSite) return;
+    var version = ++spotRequestVersion;
+    var siteId = selectedSite.value;
+    if (spotModal.hidden) {
+        spotPreviousFocus = !mapModal.hidden ? document.getElementById('closeMapButton') : document.activeElement;
+        spotPreviousOverflow = document.body.style.overflow;
+    }
     selectedSpot = spot;
     spatial.select(spot.spotId);
-    showSitePanelButton.classList.remove('hidden');
-    setImage(spotImage, document.getElementById('spotImageEmpty'),
-        spot.representativeImageUrl, spot.code + ' ' + spot.name);
+    renderSpotInformation(spot);
+    resetSpotGallery(spot, '이미지를 불러오는 중입니다.', spot.representativeImageUrl);
+    spotModal.hidden = false;
+    mapDialog.inert = !mapModal.hidden;
+    if (!mapModal.hidden) mapDialog.setAttribute('aria-modal', 'false');
+    document.querySelector('.home-map-container').inert = true;
+    document.body.style.overflow = 'hidden';
+    spotDialog.scrollTop = 0;
+    document.getElementById('closeSpotDetailButton').focus();
     updateAnalysis();
-
-    /*
-     * Site 기본 정보 숨기기
-     */
-    siteInformationPanel
-        .classList
-        .add('hidden');
-
-
-    /*
-     * HS 상세 정보 표시
-     */
-    spotInformationPanel
-        .classList
-        .remove('hidden');
-
-
-    sitePanel.scrollTop = 0;
-
+    var status = document.getElementById('spotGalleryStatus');
+    status.textContent = '이미지를 불러오는 중입니다.';
+    try {
+        var response = await fetch('/api/sites/' + encodeURIComponent(siteId) + '/spots?spotId=' + encodeURIComponent(spot.spotId), {cache: 'no-store'});
+        if (!response.ok) throw new Error('HS 조회 실패');
+        var spots = await response.json();
+        if (version !== spotRequestVersion || spotModal.hidden) return;
+        if (!Array.isArray(spots)) throw new Error('잘못된 HS 응답');
+        var fresh = spots.find(item => item && String(item.spotId) === String(spot.spotId));
+        if (!fresh) throw new Error('HS 없음');
+        selectedSpot = fresh;
+        renderSpotInformation(fresh);
+        renderSpotGallery(fresh);
+        status.textContent = '';
+        updateAnalysis();
+    } catch (error) {
+        if (version !== spotRequestVersion || spotModal.hidden) return;
+        resetSpotGallery(spot, '이미지를 불러오지 못했습니다.');
+        status.textContent = '이미지를 불러오지 못했습니다. 닫은 뒤 다시 열어 주세요.';
+    }
 }
-
+function closeSpotDetail(restoreFocus = true) {
+    ++spotRequestVersion;
+    if (spotModal.hidden) return;
+    spotModal.hidden = true;
+    mapDialog.inert = false;
+    mapDialog.setAttribute('aria-modal', 'true');
+    document.querySelector('.home-map-container').inert = false;
+    document.body.style.overflow = spotPreviousOverflow;
+    selectedSpot = null;
+    spatial.select(null);
+    if (restoreFocus && spotPreviousFocus) spotPreviousFocus.focus();
+}
+document.getElementById('closeSpotDetailButton').addEventListener('click', () => closeSpotDetail());
+spotModal.addEventListener('click', event => { if (event.target === spotModal) closeSpotDetail(); });
+document.addEventListener('keydown', function(event) {
+    if (spotModal.hidden) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeSpotDetail();
+    }
+    if (event.key === 'Tab') {
+        var controls = Array.from(spotDialog.querySelectorAll('button')).filter(control => control.getClientRects().length);
+        var first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+});
 
 /* ================================
    Healing Spot 마커 표시
@@ -356,9 +416,9 @@ function drawHealingSpots() {
                 'click',
                 function() {
 
-                    showSpotInformation(spot);
+                    openSpotDetail(spot);
                     document.getElementById('mapSelectionStatus').textContent = spot.code + ' · ' + spot.name
-                        + ' 선택됨 · 지도를 닫으면 왼쪽 패널에서 정보를 볼 수 있습니다.';
+                        + ' 상세 보기';
 
                 }
             );
@@ -439,23 +499,14 @@ function updateAnalysis() {
     });
     if (!modal.hidden) renderAnalysisModal();
 }
-function showSitePanel() {
-    selectedSpot = null;
-    spatial.select(null);
-    showSitePanelButton.classList.add('hidden');
-    spotInformationPanel.classList.add('hidden');
-    siteInformationPanel.classList.remove('hidden');
-    sitePanel.scrollTop = 0;
-}
 var participantSelect = document.getElementById('participantSelect');
 survey.participants.forEach(participant => participantSelect.add(new Option(participant, participant)));
 participantSelect.addEventListener('change', function() { selectedParticipant = this.value; updateAnalysis(); });
 document.getElementById('metricSelect').addEventListener('change', function() { selectedMetric = this.value; updateAnalysis(); });
-showSitePanelButton.addEventListener('click', showSitePanel);
 siteSelect.addEventListener('change', function() {
     selectedSite = siteSelect.options[siteSelect.selectedIndex];
     closeAnalysisModal();
-    showSitePanel();
+    closeSpotDetail(false);
     showSiteInformation(selectedSite);
     spatial.load(selectedSite);
     document.getElementById('mapModalTitle').textContent = selectedSite ? selectedSite.dataset.name + ' · 지도' : '지도';
@@ -494,7 +545,7 @@ document.getElementById('openAnalysisButton').addEventListener('click', function
 document.getElementById('closeAnalysisButton').addEventListener('click', closeAnalysisModal);
 modal.addEventListener('click', event => { if (event.target === modal) closeAnalysisModal(); });
 document.addEventListener('keydown', function(event) {
-    if (modal.hidden) return;
+    if (modal.hidden || !spotModal.hidden) return;
     if (event.key === 'Escape') closeAnalysisModal();
     if (event.key === 'Tab') {
         var controls = Array.from(dialog.querySelectorAll('button, summary, [tabindex="0"]'));
@@ -506,7 +557,7 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
-var spatial = window.HomeSpatial(showSpotInformation);
+var spatial = window.HomeSpatial(openSpotDetail);
 var mapModal = document.getElementById('mapModal');
 var mapDialog = mapModal.querySelector('[role="dialog"]');
 var mapPreviousFocus = null;
@@ -545,7 +596,7 @@ document.getElementById('openMapButton').addEventListener('click', function() {
 document.getElementById('closeMapButton').addEventListener('click', closeMapModal);
 mapModal.addEventListener('click', event => { if (event.target === mapModal) closeMapModal(); });
 document.addEventListener('keydown', function(event) {
-    if (mapModal.hidden) return;
+    if (mapModal.hidden || !spotModal.hidden || event.defaultPrevented) return;
     if (event.key === 'Escape') { event.preventDefault(); closeMapModal(); }
     if (event.key === 'Tab') {
         var controls = Array.from(mapDialog.querySelectorAll('button, a[href], input, select, [tabindex]'))

@@ -453,4 +453,29 @@ class SpatialLayoutTests {
                 .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
     }
 
+    @Test void monitoringGalleryUsesOrderedStorageUrlsAndSiteScope() throws Exception {
+        spotImages.upload(first.getSpotId(), List.of(file("first.png"), file("representative.png")));
+        var gallery = spotImages.list(first.getSpotId());
+        spotImages.setRepresentative(first.getSpotId(), gallery.getLast().imageId());
+        String endpoint = "/api/sites/" + site.getSiteId() + "/spots";
+        mvc.perform(get(endpoint).param("spotId", first.getSpotId().toString()).sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].courseCode").value(course.getCode()))
+                .andExpect(jsonPath("$[0].representativeImageUrl").value(gallery.getLast().readUrl()))
+                .andExpect(jsonPath("$[0].images[0].imageId").value(gallery.getFirst().imageId()))
+                .andExpect(jsonPath("$[0].images[0].displayOrder").value(1))
+                .andExpect(jsonPath("$[0].images[1].representative").value(true))
+                .andExpect(jsonPath("$[0].images[1].readUrl").value(gallery.getLast().readUrl()))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("objectKey"))));
+        var otherSite = sites.saveAndFlush(new Site("Other gallery", "주소", 37.0, 127.0, 3));
+        mvc.perform(get("/api/sites/" + otherSite.getSiteId() + "/spots")
+                        .param("spotId", first.getSpotId().toString()).sessionAttr("loginAdminId", 1L))
+                .andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get(endpoint).param("spotId", second.getSpotId().toString()).sessionAttr("loginAdminId", 1L))
+                .andExpect(jsonPath("$[0].images").isEmpty());
+        mvc.perform(get(endpoint).param("spotId", first.getSpotId().toString()).sessionAttr("loginMemberId", 1L))
+                .andExpect(jsonPath("$[0].images").isEmpty())
+                .andExpect(jsonPath("$[0].representativeImageUrl").isEmpty());
+    }
+
 }

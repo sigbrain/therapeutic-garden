@@ -10,6 +10,20 @@ window.HomeSpatial = function(onSelect) {
         selectedId = spotId;
         buttons.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.id === spotId)));
     }
+    function positionLabels() {
+        var width = canvas.clientWidth;
+        if (!width) return;
+        buttons.forEach(entry => {
+            entry.label.style.maxWidth = Math.min(200, Math.max(0, width - 16)) + 'px';
+            var half = entry.label.offsetWidth / 2;
+            var center = width * entry.xPercent / 100;
+            // Move only the label; the photo remains on its saved percentage coordinate.
+            var boundedCenter = Math.min(Math.max(center, half + 8), width - half - 8);
+            entry.label.style.marginLeft = (boundedCenter - center) + 'px';
+        });
+    }
+    if (window.ResizeObserver) new window.ResizeObserver(positionLabels).observe(canvas);
+    else window.addEventListener('resize', positionLabels);
     async function load(site) {
         var current = ++version;
         selectedId = null;
@@ -47,9 +61,8 @@ window.HomeSpatial = function(onSelect) {
                 button.className = 'monitoring-hotspot';
                 button.style.left = spot.xPercent + '%';
                 button.style.top = spot.yPercent + '%';
-                button.setAttribute('aria-label', spot.code + ' · ' + spot.name + ' 정보 보기');
+                button.setAttribute('aria-label', spot.code + ' · ' + spot.name + ' 상세 보기');
                 button.setAttribute('aria-pressed', String(spot.spotId === selectedId));
-                button.title = spot.code + ' · ' + spot.name;
                 var circle = document.createElement('span');
                 circle.className = 'monitoring-hotspot-circle';
                 circle.textContent = spot.code || spot.name;
@@ -63,17 +76,19 @@ window.HomeSpatial = function(onSelect) {
                 }
                 var label = document.createElement('span');
                 label.className = 'monitoring-hotspot-label';
-                label.textContent = spot.code || spot.name;
-                // Keep the circle centered on the saved coordinate, including image edges.
-                if (Number(spot.yPercent) > 85) label.classList.add('above');
+                label.textContent = [spot.code, spot.name].filter(Boolean).join(' · ');
+                label.setAttribute('aria-hidden', 'true');
                 button.append(circle, label);
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
-                buttons.push({id: spot.spotId, button: button});
+                button.addEventListener('mouseenter', positionLabels);
+                button.addEventListener('focus', positionLabels);
+                buttons.push({id: spot.spotId, button: button, label: label, xPercent: Number(spot.xPercent)});
                 overlay.append(button);
             });
             image.addEventListener('load', () => {
                 if (current !== version) return;
                 canvas.hidden = false;
+                positionLabels();
                 status.textContent = placed.length ? '' : '설정된 HS 위치가 없습니다.';
             });
             image.addEventListener('error', () => {

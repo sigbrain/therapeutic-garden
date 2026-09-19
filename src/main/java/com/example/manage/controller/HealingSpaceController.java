@@ -52,14 +52,20 @@ public class HealingSpaceController {
      */
     @GetMapping("/{siteId}/spots")
     public List<HealingSpotResponse> getHealingSpots(
-            @PathVariable Long siteId, jakarta.servlet.http.HttpSession session
+            @PathVariable Long siteId, jakarta.servlet.http.HttpSession session,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Long spotId
     ) {
 
         return healingSpotService
                 .findBySiteId(siteId)
                 .stream()
-                .map(spot -> new HealingSpotResponse(spot, session.getAttribute("loginAdminId") != null
-                        ? spotImages.representativeReadUrl(spot.getSpotId()) : null))
+                .filter(spot -> spotId == null || spot.getSpotId().equals(spotId))
+                .map(spot -> {
+                    var images = session.getAttribute("loginAdminId") != null
+                            ? spotImages.list(spot.getSpotId()) : List.<com.example.manage.dto.ImageResponse>of();
+                    return new HealingSpotResponse(spot, images.stream().filter(com.example.manage.dto.ImageResponse::representative)
+                            .map(com.example.manage.dto.ImageResponse::readUrl).findFirst().orElse(null), images);
+                })
                 .toList();
     }
 }
