@@ -34,6 +34,7 @@ function setup(options = {}) {
     const survey = {participants: [], metrics: {stress: {name: 'VAS', spatial: true}}, range() {}, courseMean() {},
         normalize() {}, getSurveyColor() { return '#abc'; }, renderSpot() {}, renderModal() {}};
     const context = {document: {getElementById: element, querySelector: element,
+            createElementNS(ns, tag) { return this.createElement(tag); },
             createElement(tag) { return Object.assign(element('created' + ++elementSequence), {tag}); },
             addEventListener(event, fn) { (documentEvents[event] ||= []).push(fn); }, body: {style: {}}},
         window: {kakao: options.noSdk ? null : kakao, HomeSurvey: survey,
@@ -41,12 +42,12 @@ function setup(options = {}) {
             addEventListener(event, fn) { windowEvents[event] = fn; }}, kakao, Option: function() {},
         fetch: options.fetch || (async url => ({ok: true, json: async () => url.endsWith('/data')
             ? {siteId: Number(url.split('/')[3]), name: 'Site', image: {readUrl: '/spatial/' + url.split('/')[3]},
-                spots: [{spotId: 1, code: 'HS1', name: '정원', course: 'HC1 · 코스', readUrl: '/authenticated/hs-1', xPercent: 20, yPercent: 70}]}
+                spots: [{spotId: 1, code: 'HS1', name: '정원', course: 'HC1 · 코스', courseId: 17, courseCode: 'HC1', courseName: '코스', readUrl: '/authenticated/hs-1', xPercent: 20, yPercent: 70}]}
             : url.endsWith('/courses')
             ? [{centerLatitude: 37, centerLongitude: 127, radius: 10}]
             : [{spotId: 1, code: 'HS1', name: '정원', courseCode: 'HC1', courseName: '코스', latitude: 37, longitude: 127,
                 representativeImageUrl: '/authenticated/hs-1', images: [{imageId: 1, displayOrder: 1, representative: true, readUrl: '/authenticated/hs-1'}]}]}))};
-    vm.createContext(context); vm.runInContext(spatialScript, context); vm.runInContext(script, context);
+    vm.createContext(context); vm.runInContext(fs.readFileSync('src/main/resources/static/js/home-course-overlay.js', 'utf8'), context); vm.runInContext(spatialScript, context); vm.runInContext(script, context);
     return {elements, maps, circles, markers, context, windowEvents,
         key(event) { event.stopImmediatePropagation = () => { event.stopped = true; }; for (const fn of documentEvents.keydown) { fn(event); if (event.stopped) break; } },
         open() { elements.openMapButton.click(); frames.splice(0).forEach(fn => fn()); },
@@ -81,7 +82,7 @@ test('Monitoring runtime has no filename inference or static Site/HS image mappi
 
 const canvas = ui => ui.elements.monitoringCanvas;
 const image = ui => canvas(ui).children[0];
-const hotspots = ui => canvas(ui).children[1].children;
+const hotspots = ui => canvas(ui).children[3].children;
 function layoutFetch(layout) {
     return async url => ({ok: true, json: async () => url.endsWith('/data') ? layout : []});
 }
@@ -356,4 +357,32 @@ test('label clamps to both stage edges without moving hotspot coordinates', asyn
     assert.deepEqual(hotspots(ui).map(button => button.children[1].style.marginLeft), ['60px', '0px', '-60px']);
     assert.equal(hotspots(ui)[0].children[1].style.maxWidth, '104px');
     assert.deepEqual(hotspots(ui).map(button => button.style.left), ['0%', '50%', '100%']);
+});
+
+const regions = ui => canvas(ui).children[1].children;
+const badges = ui => canvas(ui).children[2].children;
+test('HC demo defaults to stress, selector changes only text and retains hotspot/modal interactions', async () => {
+    const ui = setup(); await flush(); image(ui).load();
+    assert.equal(regions(ui).length, 1);
+    const region = regions(ui)[0];
+    const before = [region.x, region.y, region.width, region.height];
+    const stress = badges(ui)[0].children[1].textContent;
+    assert.match(stress, /스트레스 \d+% 감소/);
+    ui.elements.hcRelaxation.click();
+    assert.equal(ui.elements.hcRelaxation['aria-pressed'], 'true');
+    assert.match(badges(ui)[0].children[1].textContent, /이완감 (\d+% (증가|감소)|변화 없음)/);
+    assert.deepEqual([region.x, region.y, region.width, region.height], before);
+    ui.elements.hcStress.click(); assert.equal(badges(ui)[0].children[1].textContent, stress);
+    hotspots(ui)[0].click(); await flush(); assert.equal(ui.elements.spotDetailModal.hidden, false);
+    ui.change(1); assert.equal(canvas(ui).children.length, 0); await flush();
+    assert.equal(regions(ui).length, 1); assert.notEqual(regions(ui)[0], region);
+});
+test('stale HC response cannot restore another Site overlay', async () => {
+    let finish;
+    const ui = setup({fetch: url => url === '/admin/sites/1/spatial-layout/data'
+        ? new Promise(resolve => { finish = resolve; })
+        : layoutFetch({...baseLayout(), siteId: 2})(url)});
+    ui.change(1); await flush();
+    finish({ok: true, json: async () => ({...baseLayout(), spots: [{...baseLayout().spots[0], courseId: 99}]})});
+    await flush(); assert.equal(regions(ui).length, 0); assert.equal(badges(ui).length, 0);
 });

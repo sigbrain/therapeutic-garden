@@ -18,7 +18,8 @@ public class SpatialLayoutService {
     private final SiteImageService siteImages;
     private final HealingSpotImageService spotImages;
 
-    public record Spot(Long spotId, String course, String code, String name, String readUrl,
+    public record Spot(Long spotId, String course, Long courseId, String courseCode, String courseName,
+                       String code, String name, String readUrl,
                        BigDecimal xPercent, BigDecimal yPercent) {}
     public record Layout(Long siteId, String name, long revision, ImageResponse image, List<Spot> spots) {}
 
@@ -37,6 +38,7 @@ public class SpatialLayoutService {
                             .map(ImageResponse::readUrl).findFirst().orElse(null);
                     var p = saved.get(s.getSpotId());
                     return new Spot(s.getSpotId(), s.getHealingCourse().getCode() + " · " + s.getHealingCourse().getName(),
+                            s.getHealingCourse().getCourseId(), s.getHealingCourse().getCode(), s.getHealingCourse().getName(),
                             s.getCode(), s.getName(), url, p == null ? null : p.getXPercent(), p == null ? null : p.getYPercent());
                 }).toList();
         return new Layout(siteId, site.getName(), site.getSpatialRevision(), image, result);

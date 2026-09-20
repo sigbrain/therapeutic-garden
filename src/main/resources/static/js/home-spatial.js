@@ -6,11 +6,45 @@ window.HomeSpatial = function(onSelect) {
     var version = 0;
     var buttons = [];
     var selectedId = null;
+    var courses = [], badges = [];
+    var metric = 'stress';
+    var effects = window.HomeCourseOverlay;
+    var metricButtons = ['hcStress', 'hcRelaxation'].map(id => document.getElementById(id));
+    function updateMetric(next) {
+        metric = next;
+        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'relaxation' : 'stress'))));
+        badges.forEach(entry => {
+            var change = effects.aggregate(entry.course, metric);
+            var color = effects.metricColor(change, metric);
+            entry.value.textContent = effects.formatChange(change, metric);
+            entry.value.style.color = color;
+            entry.region.style.fill = color;
+            entry.region.style.stroke = color;
+        });
+    }
+    metricButtons.forEach((button, index) => button.addEventListener('click', () => updateMetric(index ? 'relaxation' : 'stress')));
+    function positionBadges() {
+        var width = canvas.clientWidth, height = canvas.clientHeight;
+        if (!width || !height) return;
+        var obstacles = buttons.map(entry => {
+            var diameter = entry.button.offsetWidth + 14;
+            return {x: width * entry.xPercent / 100 - diameter / 2,
+                y: height * entry.yPercent / 100 - diameter / 2, w: diameter, h: diameter};
+        });
+        badges.forEach(entry => {
+            var pos = effects.badgePosition(entry.course.bounds,
+                {w: entry.badge.offsetWidth, h: entry.badge.offsetHeight}, {w: width, h: height}, obstacles);
+            entry.badge.style.left = pos.x / width * 100 + '%';
+            entry.badge.style.top = pos.y / height * 100 + '%';
+            obstacles.push(pos);
+        });
+    }
     function select(spotId) {
         selectedId = spotId;
         buttons.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.id === spotId)));
     }
     function positionLabels() {
+        positionBadges();
         var width = canvas.clientWidth;
         if (!width) return;
         buttons.forEach(entry => {
@@ -28,6 +62,8 @@ window.HomeSpatial = function(onSelect) {
         var current = ++version;
         selectedId = null;
         buttons = [];
+        courses = [];
+        badges = [];
         canvas.replaceChildren();
         canvas.hidden = true;
         settings.hidden = true;
@@ -55,6 +91,40 @@ window.HomeSpatial = function(onSelect) {
             var placed = layout.spots.filter(spot => [spot.xPercent, spot.yPercent].every(value =>
                 value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
                 && Number(value) >= 0 && Number(value) <= 100));
+            courses = effects.groups(layout.spots);
+            var regions = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            regions.setAttribute('viewBox', '0 0 100 100');
+            regions.setAttribute('preserveAspectRatio', 'none');
+            regions.setAttribute('aria-hidden', 'true');
+            regions.setAttribute('class', 'monitoring-course-regions');
+            var badgeLayer = document.createElement('div');
+            badgeLayer.className = 'monitoring-course-badges';
+            badgeLayer.setAttribute('aria-label', 'HC 공간효과 예시 데이터');
+            courses.forEach((course, index) => {
+                var bounds = course.bounds;
+                var region = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                Object.entries({x: bounds.left, y: bounds.top, width: bounds.right - bounds.left,
+                    height: bounds.bottom - bounds.top,
+                    // Flatten corners at the image edge so even edge-positioned HS centers stay inside.
+                    rx: Math.min(6, ...course.spots.map(s => Math.min(Number(s.xPercent) - bounds.left, bounds.right - Number(s.xPercent)))),
+                    ry: Math.min(7, ...course.spots.map(s => Math.min(Number(s.yPercent) - bounds.top, bounds.bottom - Number(s.yPercent)))),
+                    class: 'hc-tone-' + index % 3}).forEach(([key, value]) => region.setAttribute(key, value));
+                regions.append(region);
+                var badge = document.createElement('div');
+                badge.className = 'monitoring-course-badge hc-tone-' + index % 3;
+                var title = document.createElement('span');
+                title.textContent = [course.code, course.name].filter(Boolean).join(' · ');
+                var value = document.createElement('strong');
+                var change = effects.aggregate(course, metric);
+                value.textContent = effects.formatChange(change, metric);
+                var color = effects.metricColor(change, metric);
+                region.style.fill = color;
+                region.style.stroke = color;
+                value.style.color = color;
+                badge.append(title, value);
+                badgeLayer.append(badge);
+                badges.push({course: course, badge: badge, value: value, region: region});
+            });
             placed.forEach(spot => {
                 var button = document.createElement('button');
                 button.type = 'button';
@@ -82,7 +152,7 @@ window.HomeSpatial = function(onSelect) {
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
                 button.addEventListener('mouseenter', positionLabels);
                 button.addEventListener('focus', positionLabels);
-                buttons.push({id: spot.spotId, button: button, label: label, xPercent: Number(spot.xPercent)});
+                buttons.push({id: spot.spotId, button: button, label: label, xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
                 overlay.append(button);
             });
             image.addEventListener('load', () => {
@@ -97,7 +167,7 @@ window.HomeSpatial = function(onSelect) {
                 status.textContent = '모니터링 이미지를 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.';
                 settings.hidden = false;
             });
-            canvas.append(image, overlay);
+            canvas.append(image, regions, badgeLayer, overlay);
             image.src = layout.image.readUrl;
         } catch (error) {
             if (current !== version) return;

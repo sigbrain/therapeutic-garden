@@ -399,6 +399,9 @@ class SpatialLayoutTests {
                 .andExpect(jsonPath("$.image.spatial").value(true))
                 .andExpect(jsonPath("$.image.representative").value(false))
                 .andExpect(jsonPath("$.spots[0].spotId").value(first.getSpotId()))
+                .andExpect(jsonPath("$.spots[0].courseId").value(course.getCourseId()))
+                .andExpect(jsonPath("$.spots[0].courseCode").value(course.getCode()))
+                .andExpect(jsonPath("$.spots[0].courseName").value(course.getName()))
                 .andExpect(jsonPath("$.spots[0].xPercent").value(76))
                 .andExpect(jsonPath("$.spots[0].yPercent").value(12))
                 .andExpect(jsonPath("$.spots[0].readUrl").value(representative.readUrl()))
@@ -440,7 +443,7 @@ class SpatialLayoutTests {
 
     @Test void monitoringTemplatePlacesMapAndLegendInsideSecondaryDialog() throws Exception {
         String html = monitoringHtml();
-        assertThat(html).contains("공간 모니터링", "지도 보기", "id=\"monitoringCanvas\"", "/js/home-spatial.js", "/css/home-spatial.css");
+        assertThat(html).contains("공간 모니터링", "지도 보기", "id=\"monitoringCanvas\"", "/js/home-spatial.js", "/css/home-spatial.css", "Demo 데이터", "id=\"hcStress\"", "id=\"hcRelaxation\"", "스트레스 수준", "이완감 수준", "/js/home-course-overlay.js");
         int dialogStart = html.indexOf("id=\"mapModal\"");
         assertThat(html.indexOf("id=\"map\"")).isGreaterThan(dialogStart);
         assertThat(html.indexOf("id=\"surveyLegendTitle\"")).isGreaterThan(dialogStart);

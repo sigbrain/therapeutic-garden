@@ -113,6 +113,13 @@
             <h1 id="spatialTitle">공간 모니터링</h1>
             <button type="button" id="openMapButton" aria-haspopup="dialog">지도 보기</button>
         </div>
+        <div class="monitoring-effect-controls">
+            <div role="group" aria-label="공간효과 예시 지표">
+                <button type="button" id="hcStress" aria-pressed="true">스트레스 수준</button>
+                <button type="button" id="hcRelaxation" aria-pressed="false">이완감 수준</button>
+            </div>
+            <span class="monitoring-demo" title="공간효과 시각화를 위한 예시 값입니다. 실제 측정 결과가 아닙니다.">Demo 데이터</span>
+        </div>
         <div class="monitoring-content">
             <p id="monitoringStatus" role="status">공간 정보를 불러오는 중입니다.</p>
             <a id="monitoringSettings" hidden>공간 모니터링 설정</a>
@@ -189,7 +196,8 @@
 ================================ -->
 
 <script th:src="@{/js/home-survey-analysis.js}"></script>
-<script th:src="@{/js/home-spatial.js}"></script>
+<script th:src="@{/js/home-course-overlay.js?v=hc-level}"></script>
+<script th:src="@{/js/home-spatial.js?v=hc-level}"></script>
 <script
         th:src="@{/js/home-map.js}">
 </script>
