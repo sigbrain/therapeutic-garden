@@ -99,7 +99,7 @@ class RoleBasedHomeTests {
                 .andExpect(model().attribute("kakaoMapsJavaScriptKey", kakaoKey))
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("id=\"siteSelect\"", "id=\"map\"", "id=\"analysisModal\"",
-                "id=\"spotInformationPanel\"", "href=\"/admin/monitoring\"");
+                "id=\"spotDetailModal\"", "href=\"/admin/monitoring\"");
         String header = html.substring(html.indexOf("<header"), html.indexOf("</header>"));
         assertThat(header).contains("href=\"/admin/monitoring\"", "href=\"/admin\"", "href=\"/admin/logout\"")
                 .doesNotContain("/member", "/admin/login");

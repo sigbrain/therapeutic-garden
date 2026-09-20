@@ -49,3 +49,5 @@ manage-backup.sql
 
 # Runtime uploads and rollback recovery files
 .local/
+
+.codex-reference/

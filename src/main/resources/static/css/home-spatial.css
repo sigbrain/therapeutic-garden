@@ -1,0 +1,88 @@
+.monitoring-space { min-width: 0; overflow-y: auto; background: #f7f8f2; }
+.monitoring-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; }
+.monitoring-heading h1, .monitoring-heading h2 { margin: 0; font-size: 20px; color: #244b3b; overflow-wrap: anywhere; }
+.monitoring-heading button { flex-shrink: 0; padding: 9px 15px; border: 1px solid #cbd8cf; border-radius: 8px; background: #fff; color: #365647; font: inherit; font-size: 13px; cursor: pointer; }
+.monitoring-heading button:hover { background: #eef3ed; }
+.monitoring-content { padding: 0 36px 44px; }
+#monitoringStatus { margin: 0 0 16px; color: #66776c; font-size: 13px; line-height: 1.7; }
+#monitoringStatus:empty { display: none; }
+#monitoringSettings { display: inline-block; color: #36644d; font-size: 13px; margin-bottom: 18px; text-underline-offset: 4px; }
+.monitoring-canvas { position: relative; width: 100%; margin-top: 12px; }
+.monitoring-image { display: block; width: 100%; height: auto; border-radius: 6px; }
+.monitoring-hotspots { position: absolute; inset: 0; pointer-events: none; }
+.monitoring-hotspot { position: absolute; transform: translate(-50%, -50%); padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
+.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(58px, 8vw, 108px); height: clamp(58px, 8vw, 108px); box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 3px 10px #182d3540; transition: transform .16s, box-shadow .16s; }
+.monitoring-hotspot-circle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.monitoring-hotspot-label { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: 200px; padding: 5px 8px; border-radius: 5px; background: #fffffff5; color: #244b3b; font-size: 12px; line-height: 1.4; font-weight: 600; text-align: center; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; box-shadow: 0 2px 6px #182d3526; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s; }
+@media (hover: hover) and (pointer: fine) {
+    .monitoring-hotspot:hover .monitoring-hotspot-label,
+    .monitoring-hotspot:focus-visible .monitoring-hotspot-label { opacity: 1; visibility: visible; }
+}
+.monitoring-hotspot:hover, .monitoring-hotspot:focus-visible, .monitoring-hotspot[aria-pressed="true"] { z-index: 2; }
+.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.07); box-shadow: 0 5px 14px #182d3555; }
+.monitoring-hotspot[aria-pressed="true"] .monitoring-hotspot-circle { outline: 2px solid #427e5c; outline-offset: 3px; }
+.monitoring-hotspot:focus-visible { outline: 2px solid #427e5c; outline-offset: 4px; border-radius: 50%; }
+.monitoring-map-dialog { display: flex; flex-direction: column; width: 88vw; height: 88vh; height: 88dvh; max-width: 1600px; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px #0f172a33; }
+.monitoring-map-dialog .map-section { flex: 1; min-height: 0; position: relative; }
+.monitoring-map-dialog #map { width: 100%; height: 100%; }
+.monitoring-map-dialog #closeMapButton { width: 38px; height: 38px; padding: 0; font-size: 26px; }
+#mapSelectionStatus { margin: 0; padding: 10px 24px; color: #526657; font-size: 13px; }
+#mapSelectionStatus:empty { display: none; }
+@media (max-width: 900px) { .monitoring-space { overflow: visible; min-height: 300px; } }
+@media (max-width: 520px) {
+    .monitoring-heading { padding: 18px; gap: 10px; }
+    .monitoring-heading h1, .monitoring-heading h2 { font-size: 18px; }
+    .monitoring-content { padding: 0 28px 40px; }
+    .monitoring-map-dialog { width: 100%; height: 90vh; height: 90dvh; }
+}
+@media (prefers-reduced-motion: reduce) { .monitoring-hotspot-circle, .monitoring-hotspot-label { transition: none; } }
+
+#spotDetailModal { z-index: 1100; }
+.spot-detail-dialog { width: min(74vw, 1040px); max-height: 90vh; max-height: 90dvh; overflow-y: auto; overscroll-behavior: contain; background: #fffefa; border-radius: 16px; box-shadow: 0 20px 60px #182d3540; }
+.spot-detail-dialog .monitoring-heading { align-items: flex-start; }
+#spotDetailCourse { margin: 8px 0 0; color: #66776c; font-size: 14px; }
+#closeSpotDetailButton { width: 40px; height: 40px; padding: 0; font-size: 28px; }
+.spot-detail-content { padding: 0 24px 24px; }
+.spot-detail-hero { display: flex; align-items: center; justify-content: center; height: clamp(220px, 43vh, 460px); background: #edf1e9; border-radius: 10px; overflow: hidden; color: #66776c; text-align: center; }
+.spot-detail-hero img { width: 100%; height: 100%; object-fit: contain; }
+.spot-thumbnails { display: flex; gap: 10px; overflow-x: auto; padding: 12px 3px; }
+.spot-thumbnails button { flex: 0 0 86px; height: 66px; padding: 3px; border: 2px solid transparent; border-radius: 8px; background: #edf1e9; cursor: pointer; }
+.spot-thumbnails button[aria-pressed="true"] { border-color: #427e5c; }
+.spot-thumbnails button:focus-visible { outline: 2px solid #244b3b; outline-offset: 1px; }
+.spot-thumbnails img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+#spotGalleryStatus { color: #66776c; font-size: 13px; }
+#spotGalleryStatus:empty { display: none; }
+.spot-detail-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid #dfe6dc; }
+.spot-detail-section h3 { margin: 0 0 16px; color: #244b3b; font-size: 16px; }
+.spot-detail-section dl { margin: 0; }
+.spot-detail-section dl div { display: grid; grid-template-columns: 130px 1fr; gap: 16px; margin-top: 10px; font-size: 14px; }
+.spot-detail-section dt { color: #66776c; }
+.spot-detail-section dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 900px) { .spot-detail-dialog { width: min(94vw, 760px); } }
+@media (max-width: 520px) {
+    .monitoring-hotspot-circle { width: 48px; height: 48px; }
+    .monitoring-hotspot-label { font-size: 11px; padding: 2px 5px; }
+    .spot-detail-dialog { width: 100%; }
+    .spot-detail-content { padding: 0 16px 20px; }
+    .spot-detail-section dl div { grid-template-columns: 95px 1fr; gap: 10px; }
+}
+
+.monitoring-effect-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 0 24px 12px; }
+.monitoring-effect-controls > div { display: flex; gap: 5px; }
+.monitoring-effect-controls button { padding: 7px 10px; border: 1px solid #d3dfd4; border-radius: 7px; background: #fffefa; color: #536b5b; font: inherit; font-size: 12px; cursor: pointer; }
+.monitoring-effect-controls button[aria-pressed="true"] { background: #365d48; border-color: #365d48; color: white; }
+.monitoring-effect-controls button:focus-visible { outline: 2px solid #365d48; outline-offset: 3px; }
+.monitoring-demo { padding: 4px 7px; border: 1px solid #d8d1ac; border-radius: 5px; background: #faf6df; color: #6b6138; font-size: 11px; white-space: nowrap; }
+.monitoring-course-regions, .monitoring-course-badges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.monitoring-course-regions { z-index: 1; overflow: hidden; }
+.monitoring-course-regions rect { fill: #749d80; fill-opacity: .24; stroke: #52745d; stroke-opacity: .98; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.monitoring-course-badges { z-index: 2; }
+.monitoring-course-badge { position: absolute; box-sizing: border-box; max-width: min(180px, 58%); padding: 6px 9px; border: 1px solid #edf2e6bf; border-radius: 8px; background: #fffef2e8; color: #2b503e; box-shadow: 0 2px 5px #243b2614; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.monitoring-course-badge span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.monitoring-course-badge strong { display: block; font-size: 12px; white-space: nowrap; }
+.monitoring-hotspots { z-index: 3; }
+@media (max-width: 520px) {
+    .monitoring-effect-controls { padding: 0 18px 8px; gap: 7px; }
+    .monitoring-course-badge { max-width: 120px; padding: 4px 6px; font-size: 9px; border-radius: 6px; }
+    .monitoring-course-badge strong { font-size: 10px; }
+}

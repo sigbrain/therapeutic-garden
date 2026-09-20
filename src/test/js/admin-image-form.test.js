@@ -18,7 +18,7 @@ test('existing deletion is pending and deleting representative falls back', () =
 test('moving existing and new images gives consistent multipart indexes', () => {
     const state = draft(); state.add([file('D.png'), file('E.png')]);
     const item = state.items[4]; state.select(item); state.move(item, -1); state.move(item, -1);
-    assert.deepEqual(state.payload(), {files: [item.file, state.items[4].file], imageOrder: 'e:1,e:2,n:0,e:3,n:1', imageDeleted: '', imageRepresentative: 'n:0'});
+    assert.deepEqual(state.payload(), {files: [item.file, state.items[4].file], imageOrder: 'e:1,e:2,n:0,e:3,n:1', imageDeleted: '', imageRepresentative: 'n:0', imageSpatial: ''});
 });
 test('removing unsaved files excludes them from submission without server deletion', () => {
     const state = draft(); state.add([file()]); state.select(state.items[3]); state.remove(state.items[3]);
@@ -57,7 +57,7 @@ test('pages without editor do nothing and editor has no network operations', () 
     assert.doesNotMatch(script, /fetch\(|XMLHttpRequest|\.submit\(|requestSubmit\(/);
 });
 
-function editor() {
+function editor(spatialEnabled = false) {
     class Element {
         constructor() { this.children = []; this.dataset = {}; this.listeners = {}; }
         append(...nodes) { nodes.forEach(node => { node.parent = this; this.children.push(node); }); }
@@ -72,6 +72,7 @@ function editor() {
     for (const [key, representative] of [['e:1', 'true'], ['e:2', 'false']]) {
         const node = new Element(); node.dataset = {key, representative}; grid.append(node);
     }
+    grid.dataset.spatialEnabled = String(spatialEnabled);
     let created = 0, revoked = 0;
     vm.runInNewContext(fs.readFileSync('src/main/resources/static/js/admin-image-form.js', 'utf8'), {
         document: {getElementById: id => id === 'place-form' ? form : input,
@@ -108,4 +109,32 @@ test('actual input accumulates selections, releases removed preview, submits onl
     const payload = ui.payload();
     assert.equal(payload.get('files').length, 1); assert.equal(payload.get('files')[0].name, 'D.png');
     assert.equal(payload.get('imageRepresentative'), 'n:0'); assert.equal(ui.revoked, 1);
+});
+
+test('spatial and representative roles are independent in the draft', () => {
+    const state = draft(); state.selectSpatial(state.items[1]);
+    assert.equal(state.payload().imageSpatial, 'e:2'); assert.equal(state.payload().imageRepresentative, 'e:1');
+    state.select(state.items[1]); assert.equal(state.payload().imageSpatial, 'e:2');
+    state.selectSpatial(state.items[2]); assert.equal(state.items.filter(i => i.spatial).length, 1);
+    assert.equal(state.payload().imageRepresentative, 'e:2');
+});
+test('new spatial upload uses final multipart index after reorder and deletion', () => {
+    const state = draft(); state.add([file('a.png'), file('b.png')]); state.selectSpatial(state.items[4]);
+    state.move(state.items[4], -1); assert.equal(state.payload().imageSpatial, 'n:0');
+    state.remove(state.items[3]); assert.equal(state.payload().imageSpatial, '');
+});
+test('spatial clearing and leaving discard only the local selection', () => {
+    const state = draft(); state.selectSpatial(state.items[1]); state.selectSpatial(null);
+    assert.equal(state.payload().imageSpatial, ''); assert.equal(state.payload().imageRepresentative, 'e:1');
+    state.selectSpatial(state.items[2]); assert.equal(draft().payload().imageSpatial, '');
+});
+
+
+test('actual spatial buttons move independent badges and stage only final formdata', () => {
+    const ui = editor(true); ui.click(1, '모니터링 이미지로 설정');
+    assert.equal(ui.payload().get('imageSpatial'), 'e:2'); assert.equal(ui.payload().get('imageRepresentative'), 'e:1');
+    assert.equal(ui.grid.children[1].querySelector('.image-meta').children[0].textContent, '모니터링');
+    ui.click(0, '모니터링 이미지로 설정');
+    assert.equal(ui.grid.children[0].querySelector('.image-meta').children.length, 2);
+    ui.click(0, '모니터링 이미지 해제'); assert.equal(ui.payload().get('imageSpatial'), '');
 });

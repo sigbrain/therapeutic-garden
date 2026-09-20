@@ -48,3 +48,12 @@ test('multiple galleries do not affect each other', () => {
     assert.equal(first.main.src, 'representative.png');
     assert.equal(second.main.src, 'image-2.png');
 });
+
+test('gallery spatial badge follows its independent role', () => {
+    const state = gallery(); const spatial = {hidden: true};
+    const original = state.querySelector.bind(state);
+    state.querySelector = selector => selector === '[data-gallery-spatial]' ? spatial : original(selector);
+    state.thumbnails[1].dataset.spatial = 'true'; run([state]);
+    state.thumbnails[1].click(); assert.equal(spatial.hidden, false); assert.equal(state.badge.hidden, true);
+    state.thumbnails[0].click(); assert.equal(spatial.hidden, true); assert.equal(state.badge.hidden, false);
+});

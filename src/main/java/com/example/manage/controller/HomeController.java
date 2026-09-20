@@ -16,6 +16,7 @@ import java.util.List;
 public class HomeController {
 
     private final SiteService siteService;
+    private final com.example.manage.service.SiteImageService siteImages;
 
     @Value("${kakao.maps.javascript-key}")
     private String kakaoMapsJavaScriptKey;
@@ -41,6 +42,9 @@ public class HomeController {
                 kakaoMapsJavaScriptKey
         );
         model.addAttribute("sites", sites);
+        var imageUrls = new java.util.HashMap<Long, String>();
+        sites.forEach(site -> imageUrls.put(site.getSiteId(), siteImages.representativeReadUrl(site.getSiteId())));
+        model.addAttribute("siteImageUrls", imageUrls);
 
         return "home";
     }

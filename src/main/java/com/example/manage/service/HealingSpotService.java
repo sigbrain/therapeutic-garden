@@ -16,6 +16,8 @@ import java.util.List;
 @Transactional
 public class HealingSpotService {
     private final HealingSpotRepository healingSpotRepository;
+    private final com.example.manage.repository.SiteRepository siteRepository;
+    private final com.example.manage.repository.SiteImageSpotPositionRepository positions;
     private final HealingSpotImageService healingSpotImageService;
     private final HealingCourseRepository healingCourseRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
@@ -27,6 +29,7 @@ public class HealingSpotService {
 
     public HealingSpot createHealingSpot(Long courseId, String code, String name,
                                          Double latitude, Double longitude) {
+        siteRepository.lockForMembershipChange();
         HealingCourse course = requireCourse(courseId);
         if (healingSpotRepository.existsByHealingCourseSiteSiteIdAndCode(course.getSite().getSiteId(), code)) {
             throw new IllegalArgumentException("선택한 사이트에 이미 등록된 HS 코드입니다.");
@@ -53,22 +56,27 @@ public class HealingSpotService {
 
     public void updateHealingSpot(Long spotId, Long courseId, String code, String name,
                                   Double latitude, Double longitude) {
+        siteRepository.lockForMembershipChange();
         HealingSpot spot = findHealingSpot(spotId);
         HealingCourse course = requireCourse(courseId);
         if (healingSpotRepository.existsByHealingCourseSiteSiteIdAndCodeAndSpotIdNot(
                 course.getSite().getSiteId(), code, spotId)) {
             throw new IllegalArgumentException("선택한 사이트에 이미 등록된 HS 코드입니다.");
         }
+        if (!spot.getHealingCourse().getSite().getSiteId().equals(course.getSite().getSiteId()))
+            positions.deleteByHealingSpotSpotId(spotId);
         spot.update(course, code, name, latitude, longitude);
     }
 
     public void deleteHealingSpot(Long spotId) {
+        siteRepository.lockForMembershipChange();
         HealingSpot spot = healingSpotRepository.findLockedById(spotId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 HealingSpot입니다."));
         if (scheduleSpotRepository.existsByHealingSpotSpotId(spotId)) {
             throw new IllegalArgumentException("일정에 사용 중인 HealingSpot은 삭제할 수 없습니다.");
         }
         healingSpotImageService.deleteAll(spotId);
+        positions.deleteByHealingSpotSpotId(spotId);
         healingSpotRepository.delete(spot);
         healingSpotRepository.flush();
     }

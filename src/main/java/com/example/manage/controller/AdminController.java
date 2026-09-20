@@ -411,6 +411,7 @@ public class AdminController {
     }
 
     private void imageModel(Model model, boolean site, Long id, boolean gallery) {
+        model.addAttribute("siteImageEditor", site);
         model.addAttribute("imageTitle", site ? "사이트 이미지" : "HS 이미지");
         model.addAttribute("imageBasePath", id == null ? null : "/admin/" + (site ? "sites/" : "spots/") + id + "/images");
         List<ImageResponse> images = List.of();

@@ -8,6 +8,7 @@ import lombok.Setter;
 @Setter
 public class ImageEditForm {
     private String imageOrder;
+    private String imageSpatial;
     private String imageRepresentative;
     private String imageDeleted;
 }

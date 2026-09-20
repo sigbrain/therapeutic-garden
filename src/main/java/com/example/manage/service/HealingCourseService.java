@@ -18,6 +18,7 @@ public class HealingCourseService {
 
     private final HealingCourseRepository healingCourseRepository;
     private final SiteRepository siteRepository;
+    private final com.example.manage.repository.SiteImageSpotPositionRepository positions;
     private final HealingSpotRepository healingSpotRepository;
 
     public HealingCourse createHealingCourse(
@@ -69,15 +70,20 @@ public class HealingCourseService {
 
     public void updateHealingCourse(Long courseId, Long siteId, String code, String name,
             Double centerLatitude, Double centerLongitude, Double radius) {
+        siteRepository.lockForMembershipChange();
         HealingCourse course = findHealingCourse(courseId);
         Site site = requireSite(siteId);
         if (healingCourseRepository.existsBySiteSiteIdAndCodeAndCourseIdNot(siteId, code, courseId)) {
             throw new IllegalArgumentException("선택한 사이트에 이미 등록된 HC 코드입니다.");
         }
+        if (!course.getSite().getSiteId().equals(siteId))
+            healingSpotRepository.findByHealingCourseCourseId(courseId)
+                    .forEach(spot -> positions.deleteByHealingSpotSpotId(spot.getSpotId()));
         course.update(site, code, name, centerLatitude, centerLongitude, radius);
     }
 
     public void deleteHealingCourse(Long courseId) {
+        siteRepository.lockForMembershipChange();
         HealingCourse course = findHealingCourse(courseId);
         if (healingSpotRepository.existsByHealingCourseCourseId(courseId)) {
             throw new IllegalArgumentException("등록된 HealingSpot이 존재하는 HealingCourse는 삭제할 수 없습니다.");
