@@ -93,6 +93,43 @@ window.HomeCourseOverlay = (function() {
         }
         return candidates.reduce((best, p) => score(p) < score(best) ? p : best);
     }
-    return {groups: groups, demoSpots: demoSpots, spotChange: spotChange, aggregate: aggregate, formatChange: formatChange,
+    // Read-only display geometry, anchored to saved course bounds. Never modifies API coordinates.
+    function photoLayout(courses, width, imageHeight) {
+        var diameter = width >= 800 ? 180 : width >= 550 ? 145 : 110;
+        diameter = Math.min(diameter, Math.max(40, width - 32));
+        var gap = 16, padding = 12, cell = Math.min(Math.max(diameter, width < 550 ? Math.min(140, (width - padding * 2 - gap) / 2) : 160), width - padding * 2);
+        var placed = [], height = imageHeight;
+        courses.forEach(course => {
+            var columns = Math.max(1, Math.min(course.spots.length, 3, Math.floor((width - padding * 2 + gap) / (cell + gap))));
+            var rows = Math.ceil(course.spots.length / columns);
+            var w = columns * cell + (columns - 1) * gap + padding * 2;
+            var h = 64 + rows * (diameter + 54) + (rows - 1) * gap + padding;
+            var preferred = {x: (course.bounds.left + course.bounds.right) / 200 * width - w / 2,
+                y: course.bounds.top / 100 * imageHeight};
+            var clamp = p => ({x: Math.max(0, Math.min(width - w, p.x)), y: Math.max(0, p.y), w: w, h: h});
+            var candidates = [clamp(preferred), clamp({x: preferred.x, y: 0})];
+            placed.forEach(other => {
+                [preferred.x, 0, width - w, other.x - w - gap, other.x + other.w + gap].forEach(x => {
+                    [preferred.y, 0, other.y - h - gap, other.y + other.h + gap].forEach(y => candidates.push(clamp({x: x, y: y})));
+                });
+            });
+            var free = candidates.filter(p => placed.every(o => !overlap(
+                {x: p.x - gap / 2, y: p.y - gap / 2, w: p.w + gap, h: p.h + gap}, o)));
+            // Additional courses grow the stage vertically instead of shrinking photos or clipping labels.
+            if (!free.length) free.push(clamp({x: preferred.x, y: Math.max(0, ...placed.map(o => o.y + o.h + gap))}));
+            var score = p => Math.hypot(p.x - preferred.x, p.y - preferred.y) + Math.max(0, p.y + p.h - imageHeight) * 2;
+            var box = free.reduce((best, p) => score(p) < score(best) ? p : best);
+            box.courseId = course.id;
+            box.spots = course.spots.map((spot, index) => {
+                var row = Math.floor(index / columns), count = Math.min(columns, course.spots.length - row * columns);
+                return {id: spot.spotId, x: box.x + (w - count * cell - (count - 1) * gap) / 2 + (index % columns) * (cell + gap) + cell / 2,
+                    y: box.y + 64 + row * (diameter + 54 + gap), labelWidth: cell};
+            });
+            placed.push(box);
+            height = Math.max(height, box.y + box.h);
+        });
+        return {courses: placed, height: height, diameter: diameter};
+    }
+    return {photoLayout: photoLayout, groups: groups, demoSpots: demoSpots, spotChange: spotChange, aggregate: aggregate, formatChange: formatChange,
         metricColor: metricColor, badgePosition: badgePosition};
 })();

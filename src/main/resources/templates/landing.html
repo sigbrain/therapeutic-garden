@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="치유 공간의 이용 현황과 측정 데이터를 연결해 공간의 경험을 한눈에 확인하고 관리합니다.">
+    <meta name="description" content="생체신호를 모니터링하고 공간별 치유효과를 살펴 개인에게 맞는 힐링코스를 구성합니다.">
     <title>치유 공간 모니터링</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/landing.css}">
     <script defer th:src="@{/js/landing.js}"></script>
 </head>
 <body class="page-body service-page landing-page">
 <header th:replace="~{fragments/header :: header}"></header>
 <main>
     <section class="landing-hero" aria-labelledby="landing-hero-title">
+        <h1 id="landing-hero-title">THERAPEUTIC GARDEN</h1>
         <div class="landing-hero-copy">
-            <p class="landing-eyebrow">THERAPEUTIC GARDEN</p>
-            <h1 id="landing-hero-title">공간이<br>회복의 경험이<br class="landing-hero-break">되도록<span class="landing-period">.</span></h1>
-            <p class="landing-description">치유 공간의 이용 현황과 측정 데이터를 연결해<br class="landing-desktop-break"> 공간의 경험을 한눈에 확인하고 관리합니다.</p>
+            <p class="landing-hero-statement">공간이<br>회복의 경험이 <br class="landing-hero-break">되도록<span class="landing-period">.</span></p>
+            <p class="landing-description">나의 상태를 이해하고, 공간의 변화를 살펴<br class="landing-desktop-break"> 나에게 맞는 회복의 경험을 만듭니다.</p>
         </div>
         <div class="landing-hero-image">
             <img th:src="@{/images/landing/HS2_3.jpeg}" width="3000" height="2000"
@@ -34,61 +35,105 @@
             <div class="landing-space-copy" data-reveal>
                 <h2 id="landing-space-title">치유 공간을<br>데이터로 바라보다.</h2>
                 <p class="landing-description">하나의 공간 안에도<br>서로 다른 이용의 흐름이 있습니다.</p>
-                <p class="landing-body-copy">치유 공간의 이용 흐름과 측정 정보를 공간 단위로 연결해 확인합니다. 공간 전체에서 개별 스팟까지, 필요한 맥락을 함께 살펴봅니다.</p>
+                <p class="landing-body-copy">치유 공간의 이용 흐름과 측정 정보를 함께 살펴봅니다. 공간에서 보내는 시간이 어떤 변화로 이어지는지, 생체신호에서 그 실마리를 찾습니다.</p>
             </div>
         </div>
     </section>
 
     <section class="landing-section landing-monitoring" aria-labelledby="landing-monitoring-title">
-        <div data-reveal>
+        <div class="landing-monitoring-copy" data-reveal>
             <p class="landing-eyebrow">02 / MONITORING</p>
-            <h2 id="landing-monitoring-title">공간의 흐름을<br>한눈에 확인합니다.</h2>
-            <p class="landing-description">공간을 선택하고, 코스를 살펴보고,<br>스팟에 연결된 측정 정보를 확인합니다.</p>
+            <h2 id="landing-monitoring-title">몸이 보내는 신호,<br>공간이 만드는 변화</h2>
+            <p class="landing-description">생체신호와 공간별 반응을 함께 살피며<br>치유효과를 모니터링합니다.</p>
+            <ul class="landing-keywords" aria-label="모니터링 핵심 항목"><li><span class="landing-category-icon"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10c0 16 28 16 28 32S18 58 18 42M46 10c0 16-28 16-28 32s28 16 28 0M21 15h22M24 24h16M24 40h16M21 49h22"/></svg></span><h3>바이오마커</h3><p>스트레스와 이완감의 변화</p></li>
+<li><span class="landing-category-icon"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14c-9-9-19-1-17 8-9 3-9 15-3 19-3 12 11 19 20 10V14Zm0 0c9-9 19-1 17 8 9 3 9 15 3 19 3 12-11 19-20 10M22 23q8 0 7 8m-15 4q9-3 11 6m17-18q-8 0-7 8m15 4q-9-3-11 6"/></svg></span><h3>뇌파</h3><p>안정감과 집중의 흐름</p></li>
+<li><span class="landing-category-icon"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 52 12 32C-1 17 17 4 32 19 47 4 65 17 52 32L32 52Z"/><path d="M14 31h10l5-10 7 21 5-11h9"/></svg></span><h3>맥파</h3><p>몸의 리듬과 안정도</p></li>
+<li><span class="landing-category-icon"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="m20 12-12 19h8L6 45h28L24 31h8L20 12Zm25 5-10 16h7l-8 12h24L50 33h6L45 17ZM20 45v10m25-10v10M6 55h52"/></svg></span><h3>공간별 치유효과</h3><p>코스에 따른 반응 비교</p></li></ul>
         </div>
-        <ol class="landing-monitoring-list">
-            <li data-reveal><span class="landing-step-label">SITE</span><div><h3>살펴볼 공간을 선택합니다.</h3><p>Site를 기준으로 모니터링을 시작합니다.</p></div></li>
-            <li data-reveal><span class="landing-step-label">HEALING COURSE</span><div><h3>공간 안의 코스를 파악합니다.</h3><p>HealingCourse와 소속 스팟을 확인합니다.</p></div></li>
-            <li data-reveal><span class="landing-step-label">HEALING SPOT</span><div><h3>개별 스팟을 자세히 봅니다.</h3><p>선택한 HealingSpot의 상세 정보를 살펴봅니다.</p></div></li>
-            <li data-reveal><span class="landing-step-label">MEASUREMENT</span><div><h3>측정 정보에서 분석까지.</h3><p>공간에 연결된 측정 데이터와 상세 분석을 확인합니다.</p></div></li>
-        </ol>
+        <figure class="landing-signal-visual" data-reveal aria-labelledby="landing-signal-caption">
+            <div class="landing-visor-photo">
+                <img th:src="@{/images/landing/monitoring-visor.png}" width="1024" height="1536" loading="lazy" decoding="async"
+                     alt="정원에서 흰색 바이저형 머리 착용 장비를 쓰고 앉아 있는 사용자의 설명용 이미지">
+            </div>
+            <div class="landing-signal-panel">
+                <div class="landing-signal-heading"><span>생체신호 모니터링</span><span class="landing-sample-label">Sample Monitoring</span></div>
+                <div class="landing-signal-row">
+                    <div><h3>뇌파 <small>EEG</small></h3><span>안정감 · 집중의 흐름</span></div>
+                    <svg class="landing-waveform landing-waveform-eeg" viewBox="0 0 400 64" aria-hidden="true"><g class="landing-wave-track"><path d="M0 33 L20 33 26 23 34 42 43 28 50 34 65 34 74 15 82 49 93 23 101 37 111 29 125 33 141 33 149 20 157 43 167 28 176 36 190 33 206 33 218 17 227 47 236 26 245 36 263 33 281 33 290 23 299 43 311 26 321 36 334 32 352 33 362 19 371 43 382 29 390 33 400 33"/><path transform="translate(400 0)" d="M0 33 L20 33 26 23 34 42 43 28 50 34 65 34 74 15 82 49 93 23 101 37 111 29 125 33 141 33 149 20 157 43 167 28 176 36 190 33 206 33 218 17 227 47 236 26 245 36 263 33 281 33 290 23 299 43 311 26 321 36 334 32 352 33 362 19 371 43 382 29 390 33 400 33"/></g></svg>
+                </div>
+                <div class="landing-signal-row">
+                    <div><h3>맥파 <small>Pulse</small></h3><span>몸의 리듬 · 안정도</span></div>
+                    <svg class="landing-waveform landing-waveform-pulse" viewBox="0 0 400 64" aria-hidden="true"><g class="landing-wave-track"><path transform="translate(0 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(100 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(200 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(300 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(400 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(500 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(600 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/><path transform="translate(700 0)" d="M0 49 C20 49 24 49 30 20 S42 10 49 29 S56 26 64 37 S76 49 94 49 L100 49"/></g></svg>
+                </div>
+                <div class="landing-biomarker">
+                    <h3>바이오마커</h3>
+                    <div class="landing-biomarker-pair"><div><span>스트레스</span><i class="landing-meter" aria-hidden="true"><b style="--level: 38%"></b></i></div><div><span>이완감</span><i class="landing-meter" aria-hidden="true"><b style="--level: 72%"></b></i></div></div>
+                </div>
+                <div class="landing-spatial-sample">
+                    <h3>공간별 치유효과</h3>
+                    <div><span>감각 코스</span><i class="landing-meter" aria-hidden="true"><b style="--level: 62%"></b></i></div>
+                    <div><span>회복 코스</span><i class="landing-meter" aria-hidden="true"><b style="--level: 80%"></b></i></div>
+                    <div><span>힐링 코스</span><i class="landing-meter" aria-hidden="true"><b style="--level: 70%"></b></i></div>
+                </div>
+            </div>
+            <figcaption id="landing-signal-caption">장비 착용 장면은 연출 이미지이며, 파형과 지표는 설명용 예시입니다.</figcaption>
+        </figure>
     </section>
 
-    <section class="landing-section landing-structure" aria-labelledby="landing-structure-title">
-        <div class="landing-section-intro" data-reveal>
-            <p class="landing-eyebrow">03 / SPACE STRUCTURE</p>
-            <h2 id="landing-structure-title">하나의 공간에서,<br>하나의 스팟까지.</h2>
-            <p class="landing-description">공간을 이해하는 세 가지 단위.</p>
-        </div>
-        <div class="landing-structure-layout">
-            <div class="landing-structure-image landing-photo" data-reveal>
-                <img th:src="@{/images/landing/HS4_1.jpg}" width="2544" height="1696" loading="lazy" decoding="async"
-                     alt="위에서 바라본 디에이치 방배 정원의 원형 동선과 잔디, 휴게 공간의 배치">
+    <section class="landing-section landing-effects" aria-labelledby="landing-effects-title">
+        <div class="landing-effects-intro" data-reveal>
+            <div>
+                <p class="landing-eyebrow">03 / HEALING EFFECT</p>
+                <h2 id="landing-effects-title">공간마다 다른,<br>회복의 변화를 만나다.</h2>
             </div>
-            <ol class="landing-structure-list" aria-label="공간에서 코스, 개별 스팟으로 이어지는 구조" data-reveal>
-                <li><div class="landing-domain-label"><span>SITE</span><h3>치유 공간</h3><p>코스와 스팟을 담는 전체 공간</p></div></li>
-                <li><div class="landing-domain-label"><span>HEALING COURSE</span><h3>공간별 치유 코스</h3><p>공간 안에 구성된 코스</p></div></li>
-                <li><div class="landing-domain-label"><span>HEALING SPOT</span><h3>개별 측정 스팟</h3></div></li>
-            </ol>
+            <div class="landing-effects-description">
+                <p class="landing-description">모니터링한 변화를 코스별로 살펴봅니다.<br>공간과 치유효과를 한눈에 연결합니다.</p>
+            </div>
+        </div>
+        <div class="landing-effect-map" aria-label="디에이치 방배의 코스별 Healing Spot과 예시 효과">
+            <img class="landing-site-backdrop" th:src="@{/images/landing/the-h-bangbae-site-plan.png}" width="1460" height="1080" loading="lazy" decoding="async" alt="디에이치 방배 단지 배치도">
+            <div class="landing-course-grid"><article class="landing-effect-card landing-effect-recovery" data-reveal aria-labelledby="landing-course-a">
+                <header><p>HC-A</p><h3 id="landing-course-a">회복 코스</h3><span>2 HEALING SPOTS</span></header>
+                <div class="landing-course-photos"><figure><img th:src="@{/images/site1/healing-spots/hs1.jpeg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS1 · 호스타 정원 실제 공간"><figcaption><span>HS1</span> 호스타 정원</figcaption></figure>
+<figure><img th:src="@{/images/landing/HS2_4.png}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS2 · 곶자왈원 실제 공간"><figcaption><span>HS2</span> 곶자왈원</figcaption></figure></div>
+                <div class="landing-course-stats"><p>방문 <strong>130</strong></p><p>평균 스트레스 <strong>32% 감소</strong></p><p>정서안정지수 <strong>10% 상승</strong></p></div>
+            </article>
+<article class="landing-effect-card landing-effect-sensory" data-reveal aria-labelledby="landing-course-b">
+                <header><p>HC-B</p><h3 id="landing-course-b">감각 코스</h3><span>2 HEALING SPOTS</span></header>
+                <div class="landing-course-photos"><figure><img th:src="@{/images/landing/HS3_1.png}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS3 · 가든 위스퍼스 실제 공간"><figcaption><span>HS3</span> 가든 위스퍼스</figcaption></figure>
+<figure><img th:src="@{/images/landing/HS4_3.jpg}" width="3000" height="2000" loading="lazy" decoding="async" alt="HS4 · 콜로네이드 가든 실제 공간"><figcaption><span>HS4</span> 콜로네이드 가든</figcaption></figure></div>
+                <div class="landing-course-stats"><p>방문 <strong>98</strong></p><p>평균 스트레스 <strong>21% 감소</strong></p><p>정서안정지수 <strong>7% 상승</strong></p></div>
+            </article>
+<article class="landing-effect-card landing-effect-healing" data-reveal aria-labelledby="landing-course-c">
+                <header><p>HC-C</p><h3 id="landing-course-c">힐링 코스</h3><span>2 HEALING SPOTS</span></header>
+                <div class="landing-course-photos"><figure><img th:src="@{/images/landing/HS5_1.jpg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS5 · 블로썸 가든 실제 공간"><figcaption><span>HS5</span> 블로썸 가든</figcaption></figure>
+<figure><img th:src="@{/images/landing/HS6_1.jpg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS6 · 극림원 실제 공간"><figcaption><span>HS6</span> 극림원</figcaption></figure></div>
+                <div class="landing-course-stats"><p>방문 <strong>116</strong></p><p>평균 스트레스 <strong>27% 감소</strong></p><p>정서안정지수 <strong>13% 상승</strong></p></div>
+            </article></div>
+            <p class="landing-map-caption">THE H BANGBAE <span>실제 치유 공간에서 만나는 세 가지 코스</span></p>
         </div>
     </section>
 
     <section class="landing-section landing-connection" aria-labelledby="landing-connection-title">
         <div class="landing-connection-layout">
             <div class="landing-connection-copy" data-reveal>
-                <p class="landing-eyebrow">04 / EXPERIENCE &amp; DATA</p>
-                <h2 id="landing-connection-title">공간과 데이터를<br>하나의 흐름으로.</h2>
-                <p class="landing-description">일정으로 이어지는 공간의 경험,<br>측정 정보로 살펴보는 공간의 맥락.</p>
+                <p class="landing-eyebrow">04 / PERSONAL HEALING COURSE</p>
+                <h2 id="landing-connection-title">나의 상태에 맞춰,<br>치유의 길을 구성합니다.</h2>
+                <p class="landing-description">모니터링한 생체신호와 공간별 치유효과를 바탕으로<br class="landing-desktop-break"> 개인에게 맞는 힐링코스를 제안합니다.</p>
             </div>
-            <div class="landing-connection-image landing-photo" data-reveal>
-                <img th:src="@{/images/landing/HS4_2.jpg}" width="3384" height="2450" loading="lazy" decoding="async"
-                     alt="디에이치 방배의 넓은 잔디 정원과 소나무, 곡선형 산책로를 밝히는 야간 조명">
-            </div>
+            <ol class="landing-connection-flow" aria-label="모니터링부터 개인 힐링코스 구성까지" data-reveal>
+                <li><span class="landing-step-label">01 / MONITORING</span><h3>나의 상태 이해</h3></li>
+                <li><span class="landing-step-label">02 / HEALING EFFECT</span><h3>공간별 효과 확인</h3></li>
+                <li><span class="landing-step-label">03 / PERSONAL COURSE</span><h3>개인 힐링코스 구성</h3></li>
+            </ol>
         </div>
-        <ol class="landing-connection-flow" aria-label="공간의 경험과 데이터의 연결">
-            <li data-reveal><span class="landing-step-label">01 / SPACE</span><h3>공간</h3><p>HealingCourse · HealingSpot</p></li>
-            <li data-reveal><span class="landing-step-label">02 / EXPERIENCE</span><h3>이용</h3><p>참가자 일정 · 공간 이용</p></li>
-            <li data-reveal><span class="landing-step-label">03 / DATA</span><h3>측정 정보</h3><p>측정 데이터 · 상세 분석</p></li>
-        </ol>
+        <div class="landing-personal-course" data-reveal>
+            <div class="landing-personal-intro"><div><p class="landing-eyebrow">Sample Personal Healing Course</p><h3>오늘의 나를 위한 치유의 길</h3></div><div class="landing-current-state"><span>오늘의 상태 · 예시</span><p>스트레스 <strong>높음</strong><span aria-hidden="true"> / </span>이완감 <strong>낮음</strong></p></div></div>
+            <ol class="landing-personal-spots" aria-label="추천 Healing Course 예시: 콜로네이드 가든, 블로썸 가든, 극림원"><li><figure><img th:src="@{/images/landing/HS4_1.jpg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS4 · 콜로네이드 가든 실제 공간"><figcaption><span class="landing-personal-step">01</span><div><h3>HS4 · 콜로네이드 가든</h3></div></figcaption></figure></li>
+<li><figure><img th:src="@{/images/landing/HS5_3.jpg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS5 · 블로썸 가든 실제 공간"><figcaption><span class="landing-personal-step">02</span><div><h3>HS5 · 블로썸 가든</h3></div></figcaption></figure></li>
+<li><figure><img th:src="@{/images/landing/HS6_4.jpg}" width="1440" height="1920" loading="lazy" decoding="async" alt="HS6 · 극림원 실제 공간"><figcaption><span class="landing-personal-step">03</span><div><h3>HS6 · 극림원</h3></div></figcaption></figure></li></ol>
+            <p class="landing-personal-note">Sample Course · 상태, 코스 조합과 기대 효과는 서비스 설명을 위한 예시입니다.</p>
+        </div>
     </section>
 
     <section class="landing-section landing-final-cta" aria-labelledby="landing-cta-title">

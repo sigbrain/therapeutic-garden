@@ -159,13 +159,27 @@ class RoleBasedHomeTests {
                 .doesNotContain("<a ", "<button", "<nav", "/admin/login", "/member/login");
         String experience = html.substring(html.indexOf("<section class=\"landing-section landing-connection"),
                 html.indexOf("<section class=\"landing-section landing-final-cta"));
-        assertThat(experience).contains("/images/landing/HS4_2.jpg")
+        assertThat(experience).contains("/images/landing/HS4_1.jpg",
+                "/images/landing/HS5_3.jpg", "/images/landing/HS6_4.jpg",
+                "Sample Personal Healing Course", "나의 상태에 맞춰,", "치유의 길을 구성합니다.")
                 .doesNotContain("/images/landing/HS2_4.png", "/images/landing/HS4_3.jpg", "/images/landing/HS4_4.png");
-        assertThat(html).contains("THERAPEUTIC SPACE", "MONITORING", "SPACE STRUCTURE",
-                "EXPERIENCE &amp; DATA", "THERAPEUTIC GARDEN MONITORING", "src=\"/js/landing.js\"")
+        assertThat(html).contains("THERAPEUTIC SPACE", "MONITORING", "HEALING EFFECT",
+                "PERSONAL HEALING COURSE", "THERAPEUTIC GARDEN MONITORING", "src=\"/js/landing.js\"")
                 .doesNotContain("<video", "<iframe", "<footer", "SIGBRAIN");
         assertThat(hero).contains("/images/landing/HS2_3.jpeg")
                 .doesNotContain("HC-A", "HC-B", "HS1", "HS2</span>", "공간 구조 개념도");
+        assertThat(html).contains("바이오마커", "뇌파", "맥파", "공간별 치유효과", "Sample Monitoring",
+                "방문 <strong>130</strong>", "32% 감소", "10% 상승", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
+                .doesNotContain(".codex-reference", "home-course-overlay.js", "id=\"siteSelect\"", "<canvas");
+        assertThat(html).contains("몸이 보내는 신호,", "공간이 만드는 변화", "생체신호와 공간별 반응을 함께 살피며",
+                "치유효과를 모니터링합니다.", "호스타 정원", "곶자왈원", "가든 위스퍼스", "콜로네이드 가든",
+                "블로썸 가든", "극림원", "21% 감소", "7% 상승", "27% 감소", "13% 상승")
+                .doesNotContain("HRV", "Sample Data", "아래 수치는 설명을 위한 예시 데이터입니다.",
+                        "머리에 착용하는 생체신호 측정 장비");
+        assertThat(experience).contains("HS4 · 콜로네이드 가든", "HS5 · 블로썸 가든", "HS6 · 극림원")
+                .doesNotContain("HS1 · 호스타 정원", "긴장 완화", "감각 환기", "정서 안정");
+        assertThat(experience.indexOf("HS4 ·")).isLessThan(experience.indexOf("HS5 ·"));
+        assertThat(experience.indexOf("HS5 ·")).isLessThan(experience.indexOf("HS6 ·"));
         var images = java.util.regex.Pattern.compile("<img[^>]+src=\"([^\"]+)\"").matcher(html);
         int spacePhotos = 0;
         while (images.find()) {
@@ -174,7 +188,7 @@ class RoleBasedHomeTests {
             assertThat(Files.isRegularFile(Path.of("src/main/resources/static" + source))).isTrue();
             if (source.startsWith("/images/landing/")) spacePhotos++;
         }
-        assertThat(spacePhotos).isBetween(3, 5);
+        assertThat(spacePhotos).isEqualTo(13);
         var ids = java.util.regex.Pattern.compile("\\bid=\"([^\"]+)\"").matcher(html);
         var uniqueIds = new java.util.HashSet<String>();
         while (ids.find()) assertThat(uniqueIds.add(ids.group(1))).as("unique id: " + ids.group(1)).isTrue();
@@ -192,7 +206,7 @@ class RoleBasedHomeTests {
         try (var paths = Files.walk(resources.resolve("templates"))) {
             for (Path path : paths.filter(p -> p.toString().endsWith(".html"))
                     .filter(p -> !p.getFileName().toString().equals("landing.html")).toList()) {
-                assertThat(Files.readString(path)).as(path.toString()).doesNotContain("landing.js");
+                assertThat(Files.readString(path)).as(path.toString()).doesNotContain("landing.js", "landing.css");
             }
         }
     }

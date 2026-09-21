@@ -39,7 +39,7 @@ function setup(options = {}) {
             addEventListener(event, fn) { (documentEvents[event] ||= []).push(fn); }, body: {style: {}}},
         window: {kakao: options.noSdk ? null : kakao, HomeSurvey: survey,
             requestAnimationFrame(fn) { frames.push(fn); },
-            addEventListener(event, fn) { windowEvents[event] = fn; }}, kakao, Option: function() {},
+            addEventListener(event, fn) { const previous = windowEvents[event]; windowEvents[event] = (...args) => { if (previous) previous(...args); fn(...args); }; }}, kakao, Option: function() {},
         fetch: options.fetch || (async url => ({ok: true, json: async () => url.endsWith('/data')
             ? {siteId: Number(url.split('/')[3]), name: 'Site', image: {readUrl: '/spatial/' + url.split('/')[3]},
                 spots: [{spotId: 1, code: 'HS1', name: '정원', course: 'HC1 · 코스', courseId: 17, courseCode: 'HC1', courseName: '코스', readUrl: '/authenticated/hs-1', xPercent: 20, yPercent: 70}]}
@@ -187,11 +187,11 @@ test('SDK unavailable still allows photo hotspot information', async () => {
     assert.equal(ui.maps.length, 0); assert.match(ui.elements.map.textContent, /지도를 불러올 수 없습니다/);
     ui.elements.closeMapButton.click(); hotspots(ui)[0].click(); assert.equal(ui.elements.spotId.textContent, 'HS1');
 });
-test('coordinate plane uses uncropped responsive image, absolute overlay, and circle-centered markers', () => {
+test('coordinate plane uses uncropped responsive image, absolute overlay, and course-centered markers', () => {
     const css = fs.readFileSync('src/main/resources/static/css/home-spatial.css', 'utf8');
     assert.match(css, /\.monitoring-image\s*\{[^}]*width: 100%; height: auto;/);
     assert.match(css, /\.monitoring-hotspots\s*\{[^}]*position: absolute; inset: 0;/);
-    assert.match(css, /\.monitoring-hotspot\s*\{[^}]*translate\(-50%, -50%\)/);
+    assert.match(css, /\.monitoring-hotspot\s*\{[^}]*translateX\(-50%\)/);
     assert.doesNotMatch(spatialScript, /\/images\/site|\.jpeg|objectKey/);
 });
 
@@ -287,11 +287,11 @@ test('Site change closes detail and ignores late gallery responses; reopen obtai
     await ui.context.openSpotDetail({spotId: 1}); assert.equal(ui.elements.spotImage.src, '/fresh');
     ui.elements.spotDetailModal.click({target: ui.elements.spotDetailModal}); assert.equal(ui.elements.spotDetailModal.hidden, true);
 });
-test('monitoring uses enlarged responsive circles and hover-capable label disclosure', () => {
+test('monitoring uses enlarged responsive circles and always-visible labels', () => {
     const css = fs.readFileSync('src/main/resources/static/css/home-spatial.css', 'utf8');
-    assert.match(css, /clamp\(58px, 8vw, 108px\)/);
-    assert.match(css, /@media \(hover: hover\) and \(pointer: fine\)/);
-    assert.match(css, /-webkit-line-clamp: 2/);
+    assert.match(css, /clamp\(110px, 13vw, 180px\)/);
+    assert.doesNotMatch(css, /visibility: hidden/);
+    assert.match(css, /border-radius: 16px/);
     assert.doesNotMatch(script, /spotInformationPanel|showSitePanelButton/);
 });
 
@@ -341,22 +341,25 @@ test('actual image download failure is a loading error, not no registered images
 });
 
 
-test('label clamps to both stage edges without moving hotspot coordinates', async () => {
+test('display layout keeps photos and labels inside the stage without mutating saved positions', async () => {
     const layout = baseLayout();
-    layout.spots = [0, 50, 100].map((x, index) => ({...layout.spots[0], spotId: index + 1, xPercent: x}));
+    layout.spots = [0, 50, 100].map((x, index) => ({...layout.spots[0], spotId: index + 1, courseId: 19, xPercent: x}));
+    const before = JSON.stringify(layout);
     const ui = setup({fetch: layoutFetch(layout)}); await flush();
-    canvas(ui).clientWidth = 400;
-    hotspots(ui).forEach(button => { button.children[1].offsetWidth = 180; });
+    canvas(ui).clientWidth = 334;
+    image(ui).naturalWidth = 1000; image(ui).naturalHeight = 700;
     image(ui).load();
-    assert.deepEqual(hotspots(ui).map(button => button.children[1].style.marginLeft), ['98px', '0px', '-98px']);
-    assert.deepEqual(hotspots(ui).map(button => button.style.left), ['0%', '50%', '100%']);
-    assert.ok(hotspots(ui).every(button => button.children[1].textContent === 'GARDEN · 정원' && !button.title));
-    canvas(ui).clientWidth = 120;
-    hotspots(ui).forEach(button => { button.children[1].offsetWidth = 104; });
-    hotspots(ui)[0].mouseenter();
-    assert.deepEqual(hotspots(ui).map(button => button.children[1].style.marginLeft), ['60px', '0px', '-60px']);
-    assert.equal(hotspots(ui)[0].children[1].style.maxWidth, '104px');
-    assert.deepEqual(hotspots(ui).map(button => button.style.left), ['0%', '50%', '100%']);
+    assert.equal(JSON.stringify(layout), before);
+    assert.equal(hotspots(ui)[0].style.top, hotspots(ui)[1].style.top);
+    for (const button of hotspots(ui)) {
+        const center = parseFloat(button.style.left), width = parseFloat(button.style.width);
+        assert.ok(center - width / 2 >= 0 && center + width / 2 <= 334);
+        assert.equal(button.children[0].style.width, '110px');
+        assert.equal(button.children[1].textContent, 'GARDEN · 정원');
+    }
+    canvas(ui).clientWidth = 1000; ui.windowEvents.resize();
+    assert.equal(hotspots(ui)[0].children[0].style.width, '180px');
+    assert.equal(JSON.stringify(layout), before);
 });
 
 const regions = ui => canvas(ui).children[1].children;

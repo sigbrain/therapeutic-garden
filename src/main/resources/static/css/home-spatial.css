@@ -8,18 +8,14 @@
 #monitoringStatus:empty { display: none; }
 #monitoringSettings { display: inline-block; color: #36644d; font-size: 13px; margin-bottom: 18px; text-underline-offset: 4px; }
 .monitoring-canvas { position: relative; width: 100%; margin-top: 12px; }
-.monitoring-image { display: block; width: 100%; height: auto; border-radius: 6px; }
+.monitoring-image { display: block; width: 100%; height: auto; min-height: inherit; object-fit: cover; border-radius: 6px; }
 .monitoring-hotspots { position: absolute; inset: 0; pointer-events: none; }
-.monitoring-hotspot { position: absolute; transform: translate(-50%, -50%); padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
-.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(58px, 8vw, 108px); height: clamp(58px, 8vw, 108px); box-sizing: border-box; border: 2px solid #fff; border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 3px 10px #182d3540; transition: transform .16s, box-shadow .16s; }
+.monitoring-hotspot { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
+.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(110px, 13vw, 180px); height: clamp(110px, 13vw, 180px); box-sizing: border-box; border: 3px solid #fff; border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 3px 10px #182d3540; transition: transform .16s, box-shadow .16s; }
 .monitoring-hotspot-circle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.monitoring-hotspot-label { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: 200px; padding: 5px 8px; border-radius: 5px; background: #fffffff5; color: #244b3b; font-size: 12px; line-height: 1.4; font-weight: 600; text-align: center; white-space: normal; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; box-shadow: 0 2px 6px #182d3526; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .16s ease, visibility .16s; }
-@media (hover: hover) and (pointer: fine) {
-    .monitoring-hotspot:hover .monitoring-hotspot-label,
-    .monitoring-hotspot:focus-visible .monitoring-hotspot-label { opacity: 1; visibility: visible; }
-}
+.monitoring-hotspot-label { display: block; box-sizing: border-box; max-width: 100%; padding: 6px 9px; border-radius: 16px; background: #fffef8f5; color: #244b3b; font-size: 12px; line-height: 1.4; font-weight: 600; text-align: center; white-space: normal; overflow-wrap: anywhere; box-shadow: 0 2px 6px #182d3526; pointer-events: none; }
 .monitoring-hotspot:hover, .monitoring-hotspot:focus-visible, .monitoring-hotspot[aria-pressed="true"] { z-index: 2; }
-.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.07); box-shadow: 0 5px 14px #182d3555; }
+.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.03); box-shadow: 0 5px 14px #182d3555; }
 .monitoring-hotspot[aria-pressed="true"] .monitoring-hotspot-circle { outline: 2px solid #427e5c; outline-offset: 3px; }
 .monitoring-hotspot:focus-visible { outline: 2px solid #427e5c; outline-offset: 4px; border-radius: 50%; }
 .monitoring-map-dialog { display: flex; flex-direction: column; width: 88vw; height: 88vh; height: 88dvh; max-width: 1600px; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px #0f172a33; }
@@ -60,7 +56,7 @@
 .spot-detail-section dd { margin: 0; overflow-wrap: anywhere; }
 @media (max-width: 900px) { .spot-detail-dialog { width: min(94vw, 760px); } }
 @media (max-width: 520px) {
-    .monitoring-hotspot-circle { width: 48px; height: 48px; }
+    .monitoring-hotspot-circle { width: 110px; height: 110px; }
     .monitoring-hotspot-label { font-size: 11px; padding: 2px 5px; }
     .spot-detail-dialog { width: 100%; }
     .spot-detail-content { padding: 0 16px 20px; }

@@ -112,3 +112,21 @@ test('photo-only visual layers preserve hotspot priority and mobile styling', ()
     assert.match(html, /id="hcStress" aria-pressed="true"/);
     assert.match(html, /Demo 데이터/);
 });
+
+test('photo groups use arbitrary identities, keep pairs horizontal, avoid collisions and preserve input', () => {
+    for (const width of [300, 334, 696, 1040]) {
+        const input = [2, 2, 2, 1, 5].flatMap((count, course) => Array.from({length: count}, (_, i) => ({
+            ...spot(31 + course, 15 + course * 12, 10 + i * 30), spotId: course * 10 + i
+        })));
+        const groups = api.groups(input), before = JSON.stringify(groups);
+        const result = api.photoLayout(groups, width, width * .74);
+        assert.equal(JSON.stringify(groups), before);
+        for (const box of result.courses) {
+            assert.ok(box.x >= 0 && box.x + box.w <= width);
+            assert.ok(box.y >= 0 && box.y + box.h <= result.height);
+            if (box.spots.length === 2) assert.equal(box.spots[0].y, box.spots[1].y);
+            for (const other of result.courses) if (box !== other)
+                assert.ok(box.x + box.w <= other.x || other.x + other.w <= box.x || box.y + box.h <= other.y || other.y + other.h <= box.y);
+        }
+    }
+});
