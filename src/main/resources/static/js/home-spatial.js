@@ -1,4 +1,4 @@
-/* Read-only monitoring view. The image itself defines the percentage coordinate plane. */
+/* Read-only monitoring view. Saved positions anchor course groups; photo positions are display-only. */
 window.HomeSpatial = function(onSelect) {
     var canvas = document.getElementById('monitoringCanvas');
     var status = document.getElementById('monitoringStatus');
@@ -23,37 +23,34 @@ window.HomeSpatial = function(onSelect) {
         });
     }
     metricButtons.forEach((button, index) => button.addEventListener('click', () => updateMetric(index ? 'relaxation' : 'stress')));
-    function positionBadges() {
-        var width = canvas.clientWidth, height = canvas.clientHeight;
-        if (!width || !height) return;
-        var obstacles = buttons.map(entry => {
-            var diameter = entry.button.offsetWidth + 14;
-            return {x: width * entry.xPercent / 100 - diameter / 2,
-                y: height * entry.yPercent / 100 - diameter / 2, w: diameter, h: diameter};
-        });
-        badges.forEach(entry => {
-            var pos = effects.badgePosition(entry.course.bounds,
-                {w: entry.badge.offsetWidth, h: entry.badge.offsetHeight}, {w: width, h: height}, obstacles);
-            entry.badge.style.left = pos.x / width * 100 + '%';
-            entry.badge.style.top = pos.y / height * 100 + '%';
-            obstacles.push(pos);
-        });
-    }
     function select(spotId) {
         selectedId = spotId;
         buttons.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.id === spotId)));
     }
+    var currentImage = null;
     function positionLabels() {
-        positionBadges();
         var width = canvas.clientWidth;
-        if (!width) return;
-        buttons.forEach(entry => {
-            entry.label.style.maxWidth = Math.min(200, Math.max(0, width - 16)) + 'px';
-            var half = entry.label.offsetWidth / 2;
-            var center = width * entry.xPercent / 100;
-            // Move only the label; the photo remains on its saved percentage coordinate.
-            var boundedCenter = Math.min(Math.max(center, half + 8), width - half - 8);
-            entry.label.style.marginLeft = (boundedCenter - center) + 'px';
+        if (!width || !currentImage || !currentImage.naturalWidth) return;
+        var geometry = effects.photoLayout(courses, width, width * currentImage.naturalHeight / currentImage.naturalWidth);
+        canvas.style.minHeight = geometry.height + 'px';
+        geometry.courses.forEach(box => {
+            var entry = badges.find(b => b.course.id === box.courseId);
+            if (entry) {
+                Object.entries({x: box.x / width * 100, y: box.y / geometry.height * 100,
+                    width: box.w / width * 100, height: box.h / geometry.height * 100, rx: 3, ry: 3})
+                    .forEach(([key, value]) => entry.region.setAttribute(key, value));
+                entry.badge.style.left = box.x + 12 + 'px';
+                entry.badge.style.top = box.y + 10 + 'px';
+            }
+            box.spots.forEach(spot => {
+                var entry = buttons.find(b => b.id === spot.id);
+                if (!entry) return;
+                entry.button.style.left = spot.x + 'px';
+                entry.button.style.top = spot.y + 'px';
+                entry.button.style.width = spot.labelWidth + 'px';
+                entry.circle.style.width = geometry.diameter + 'px';
+                entry.circle.style.height = geometry.diameter + 'px';
+            });
         });
     }
     if (window.ResizeObserver) new window.ResizeObserver(positionLabels).observe(canvas);
@@ -64,6 +61,8 @@ window.HomeSpatial = function(onSelect) {
         buttons = [];
         courses = [];
         badges = [];
+        currentImage = null;
+        canvas.style.minHeight = '';
         canvas.replaceChildren();
         canvas.hidden = true;
         settings.hidden = true;
@@ -83,6 +82,7 @@ window.HomeSpatial = function(onSelect) {
             }
             if (!layout.image.readUrl) throw new Error('모니터링 이미지 URL 없음');
             var image = document.createElement('img');
+            currentImage = image;
             image.className = 'monitoring-image';
             image.alt = layout.name + ' 모니터링 이미지';
             image.referrerPolicy = 'no-referrer';
@@ -92,6 +92,10 @@ window.HomeSpatial = function(onSelect) {
                 value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
                 && Number(value) >= 0 && Number(value) <= 100));
             courses = effects.groups(layout.spots);
+            placed.filter(spot => spot.courseId == null).forEach(spot => courses.push({
+                id: 'unassigned-' + spot.spotId, code: '', name: '', spots: [spot], unassigned: true,
+                bounds: {left: Number(spot.xPercent), right: Number(spot.xPercent), top: Number(spot.yPercent), bottom: Number(spot.yPercent)}
+            }));
             var regions = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             regions.setAttribute('viewBox', '0 0 100 100');
             regions.setAttribute('preserveAspectRatio', 'none');
@@ -101,6 +105,7 @@ window.HomeSpatial = function(onSelect) {
             badgeLayer.className = 'monitoring-course-badges';
             badgeLayer.setAttribute('aria-label', 'HC 공간효과 예시 데이터');
             courses.forEach((course, index) => {
+                if (course.unassigned) return;
                 var bounds = course.bounds;
                 var region = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 Object.entries({x: bounds.left, y: bounds.top, width: bounds.right - bounds.left,
@@ -152,7 +157,7 @@ window.HomeSpatial = function(onSelect) {
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
                 button.addEventListener('mouseenter', positionLabels);
                 button.addEventListener('focus', positionLabels);
-                buttons.push({id: spot.spotId, button: button, label: label, xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
+                buttons.push({id: spot.spotId, button: button, circle: circle, label: label, xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
                 overlay.append(button);
             });
             image.addEventListener('load', () => {
