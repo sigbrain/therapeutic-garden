@@ -88,6 +88,26 @@ class ImageStorageTests {
     @Test void localModeDoesNotNeedCredentials() {
         assertThat(new ImageStorageConfig().imageStorage(properties("local"))).isInstanceOf(LocalImageStorage.class);
     }
+    @Test void s3VariantUsesConfiguredBucketAndOnly404MeansMissing() {
+        var client = mock(S3Client.class);
+        var storage = new S3ImageStorage(client, mock(S3Presigner.class), properties("s3"));
+        String key = com.example.manage.service.MonitoringThumbnailService.key(policy.createKey(false, 2L, "image/png"));
+        var request = org.mockito.ArgumentCaptor.forClass(software.amazon.awssdk.services.s3.model.HeadObjectRequest.class);
+        assertThat(storage.exists(key)).isTrue();
+        verify(client).headObject(request.capture());
+        assertThat(request.getValue().bucket()).isEqualTo(properties("s3").bucket());
+        assertThat(request.getValue().key()).isEqualTo(key);
+        when(client.headObject(any(software.amazon.awssdk.services.s3.model.HeadObjectRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.S3Exception.builder().statusCode(404).build());
+        assertThat(storage.exists(key)).isFalse();
+        when(client.headObject(any(software.amazon.awssdk.services.s3.model.HeadObjectRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.S3Exception.builder().statusCode(403).build());
+        assertThatThrownBy(() -> storage.exists(key)).isInstanceOf(ImageStorageException.class);
+        when(client.headObject(any(software.amazon.awssdk.services.s3.model.HeadObjectRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.S3Exception.builder().statusCode(500).build());
+        assertThatThrownBy(() -> storage.exists(key)).isInstanceOf(ImageStorageException.class);
+    }
+
     @Test void s3SigningIsOfflineVirtualHostedAndExpiresInOneHour() {
         // Synthetic test-only credentials. Signing is local; client is mocked, no network call.
         var p = new ImageStorageProperties("s3", "unit-test-bucket", "test-access", "test-secret", "auto",
@@ -96,7 +116,7 @@ class ImageStorageTests {
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(p.accessKeyId(), p.secretAccessKey())))
                 .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(false).build()).build()) {
             S3Client client = mock(S3Client.class);
-            String key = policy.createKey(true, 1L, "image/jpeg");
+            String key = com.example.manage.service.MonitoringThumbnailService.key(policy.createKey(false, 1L, "image/jpeg"));
             String url = new S3ImageStorage(client, presigner, p).createReadUrl(key, "/admin/sites/1/images/1/content");
             assertThat(URI.create(url).getHost()).isEqualTo("unit-test-bucket.storage.example.invalid");
             assertThat(URI.create(url).getPath()).isEqualTo("/" + key);

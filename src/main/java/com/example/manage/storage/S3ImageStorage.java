@@ -18,6 +18,17 @@ public class S3ImageStorage implements ImageStorage, AutoCloseable {
             client.putObject(b -> b.bucket(properties.bucket()).key(key).contentType(contentType), RequestBody.fromBytes(content));
         } catch (RuntimeException e) { throw new ImageStorageException("이미지 저장소 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.", e); }
     }
+    @Override public boolean exists(String key) {
+        ImageFilePolicy.validateKey(key);
+        try {
+            client.headObject(software.amazon.awssdk.services.s3.model.HeadObjectRequest.builder()
+                    .bucket(properties.bucket()).key(key).build());
+            return true;
+        } catch (software.amazon.awssdk.services.s3.model.S3Exception e) {
+            if (e.statusCode() == 404) return false;
+            throw new ImageStorageException("이미지 존재 여부를 확인할 수 없습니다.", e);
+        } catch (RuntimeException e) { throw new ImageStorageException("이미지 존재 여부를 확인할 수 없습니다.", e); }
+    }
     @Override public void delete(String key) {
         ImageFilePolicy.validateKey(key);
         try { client.deleteObject(b -> b.bucket(properties.bucket()).key(key)); }

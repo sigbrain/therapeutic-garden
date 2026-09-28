@@ -86,6 +86,51 @@ class SpatialLayoutTests {
     void save(SpatialLayoutForm f) { layouts.save(site.getSiteId(), f); }
     String path() { return "/admin/sites/" + site.getSiteId() + "/spatial-layout"; }
 
+    @Test void monitoringVariantsFollowRepresentativeWhileGalleryKeepsOriginalsAndDeletionCleansUp() throws Exception {
+        when(storage.exists(anyString())).thenAnswer(i -> objects.containsKey(i.<String>getArgument(0)));
+        var photo = new MockMultipartFile("files", "photo.png", "image/png", MonitoringThumbnailTests.photo(1200, 800));
+        spotImages.upload(first.getSpotId(), List.of(photo, photo));
+        var gallery = spotImages.list(first.getSpotId());
+        String originalUrl = gallery.getFirst().readUrl();
+        String thumbnailUrl = originalUrl.replace("/content", "/thumbnail");
+        assertThat(layouts.load(site.getSiteId()).spots().getFirst().readUrl()).isEqualTo(thumbnailUrl);
+        assertThat(spotImages.list(first.getSpotId()).getFirst().readUrl()).isEqualTo(originalUrl);
+        assertThat(objects.keySet().stream().filter(k -> k.endsWith(".monitoring-v1-560-q82.jpg"))).hasSize(1);
+        spotImages.setRepresentative(first.getSpotId(), gallery.getLast().imageId());
+        assertThat(layouts.load(site.getSiteId()).spots().getFirst().readUrl())
+                .isEqualTo(gallery.getLast().readUrl().replace("/content", "/thumbnail"));
+        spotImages.move(first.getSpotId(), gallery.getLast().imageId(), "up");
+        assertThat(spotImages.monitoringReadUrl(first.getSpotId()))
+                .isEqualTo(gallery.getLast().readUrl().replace("/content", "/thumbnail"));
+        spotImages.delete(first.getSpotId(), gallery.getLast().imageId());
+        assertThat(spotImages.monitoringReadUrl(first.getSpotId())).isEqualTo(thumbnailUrl);
+        assertThat(objects.keySet().stream().filter(k -> k.endsWith(".monitoring-v1-560-q82.jpg"))).hasSize(1);
+        new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+            spotImages.deleteAll(first.getSpotId());
+            status.setRollbackOnly();
+        });
+        assertThat(spotImages.monitoringReadUrl(first.getSpotId())).isEqualTo(thumbnailUrl);
+        assertThat(objects.keySet().stream().filter(k -> k.endsWith(".monitoring-v1-560-q82.jpg"))).hasSize(1);
+        spotImages.deleteAll(first.getSpotId());
+        assertThat(objects.keySet().stream().filter(k -> k.endsWith(".monitoring-v1-560-q82.jpg"))).isEmpty();
+    }
+
+    @Test void integratedEditDeletesVariantAndUsesNewRepresentative() throws Exception {
+        when(storage.exists(anyString())).thenAnswer(i -> objects.containsKey(i.<String>getArgument(0)));
+        var photo = new MockMultipartFile("files", "photo.png", "image/png", MonitoringThumbnailTests.photo(800, 600));
+        spotImages.upload(first.getSpotId(), List.of(photo, photo));
+        var gallery = spotImages.list(first.getSpotId());
+        spotImages.monitoringReadUrl(first.getSpotId());
+        var form = new ImageEditForm();
+        form.setImageOrder("e:" + gallery.getLast().imageId());
+        form.setImageRepresentative("e:" + gallery.getLast().imageId());
+        form.setImageDeleted("e:" + gallery.getFirst().imageId());
+        spotImages.edit(first.getSpotId(), List.of(), form);
+        assertThat(objects.keySet().stream().filter(k -> k.endsWith(".monitoring-v1-560-q82.jpg"))).isEmpty();
+        assertThat(spotImages.monitoringReadUrl(first.getSpotId()))
+                .isEqualTo(gallery.getLast().readUrl().replace("/content", "/thumbnail"));
+    }
+
     @Test void rolesAreIndependentAndSelectionCanBeCleared() {
         select(b);
         assertThat(siteImages.list(site.getSiteId())).extracting(ImageResponse::representative).containsExactly(true, false);
