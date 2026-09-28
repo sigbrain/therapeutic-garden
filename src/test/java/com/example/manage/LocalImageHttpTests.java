@@ -107,6 +107,30 @@ class LocalImageHttpTests {
         assertThat(anonymous.statusCode()).isEqualTo(302);
         assertThat(get(path.replace("/images", "/edit")).body()).contains("새 이미지 추가", "test.png", "대표 이미지");
     }
+    @Test void thumbnailRouteChecksOwnershipAndAuthenticationAndKeepsOriginalRoute() throws Exception {
+        Long id = parent(false);
+        byte[] original = MonitoringThumbnailTests.photo(1200, 800);
+        spotImages.upload(id, List.of(new org.springframework.mock.web.MockMultipartFile(
+                "files", "photo.png", "image/png", original)));
+        var photo = spotImages.list(id).getFirst();
+        String url = spotImages.monitoringReadUrl(id);
+        var response = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + url)).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.headers().firstValue("Content-Type")).contains("image/jpeg");
+        var decoded = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(response.body()));
+        assertThat(decoded.getWidth()).isEqualTo(560);
+        var full = client.send(HttpRequest.newBuilder(URI.create("http://localhost:" + port + photo.readUrl())).GET().build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertThat(full.body()).isEqualTo(original);
+        assertThat(get("/admin/spots/" + parent(false) + "/images/" + photo.imageId() + "/thumbnail").statusCode()).isEqualTo(404);
+        var anonymous = HttpClient.newHttpClient().send(HttpRequest.newBuilder(
+                URI.create("http://localhost:" + port + url)).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(anonymous.statusCode()).isEqualTo(302);
+        spotImages.delete(id, photo.imageId());
+        assertThat(get(url).statusCode()).isEqualTo(404);
+    }
+
     @Test void oversizedMultipartShowsFriendlyError() throws Exception {
         String path = "/admin/sites/" + parent(true) + "/images";
         var response = upload(path, 10 * 1024 * 1024 + 1, false);

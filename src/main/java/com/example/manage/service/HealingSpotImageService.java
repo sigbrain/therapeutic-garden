@@ -20,6 +20,7 @@ public class HealingSpotImageService {
     private final ImageStorage storage;
     private final ImageStorageTransactions storageTransactions;
     private final ImageFilePolicy files;
+    private final MonitoringThumbnailService thumbnails;
 
     @Transactional(readOnly = true)
     public List<ImageResponse> list(Long parentId) {
@@ -32,6 +33,23 @@ public class HealingSpotImageService {
         requireParent(parentId);
         return ordered(parentId).stream().filter(HealingSpotImage::isRepresentative).findFirst()
                 .map(image -> response(parentId, image).readUrl()).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public String monitoringReadUrl(Long parentId) {
+        requireParent(parentId);
+        return ordered(parentId).stream().filter(HealingSpotImage::isRepresentative).findFirst()
+                .map(image -> thumbnails.readUrl(image.getObjectKey(),
+                        "/admin/spots/" + parentId + "/images/" + image.getImageId() + "/thumbnail",
+                        () -> response(parentId, image).readUrl())).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public ImageContent localThumbnail(Long parentId, Long imageId) {
+        if (!(storage instanceof LocalImageStorage)) throw new IllegalArgumentException("로컬 이미지 조회를 사용할 수 없습니다.");
+        requireParent(parentId);
+        HealingSpotImage image = owned(ordered(parentId), imageId);
+        return thumbnails.content(image.getObjectKey(), image.getContentType());
     }
 
     private ImageResponse response(Long parentId, HealingSpotImage image) {
@@ -75,6 +93,7 @@ public class HealingSpotImageService {
         for (String key : plan.deleted()) {
             HealingSpotImage image = resolved.get(key);
             storageTransactions.delete(image.getObjectKey(), image.getContentType());
+            thumbnails.deleteAfterCommit(image.getObjectKey());
             images.delete(image);
         }
         for (int i = 0; i < plan.order().size(); i++) {
@@ -111,6 +130,7 @@ public class HealingSpotImageService {
         List<HealingSpotImage> current = ordered(parentId);
         HealingSpotImage selected = owned(current, imageId);
         storageTransactions.delete(selected.getObjectKey(), selected.getContentType());
+        thumbnails.deleteAfterCommit(selected.getObjectKey());
         images.delete(selected);
         current.remove(selected);
         if (selected.isRepresentative() && !current.isEmpty()) {
@@ -127,6 +147,7 @@ public class HealingSpotImageService {
         List<HealingSpotImage> current = ordered(parentId);
         for (HealingSpotImage image : current) {
             storageTransactions.delete(image.getObjectKey(), image.getContentType());
+            thumbnails.deleteAfterCommit(image.getObjectKey());
             images.delete(image);
         }
         images.flush();

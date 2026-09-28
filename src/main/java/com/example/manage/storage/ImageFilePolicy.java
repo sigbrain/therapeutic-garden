@@ -34,7 +34,7 @@ public class ImageFilePolicy {
     }
 
     public static void validateKey(String key) {
-        if (key == null || !key.matches("(?:sites|healing-spots)/[1-9][0-9]*/[a-f0-9-]{36}\\.(?:jpg|png|webp)"))
+        if (key == null || !key.matches("(?:sites|healing-spots)/[1-9][0-9]*/[a-f0-9-]{36}\\.(?:jpg|png|webp)(?:\\.monitoring-v1-560-q82\\.jpg)?"))
             throw new ImageStorageException("올바르지 않은 이미지 저장 경로입니다.");
     }
 }

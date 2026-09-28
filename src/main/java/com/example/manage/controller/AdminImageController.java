@@ -91,6 +91,16 @@ public class AdminImageController {
         } catch (IllegalArgumentException e) { return ResponseEntity.notFound().build(); }
     }
 
+    @GetMapping("/spots/{parentId}/images/{imageId}/thumbnail")
+    public ResponseEntity<byte[]> thumbnailSpot(@PathVariable Long parentId, @PathVariable Long imageId) {
+        try {
+            var content = spotImages.localThumbnail(parentId, imageId);
+            return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                    .contentType(MediaType.parseMediaType(content.contentType()))
+                    .header("X-Content-Type-Options", "nosniff").body(content.bytes());
+        } catch (IllegalArgumentException e) { return ResponseEntity.notFound().build(); }
+    }
+
     private String action(String path, RedirectAttributes flash, Runnable work) {
         try {
             work.run();

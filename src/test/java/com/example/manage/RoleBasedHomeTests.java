@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.resource.ResourceUrlProvider;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ class RoleBasedHomeTests {
     @Autowired PasswordEncoder encoder;
     @Value("${kakao.maps.javascript-key}") String kakaoKey;
     MockMvc mvc;
+    @Autowired ResourceUrlProvider resourceUrlProvider;
 
     @BeforeEach
     void setUp() {
@@ -155,18 +157,18 @@ class RoleBasedHomeTests {
         assertThat(header).contains("href=\"/admin/login\"", "href=\"/member/login\"", "href=\"/\"");
         assertThat(hero).contains("THERAPEUTIC GARDEN", "공간이", "SCROLL TO EXPLORE")
                 .doesNotContain("/admin/login", "/member/login");
-        assertThat(cta).contains("/images/landing/HS3_1.png", "치유 공간의", "경험을 확인하세요.")
+        assertThat(cta).contains("/images/landing/optimized/effect-hs3-cta.webp", "치유 공간의", "경험을 확인하세요.")
                 .doesNotContain("<a ", "<button", "<nav", "/admin/login", "/member/login");
         String experience = html.substring(html.indexOf("<section class=\"landing-section landing-connection"),
                 html.indexOf("<section class=\"landing-section landing-final-cta"));
-        assertThat(experience).contains("/images/landing/HS4_1.jpg",
-                "/images/landing/HS5_3.jpg", "/images/landing/HS6_4.jpg",
+        assertThat(experience).contains("/images/landing/optimized/personal-hs4.webp",
+                "/images/landing/optimized/personal-hs5.webp", "/images/landing/optimized/personal-hs6.webp",
                 "Sample Personal Healing Course", "나의 상태에 맞춰,", "치유의 길을 구성합니다.")
                 .doesNotContain("/images/landing/HS2_4.png", "/images/landing/HS4_3.jpg", "/images/landing/HS4_4.png");
         assertThat(html).contains("THERAPEUTIC SPACE", "MONITORING", "HEALING EFFECT",
                 "PERSONAL HEALING COURSE", "THERAPEUTIC GARDEN MONITORING", "src=\"/js/landing.js\"")
                 .doesNotContain("<video", "<iframe", "<footer", "SIGBRAIN");
-        assertThat(hero).contains("/images/landing/HS2_3.jpeg")
+        assertThat(hero).contains("/images/landing/optimized/hero-hs2.webp")
                 .doesNotContain("HC-A", "HC-B", "HS1", "HS2</span>", "공간 구조 개념도");
         assertThat(html).contains("바이오마커", "뇌파", "맥파", "공간별 치유효과", "Sample Monitoring",
                 "방문 <strong>130</strong>", "32% 감소", "10% 상승", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
@@ -188,7 +190,7 @@ class RoleBasedHomeTests {
             assertThat(Files.isRegularFile(Path.of("src/main/resources/static" + source))).isTrue();
             if (source.startsWith("/images/landing/")) spacePhotos++;
         }
-        assertThat(spacePhotos).isEqualTo(13);
+        assertThat(spacePhotos).isEqualTo(14);
         var ids = java.util.regex.Pattern.compile("\\bid=\"([^\"]+)\"").matcher(html);
         var uniqueIds = new java.util.HashSet<String>();
         while (ids.find()) assertThat(uniqueIds.add(ids.group(1))).as("unique id: " + ids.group(1)).isTrue();
@@ -209,6 +211,23 @@ class RoleBasedHomeTests {
                 assertThat(Files.readString(path)).as(path.toString()).doesNotContain("landing.js", "landing.css");
             }
         }
+    }
+
+    @Test
+    void staticAssetsUseContentVersionUrlsAndBareUrlsRevalidate() throws Exception {
+        String versionedStyle = resourceUrlProvider.getForLookupPath("/css/style.css");
+        assertThat(versionedStyle).containsPattern("/css/style-[0-9a-f]{32}\\.css");
+        assertThat(resourceUrlProvider.getForLookupPath("/css/landing.css"))
+                .containsPattern("/css/landing-[0-9a-f]{32}\\.css");
+        assertThat(resourceUrlProvider.getForLookupPath("/js/landing.js"))
+                .containsPattern("/js/landing-[0-9a-f]{32}\\.js");
+        mvc.perform(get("/css/style.css")).andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "no-cache"));
+        mvc.perform(get(versionedStyle)).andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("max-age=31536000"),
+                        org.hamcrest.Matchers.containsString("public"),
+                        org.hamcrest.Matchers.containsString("immutable"))));
     }
 
 }

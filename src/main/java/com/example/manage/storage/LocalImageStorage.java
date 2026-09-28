@@ -35,6 +35,11 @@ public class LocalImageStorage implements ImageStorage {
             if (temporary != null) try { Files.deleteIfExists(temporary); } catch (IOException ignored) { /* retry cleanup on disk */ }
         }
     }
+    @Override public boolean exists(String key) {
+        try { return Files.readAttributes(path(key), java.nio.file.attribute.BasicFileAttributes.class).isRegularFile(); }
+        catch (NoSuchFileException e) { return false; }
+        catch (IOException e) { throw new ImageStorageException("로컬 이미지 존재 여부를 확인할 수 없습니다.", e); }
+    }
     @Override public void delete(String key) {
         try { Files.deleteIfExists(path(key)); }
         catch (IOException e) { throw new ImageStorageException("로컬 이미지 삭제에 실패했습니다.", e); }

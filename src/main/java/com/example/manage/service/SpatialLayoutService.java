@@ -34,8 +34,7 @@ public class SpatialLayoutService {
                 .sorted(Comparator.comparing((HealingSpot s) -> s.getHealingCourse().getCode())
                         .thenComparing(HealingSpot::getCode).thenComparing(HealingSpot::getSpotId))
                 .map(s -> {
-                    String url = spotImages.list(s.getSpotId()).stream().filter(ImageResponse::representative)
-                            .map(ImageResponse::readUrl).findFirst().orElse(null);
+                    String url = spotImages.monitoringReadUrl(s.getSpotId());
                     var p = saved.get(s.getSpotId());
                     return new Spot(s.getSpotId(), s.getHealingCourse().getCode() + " · " + s.getHealingCourse().getName(),
                             s.getHealingCourse().getCourseId(), s.getHealingCourse().getCode(), s.getHealingCourse().getName(),
