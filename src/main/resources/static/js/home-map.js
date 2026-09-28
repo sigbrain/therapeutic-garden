@@ -243,6 +243,8 @@ function renderSpotInformation(spot) {
     spotCourse.textContent = spot.course || [spot.courseCode, spot.courseName].filter(Boolean).join(' · ');
     document.getElementById('spotDetailTitle').textContent = [spot.code, spot.name].filter(Boolean).join(' · ');
     document.getElementById('spotDetailCourse').textContent = spotCourse.textContent;
+    document.getElementById('spotSiteName').textContent = spot.siteName ?? selectedSite.dataset.name;
+    document.getElementById('spotSiteAddress').textContent = spot.siteAddress ?? selectedSite.dataset.address;
 }
 function showSpotGalleryImage(url, alt, message) {
     var empty = document.getElementById('spotImageEmpty');
@@ -319,13 +321,12 @@ async function openSpotDetail(spot) {
     var status = document.getElementById('spotGalleryStatus');
     status.textContent = '이미지를 불러오는 중입니다.';
     try {
-        var response = await fetch('/api/sites/' + encodeURIComponent(siteId) + '/spots?spotId=' + encodeURIComponent(spot.spotId), {cache: 'no-store'});
+        var response = await fetch('/api/sites/' + encodeURIComponent(siteId) + '/spots/' + encodeURIComponent(spot.spotId), {cache: 'no-store'});
         if (!response.ok) throw new Error('HS 조회 실패');
-        var spots = await response.json();
+        var fresh = await response.json();
         if (version !== spotRequestVersion || spotModal.hidden) return;
-        if (!Array.isArray(spots)) throw new Error('잘못된 HS 응답');
-        var fresh = spots.find(item => item && String(item.spotId) === String(spot.spotId));
-        if (!fresh) throw new Error('HS 없음');
+        if (!fresh || Array.isArray(fresh) || String(fresh.spotId) !== String(spot.spotId)
+                || String(fresh.siteId) !== String(siteId)) throw new Error('잘못된 HS 응답');
         selectedSpot = fresh;
         renderSpotInformation(fresh);
         renderSpotGallery(fresh);

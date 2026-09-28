@@ -45,6 +45,9 @@ function setup(options = {}) {
                 spots: [{spotId: 1, code: 'HS1', name: '정원', course: 'HC1 · 코스', courseId: 17, courseCode: 'HC1', courseName: '코스', readUrl: '/authenticated/hs-1', xPercent: 20, yPercent: 70}]}
             : url.endsWith('/courses')
             ? [{centerLatitude: 37, centerLongitude: 127, radius: 10}]
+            : /\/spots\/\d+$/.test(url)
+            ? {spotId: 1, siteId: Number(url.split('/')[3]), siteName: '상세 Site', siteAddress: '상세 주소', code: 'HS1', name: '정원', courseCode: 'HC1', courseName: '코스',
+                images: [{imageId: 1, displayOrder: 1, representative: true, readUrl: '/authenticated/hs-1'}]}
             : [{spotId: 1, code: 'HS1', name: '정원', courseCode: 'HC1', courseName: '코스', latitude: 37, longitude: 127,
                 representativeImageUrl: '/authenticated/hs-1', images: [{imageId: 1, displayOrder: 1, representative: true, readUrl: '/authenticated/hs-1'}]}]}))};
     vm.createContext(context); vm.runInContext(fs.readFileSync('src/main/resources/static/js/home-course-overlay.js', 'utf8'), context); vm.runInContext(spatialScript, context); vm.runInContext(script, context);
@@ -229,12 +232,12 @@ test('map keyboard focus wraps, close restores focus and body scrolling', async 
 
 test('gallery sorts all images, initially selects representative, and changes hero via thumbnails', async () => {
     const ui = setup(); await flush();
-    const spot = {spotId: 1, code: 'HS1', name: '정원', images: [
+    const spot = {siteId: 1, spotId: 1, code: 'HS1', name: '정원', images: [
         {imageId: 3, displayOrder: 3, readUrl: '/third'},
         {imageId: 2, displayOrder: 2, representative: true, readUrl: '/representative'},
         {imageId: 1, displayOrder: 1, readUrl: '/first'}
     ]};
-    ui.context.fetch = async () => ({ok: true, json: async () => [spot]});
+    ui.context.fetch = async () => ({ok: true, json: async () => spot});
     const siteImage = ui.elements.siteImage.src, siteName = ui.elements.siteName.textContent;
     hotspots(ui)[0].focus(); hotspots(ui)[0].click(); await flush();
     const thumbs = ui.elements.spotThumbnails;
@@ -255,7 +258,7 @@ test('single image hides thumbnails; empty gallery and broken hero show placehol
     assert.equal(ui.elements.spotThumbnails.hidden, true);
     assert.equal(ui.elements.spotImage.src, '/authenticated/hs-1');
     ui.elements.spotImage.onerror(); assert.equal(ui.elements.spotImageEmpty.hidden, false);
-    ui.context.fetch = async () => ({ok: true, json: async () => [{spotId: 2, code: 'HS2', name: '숲', images: []}]});
+    ui.context.fetch = async () => ({ok: true, json: async () => ({siteId: 1, spotId: 2, code: 'HS2', name: '숲', images: []})});
     await ui.context.openSpotDetail({spotId: 2, code: 'HS2', name: '숲'});
     assert.equal(ui.elements.spotThumbnails.children.length, 0);
     assert.equal(ui.elements.spotImage.src, undefined); assert.equal(ui.elements.spotImageEmpty.hidden, false);
@@ -278,12 +281,12 @@ test('nested detail traps focus, preserves map and scrolling lock, then restores
 test('Site change closes detail and ignores late gallery responses; reopen obtains a fresh URL', async () => {
     const ui = setup(); await flush(); let finish;
     const initialFetch = ui.context.fetch;
-    ui.context.fetch = url => url.includes('?spotId=') ? new Promise(resolve => { finish = resolve; }) : initialFetch(url);
+    ui.context.fetch = url => /\/spots\/\d+$/.test(url) ? new Promise(resolve => { finish = resolve; }) : initialFetch(url);
     hotspots(ui)[0].click(); ui.change(1); await flush();
     assert.equal(ui.elements.spotDetailModal.hidden, true);
-    finish({ok: true, json: async () => [{spotId: 1, code: 'OLD', images: [{readUrl: '/old'}]}]}); await flush();
+    finish({ok: true, json: async () => ({siteId: 1, spotId: 1, code: 'OLD', images: [{readUrl: '/old'}]})}); await flush();
     assert.equal(ui.elements.spotDetailModal.hidden, true); assert.equal(ui.elements.siteName.textContent, 'Site 2');
-    ui.context.fetch = async () => ({ok: true, json: async () => [{spotId: 1, code: 'NEW', name: '새 정원', images: [{readUrl: '/fresh'}]}]});
+    ui.context.fetch = async () => ({ok: true, json: async () => ({siteId: 2, spotId: 1, code: 'NEW', name: '새 정원', images: [{readUrl: '/fresh'}]})});
     await ui.context.openSpotDetail({spotId: 1}); assert.equal(ui.elements.spotImage.src, '/fresh');
     ui.elements.spotDetailModal.click({target: ui.elements.spotDetailModal}); assert.equal(ui.elements.spotDetailModal.hidden, true);
 });
@@ -303,10 +306,10 @@ for (const failure of ['legacy', 'null', '403', '404', '500', 'network', 'json',
             return {ok: !['403', '404', '500'].includes(failure), json: async () => {
                 if (failure === 'json') throw new Error('invalid json');
                 if (failure === 'missingSpot') return [];
-                const spot = {spotId: 1, code: 'HS1', name: '정원', representativeImageUrl: '/representative'};
+                const spot = {siteId: 1, spotId: 1, code: 'HS1', name: '정원', representativeImageUrl: '/representative'};
                 if (failure === 'null') spot.images = null;
                 if (failure === 'missingUrl') spot.images = [{imageId: 1}];
-                return [spot];
+                return spot;
             }};
         };
         await ui.context.openSpotDetail({spotId: 1, code: 'HS1', name: '정원', representativeImageUrl: '/representative'});
@@ -319,18 +322,20 @@ test('photo and map use identical PK-based gallery request and complete gallery'
     const ui = setup(); await flush(); const requests = [];
     ui.context.fetch = async (url, options) => {
         requests.push([url, options.cache]);
-        return {ok: true, json: async () => [{spotId: 1, code: 'HS2', name: '곶자왈원', images: [
+        return {ok: true, json: async () => ({siteId: 1, siteName: 'API Site', siteAddress: 'API 주소', spotId: 1, code: 'HS2', name: '곶자왈원', images: [
             {imageId: 6, displayOrder: 3, readUrl: '/six'},
             {imageId: 4, displayOrder: 1, readUrl: '/four'},
             {imageId: 5, displayOrder: 2, representative: true, readUrl: '/five'}
-        ]}]};
+        ]})};
     };
     hotspots(ui)[0].click(); await flush();
     const gallery = () => ui.elements.spotThumbnails.children.map(button => button.children[0].src);
     assert.deepEqual(gallery(), ['/four', '/five', '/six']); assert.equal(ui.elements.spotImage.src, '/five');
     ui.context.closeSpotDetail(); ui.open(); ui.markers[0].click(); await flush();
     assert.deepEqual(gallery(), ['/four', '/five', '/six']); assert.equal(ui.elements.spotImage.src, '/five');
-    assert.deepEqual(requests, [['/api/sites/1/spots?spotId=1', 'no-store'], ['/api/sites/1/spots?spotId=1', 'no-store']]);
+    assert.equal(ui.elements.spotSiteName.textContent, 'API Site');
+    assert.equal(ui.elements.spotSiteAddress.textContent, 'API 주소');
+    assert.deepEqual(requests, [['/api/sites/1/spots/1', 'no-store'], ['/api/sites/1/spots/1', 'no-store']]);
 });
 test('actual image download failure is a loading error, not no registered images', async () => {
     const ui = setup(); await flush();
@@ -388,4 +393,19 @@ test('stale HC response cannot restore another Site overlay', async () => {
     ui.change(1); await flush();
     finish({ok: true, json: async () => ({...baseLayout(), spots: [{...baseLayout().spots[0], courseId: 99}]})});
     await flush(); assert.equal(regions(ui).length, 0); assert.equal(badges(ui).length, 0);
+});
+
+test('detail clears previous Site text during preview and rejects mismatched detail identities', async () => {
+    const ui = setup(); await flush();
+    await ui.context.openSpotDetail({spotId: 1});
+    assert.equal(ui.elements.spotSiteName.textContent, '상세 Site');
+    for (const identity of [{spotId: 2, siteId: 1}, {spotId: 1, siteId: 2}]) {
+        ui.context.fetch = async () => ({ok: true, json: async () => ({...identity, siteName: '잘못된 Site', images: []})});
+        const pending = ui.context.openSpotDetail({spotId: 1});
+        assert.equal(ui.elements.spotSiteName.textContent, 'Site 1');
+        assert.equal(ui.elements.spotSiteAddress.textContent, '주소');
+        await pending;
+        assert.equal(ui.elements.spotSiteName.textContent, 'Site 1');
+        assert.match(ui.elements.spotGalleryStatus.textContent, /불러오지 못했습니다/);
+    }
 });
