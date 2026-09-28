@@ -2,6 +2,9 @@ package com.example.manage.controller;
 
 import com.example.manage.dto.HealingCourseResponse;
 import com.example.manage.dto.HealingSpotResponse;
+import com.example.manage.dto.HealingSpotDetailResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.CacheControl;
 import com.example.manage.service.HealingCourseService;
 import com.example.manage.service.HealingSpotService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,17 @@ public class HealingSpaceController {
     private final HealingCourseService healingCourseService;
     private final HealingSpotService healingSpotService;
     private final com.example.manage.service.HealingSpotImageService spotImages;
+
+    @GetMapping("/{siteId}/spots/{spotId}")
+    public ResponseEntity<HealingSpotDetailResponse> getHealingSpotDetail(
+            @PathVariable Long siteId, @PathVariable Long spotId, jakarta.servlet.http.HttpSession session) {
+        try {
+            return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                    .body(healingSpotService.findDetail(siteId, spotId, session.getAttribute("loginAdminId") != null));
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 
     /*

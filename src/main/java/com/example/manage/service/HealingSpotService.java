@@ -2,6 +2,7 @@ package com.example.manage.service;
 
 import com.example.manage.domain.HealingCourse;
 import com.example.manage.domain.HealingSpot;
+import com.example.manage.dto.HealingSpotDetailResponse;
 import com.example.manage.repository.HealingCourseRepository;
 import com.example.manage.repository.HealingSpotRepository;
 import com.example.manage.repository.ScheduleSpotRepository;
@@ -46,6 +47,16 @@ public class HealingSpotService {
     public List<HealingSpot> findByCourseId(Long courseId) {
         requireCourse(courseId);
         return healingSpotRepository.findByHealingCourseCourseId(courseId);
+    }
+
+    @Transactional(readOnly = true)
+    public HealingSpotDetailResponse findDetail(Long siteId, Long spotId, boolean includeImages) {
+        HealingSpot spot = findHealingSpot(spotId);
+        if (!spot.getHealingCourse().getSite().getSiteId().equals(siteId)) {
+            throw new IllegalArgumentException("선택한 사이트에 속한 HealingSpot이 아닙니다.");
+        }
+        return HealingSpotDetailResponse.from(spot,
+                includeImages ? healingSpotImageService.list(spotId) : List.of());
     }
 
     @Transactional(readOnly = true)

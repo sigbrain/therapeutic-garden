@@ -526,4 +526,58 @@ class SpatialLayoutTests {
                 .andExpect(jsonPath("$[0].representativeImageUrl").isEmpty());
     }
 
+    @Test void singleSpotDetailIncludesSiteCourseAndOrderedOriginalGallery() throws Exception {
+        spotImages.upload(first.getSpotId(), List.of(file("first.png"), file("second.png"), file("third.png")));
+        var gallery = spotImages.list(first.getSpotId());
+        spotImages.move(first.getSpotId(), gallery.getLast().imageId(), "up");
+        spotImages.setRepresentative(first.getSpotId(), gallery.get(1).imageId());
+        String endpoint = "/api/sites/" + site.getSiteId() + "/spots/" + first.getSpotId();
+        mvc.perform(get(endpoint).sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.spotId").value(first.getSpotId()))
+                .andExpect(jsonPath("$.code").value(first.getCode()))
+                .andExpect(jsonPath("$.name").value(first.getName()))
+                .andExpect(jsonPath("$.latitude").value(first.getLatitude()))
+                .andExpect(jsonPath("$.longitude").value(first.getLongitude()))
+                .andExpect(jsonPath("$.courseId").value(course.getCourseId()))
+                .andExpect(jsonPath("$.courseCode").value(course.getCode()))
+                .andExpect(jsonPath("$.courseName").value(course.getName()))
+                .andExpect(jsonPath("$.siteId").value(site.getSiteId()))
+                .andExpect(jsonPath("$.siteName").value(site.getName()))
+                .andExpect(jsonPath("$.siteAddress").value(site.getAddress()))
+                .andExpect(jsonPath("$.images.length()").value(3))
+                .andExpect(jsonPath("$.images[0].imageId").value(gallery.get(0).imageId()))
+                .andExpect(jsonPath("$.images[1].imageId").value(gallery.get(2).imageId()))
+                .andExpect(jsonPath("$.images[2].imageId").value(gallery.get(1).imageId()))
+                .andExpect(jsonPath("$.images[2].displayOrder").value(3))
+                .andExpect(jsonPath("$.images[2].representative").value(true))
+                .andExpect(jsonPath("$.images[2].readUrl").value(gallery.get(1).readUrl()))
+                .andExpect(jsonPath("$.representativeImageUrl").value(gallery.get(1).readUrl()))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("/thumbnail"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(containsString("objectKey"))));
+        mvc.perform(get("/api/sites/" + site.getSiteId() + "/spots/" + second.getSpotId()).sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.images").isEmpty())
+                .andExpect(jsonPath("$.representativeImageUrl").isEmpty());
+        mvc.perform(get(endpoint).sessionAttr("loginMemberId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.images").isEmpty())
+                .andExpect(jsonPath("$.representativeImageUrl").isEmpty());
+        mvc.perform(get("/api/sites/" + site.getSiteId() + "/spots").sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].siteAddress").doesNotExist());
+        String html = monitoringHtml();
+        String modal = html.substring(html.indexOf("id=\"spotDetailModal\""), html.indexOf("id=\"mapModal\""));
+        assertThat(modal).contains("id=\"spotSiteName\"", "id=\"spotSiteAddress\"", "시연용 데이터");
+    }
+
+    @Test void singleSpotDetailRejectsForeignAndMissingSiteOrSpot() throws Exception {
+        var other = sites.saveAndFlush(new Site("Detail scope " + UUID.randomUUID(), "다른 주소", 38.0, 128.0, 3));
+        for (String path : List.of(
+                "/api/sites/" + other.getSiteId() + "/spots/" + first.getSpotId(),
+                "/api/sites/-1/spots/" + first.getSpotId(),
+                "/api/sites/" + site.getSiteId() + "/spots/-1")) {
+            mvc.perform(get(path).sessionAttr("loginAdminId", 1L))
+                    .andExpect(status().isNotFound()).andExpect(content().string(""));
+        }
+    }
+
 }
