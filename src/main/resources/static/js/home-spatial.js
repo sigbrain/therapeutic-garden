@@ -3,6 +3,12 @@ window.HomeSpatial = function(onSelect) {
     var canvas = document.getElementById('monitoringCanvas');
     var status = document.getElementById('monitoringStatus');
     var settings = document.getElementById('monitoringSettings');
+    var space = document.querySelector('.monitoring-space');
+    function updateStatus(message, loading) {
+        status.textContent = message;
+        status.setAttribute('data-loading', String(Boolean(loading)));
+        space.setAttribute('data-loading', String(Boolean(loading)));
+    }
     var version = 0;
     var buttons = [];
     var selectedId = null;
@@ -66,7 +72,7 @@ window.HomeSpatial = function(onSelect) {
         canvas.replaceChildren();
         canvas.hidden = true;
         settings.hidden = true;
-        status.textContent = site ? '공간 정보를 불러오는 중입니다.' : '등록된 Site가 없습니다.';
+        updateStatus(site ? '공간 정보를 불러오는 중입니다.' : '등록된 Site가 없습니다.', Boolean(site));
         if (!site) return;
         settings.href = '/admin/sites/' + encodeURIComponent(site.value) + '/spatial-layout';
         try {
@@ -76,7 +82,7 @@ window.HomeSpatial = function(onSelect) {
             if (current !== version) return;
             if (!layout || !Array.isArray(layout.spots) || String(layout.siteId) !== site.value) throw new Error('잘못된 공간 응답');
             if (!layout.image) {
-                status.textContent = '모니터링 이미지가 아직 설정되지 않았습니다.';
+                updateStatus('모니터링 이미지가 아직 설정되지 않았습니다.');
                 settings.hidden = false;
                 return;
             }
@@ -164,19 +170,19 @@ window.HomeSpatial = function(onSelect) {
                 if (current !== version) return;
                 canvas.hidden = false;
                 positionLabels();
-                status.textContent = placed.length ? '' : '설정된 HS 위치가 없습니다.';
+                updateStatus(placed.length ? '' : '설정된 HS 위치가 없습니다.');
             });
             image.addEventListener('error', () => {
                 if (current !== version) return;
                 canvas.hidden = true;
-                status.textContent = '모니터링 이미지를 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.';
+                updateStatus('모니터링 이미지를 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.');
                 settings.hidden = false;
             });
             canvas.append(image, regions, badgeLayer, overlay);
             image.src = layout.image.readUrl;
         } catch (error) {
             if (current !== version) return;
-            status.textContent = '공간 모니터링을 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.';
+            updateStatus('공간 모니터링을 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.');
             settings.hidden = false;
         }
     }
