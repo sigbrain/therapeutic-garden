@@ -120,7 +120,8 @@ class ImageStorageTests {
             String url = new S3ImageStorage(client, presigner, p).createReadUrl(key, "/admin/sites/1/images/1/content");
             assertThat(URI.create(url).getHost()).isEqualTo("unit-test-bucket.storage.example.invalid");
             assertThat(URI.create(url).getPath()).isEqualTo("/" + key);
-            assertThat(url).contains("X-Amz-Expires=3600", "X-Amz-Signature=");
+            assertThat(url.contains("X-Amz-Expires=3600")).isTrue();
+            assertThat(url.contains("X-Amz-Signature=")).isTrue();
             verifyNoInteractions(client);
         }
     }
