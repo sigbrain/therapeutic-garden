@@ -13,4 +13,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 참가자 번호로 조회
     Optional<Member> findByParticipantNo(Integer participantNo);
+
+    Optional<Member> findTopByOrderByParticipantNoDesc();
 }

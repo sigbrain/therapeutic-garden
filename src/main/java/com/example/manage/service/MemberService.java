@@ -1,6 +1,7 @@
 package com.example.manage.service;
 
 import com.example.manage.domain.Member;
+import com.example.manage.dto.MemberCreateForm;
 import com.example.manage.domain.Schedule;
 import com.example.manage.repository.MemberRepository;
 import com.example.manage.repository.ScheduleRepository;
@@ -21,6 +22,30 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
+
+    /**
+     * In-process concurrent registrations are serialized so they cannot select
+     * the same next participant number. The database UNIQUE constraint remains
+     * the final guard, including when multiple application instances are used.
+     */
+    public synchronized Member createMember(MemberCreateForm form) {
+        if (memberRepository.findByLoginId(form.getLoginId()).isPresent()) {
+            return null;
+        }
+
+        int participantNo = memberRepository.findTopByOrderByParticipantNoDesc()
+                .map(member -> Math.addExact(member.getParticipantNo(), 1))
+                .orElse(1);
+        String encodedPassword = passwordEncoder.encode(form.getPassword());
+        String phone = normalizePhone(form.getPhone());
+        Member member = new Member(participantNo, form.getGroupNo(), form.getLoginId(),
+                encodedPassword, form.getName(), phone);
+        return memberRepository.save(member);
+    }
+
+    private String normalizePhone(String phone) {
+        return phone == null ? null : phone.replace("-", "");
+    }
 
     public void createMember(
             Integer participantNo,
@@ -128,9 +153,7 @@ public class MemberService {
          * [PHONE_REDACTED]
          * 형식으로 저장한다.
          */
-        if (phone != null) {
-            phone = phone.replace("-", "");
-        }
+        phone = normalizePhone(phone);
 
 
         /*

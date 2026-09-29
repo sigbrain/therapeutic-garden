@@ -23,6 +23,7 @@ import com.example.manage.domain.Admin;
 import com.example.manage.domain.Member;
 import com.example.manage.domain.Schedule;
 import com.example.manage.dto.MemberEditForm;
+import com.example.manage.dto.MemberCreateForm;
 import com.example.manage.dto.ScheduleForm;
 import com.example.manage.dto.ScheduleResponse;
 import com.example.manage.service.SiteService;
@@ -518,6 +519,35 @@ public class AdminController {
         );
 
         return "admin/member-list";
+    }
+
+    @GetMapping("/members/new")
+    public String newMemberForm(Model model) {
+        model.addAttribute("memberCreateForm", new MemberCreateForm());
+        return "admin/member-create";
+    }
+
+    @PostMapping("/members")
+    public String createMember(
+            @Valid @ModelAttribute("memberCreateForm") MemberCreateForm form,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            form.setPassword(null);
+            return "admin/member-create";
+        }
+
+        Member member = memberService.createMember(form);
+        if (member == null) {
+            bindingResult.rejectValue("loginId", "duplicate", "이미 사용 중인 로그인 아이디입니다.");
+            form.setPassword(null);
+            return "admin/member-create";
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "참가자를 등록했습니다.");
+        return "redirect:/admin/members/" + member.getMemberId();
     }
 
 
