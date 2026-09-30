@@ -165,17 +165,52 @@ class RoleBasedHomeTests {
                 "/images/landing/optimized/personal-hs5.webp", "/images/landing/optimized/personal-hs6.webp",
                 "Sample Personal Healing Course", "나의 상태에 맞춰,", "치유의 길을 구성합니다.")
                 .doesNotContain("/images/landing/HS2_4.png", "/images/landing/HS4_3.jpg", "/images/landing/HS4_4.png");
-        assertThat(html).contains("THERAPEUTIC SPACE", "MONITORING", "HEALING EFFECT",
+        assertThat(html).contains("01 / HEALING EFFECT", "02 / MONITORING", "03 / PERSONAL HEALING COURSE",
                 "PERSONAL HEALING COURSE", "THERAPEUTIC GARDEN MONITORING", "src=\"/js/landing.js\"")
-                .doesNotContain("<video", "<iframe", "<footer", "SIGBRAIN");
+                .doesNotContain("THERAPEUTIC SPACE", "01 / HEALING CHANGE", "04 / PERSONAL HEALING COURSE",
+                        "<video", "<iframe", "<footer", "SIGBRAIN");
+        assertThat(html.indexOf("landing-hero"))
+                .isLessThan(html.indexOf("01 / HEALING EFFECT"));
+        assertThat(html.indexOf("01 / HEALING EFFECT"))
+                .isLessThan(html.indexOf("02 / MONITORING"));
+        assertThat(html.indexOf("02 / MONITORING"))
+                .isLessThan(html.indexOf("03 / PERSONAL HEALING COURSE"));
+        assertThat(html).contains("id=\"healing-effect\"", "/images/landing/optimized/personal-change.webp",
+                "/images/landing/optimized/site-plan.webp", "/images/landing/optimized/effect-hs1.webp",
+                "/images/landing/optimized/effect-hs2.webp", "/images/landing/optimized/effect-hs3-cta.webp",
+                "/images/landing/optimized/effect-hs4.webp", "/images/landing/optimized/effect-hs5.webp",
+                "/images/landing/optimized/effect-hs6.webp",
+                "data-course-id=\"HC-A\"", "data-course-id=\"HC-B\"", "data-course-id=\"HC-C\"",
+                "data-field=\"stress-reduction\"", "data-field=\"emotional-increase\"",
+                "data-field=\"participant-id\"", "29.2% 감소", "66.7% 증가");
+        assertThat(html).contains("/images/landing/optimized/monitoring-background.webp",
+                "/images/landing/optimized/personal-course-background.webp",
+                "landing-effect-overview-hero", "landing-monitoring-hero", "landing-connection-hero",
+                "landing-effect-overview-content", "landing-monitoring-content", "landing-connection-content",
+                "data-chart-current-label", "data-chart-current-metric-label", "data-chart-current-value",
+                "data-personal-metric=\"stress\"", "data-personal-metric=\"emotional\"",
+                "data-chart-stage=\"0\"", "data-chart-stage=\"3\"")
+                .doesNotContain(".local/", "http://", "https://");
+        String effect = html.substring(html.indexOf("<section id=\"healing-effect\""),
+                html.indexOf("<section class=\"landing-section landing-monitoring"));
+        assertThat(effect).contains("HS1 · 호스타 정원", "HS2 · 곶자왈원",
+                "HS3 · 가든 위스퍼스", "HS4 · 콜로네이드 가든",
+                "HS5 · 블로썸 가든", "HS6 · 극림원", "data-personal-change-chart")
+                .doesNotContain("landing-chart-line-stress", "landing-chart-line-emotional",
+                        "data-chart-current-stress", "data-chart-current-emotional",
+                        "Healing Course별 대표 공간과 평균 변화를 요약합니다.",
+                        "한 참가자의 측정 전후 변화입니다.", "Sample · 예시 데이터",
+                        "Sample Effect · 현재 수치는 서비스 설명을 위한 예시이며 다음 데이터 연동에서 교체됩니다.",
+                        "개인 측정 값과 변화 흐름은 데이터 연동 전 예시입니다.");
         assertThat(hero).contains("/images/landing/optimized/hero-hs2.webp")
                 .doesNotContain("HC-A", "HC-B", "HS1", "HS2</span>", "공간 구조 개념도");
         assertThat(html).contains("바이오마커", "뇌파", "맥파", "공간별 치유효과", "Sample Monitoring",
-                "방문 <strong>130</strong>", "32% 감소", "10% 상승", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
+                "35% 감소", "12% 증가", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
                 .doesNotContain(".codex-reference", "home-course-overlay.js", "id=\"siteSelect\"", "<canvas");
         assertThat(html).contains("몸이 보내는 신호,", "공간이 만드는 변화", "생체신호와 공간별 반응을 함께 살피며",
-                "치유효과를 모니터링합니다.", "호스타 정원", "곶자왈원", "가든 위스퍼스", "콜로네이드 가든",
-                "블로썸 가든", "극림원", "21% 감소", "7% 상승", "27% 감소", "13% 상승")
+                "치유효과를 모니터링합니다.", "곶자왈원", "콜로네이드 가든",
+                "블로썸 가든", "극림원", "data-stress=\"18\"", "data-emotional=\"6\"",
+                "29% 감소", "15% 증가")
                 .doesNotContain("HRV", "Sample Data", "아래 수치는 설명을 위한 예시 데이터입니다.",
                         "머리에 착용하는 생체신호 측정 장비");
         assertThat(experience).contains("HS4 · 콜로네이드 가든", "HS5 · 블로썸 가든", "HS6 · 극림원")
@@ -190,7 +225,7 @@ class RoleBasedHomeTests {
             assertThat(Files.isRegularFile(Path.of("src/main/resources/static" + source))).isTrue();
             if (source.startsWith("/images/landing/")) spacePhotos++;
         }
-        assertThat(spacePhotos).isEqualTo(14);
+        assertThat(spacePhotos).isEqualTo(16);
         var ids = java.util.regex.Pattern.compile("\\bid=\"([^\"]+)\"").matcher(html);
         var uniqueIds = new java.util.HashSet<String>();
         while (ids.find()) assertThat(uniqueIds.add(ids.group(1))).as("unique id: " + ids.group(1)).isTrue();
@@ -202,7 +237,14 @@ class RoleBasedHomeTests {
         Path resources = Path.of("src/main/resources");
         String js = Files.readString(resources.resolve("static/js/landing.js"));
         assertThat(js).contains("'IntersectionObserver' in window", "motion.matches", "showAll",
-                "observer.disconnect()", "prefers-reduced-motion: reduce", "focusin");
+                "observer.disconnect()", "prefers-reduced-motion: reduce", "focusin",
+                "initializeHealingSpotCarousels", "changeHealingSpot", "initializePersonalChangeAnimation",
+                "personalChangeMetrics", "applyMetric", "scheduleTimeline", "is-timeline-active", "5500");
+        assertThat(Files.readString(resources.resolve("static/css/landing.css")))
+                .contains("@media (prefers-reduced-motion: reduce)", "data-active-metric=\"stress\"",
+                        "data-active-metric=\"emotional\"", "landing-effect-overview-background",
+                        "landing-section-hero", "landing-section-content")
+                .doesNotContain("landing-chart-line-stress", "landing-chart-line-emotional");
         assertThat(Files.readString(resources.resolve("static/css/style.css")))
                 .contains("@media (prefers-reduced-motion: reduce)", ".landing-reveal-enabled .landing-page");
         try (var paths = Files.walk(resources.resolve("templates"))) {
@@ -221,6 +263,18 @@ class RoleBasedHomeTests {
                 .containsPattern("/css/landing-[0-9a-f]{32}\\.css");
         assertThat(resourceUrlProvider.getForLookupPath("/js/landing.js"))
                 .containsPattern("/js/landing-[0-9a-f]{32}\\.js");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/personal-change.webp"))
+                .containsPattern("/images/landing/optimized/personal-change-[0-9a-f]{32}\\.webp");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/site-plan.webp"))
+                .containsPattern("/images/landing/optimized/site-plan-[0-9a-f]{32}\\.webp");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/effect-hs1.webp"))
+                .containsPattern("/images/landing/optimized/effect-hs1-[0-9a-f]{32}\\.webp");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/effect-hs6.webp"))
+                .containsPattern("/images/landing/optimized/effect-hs6-[0-9a-f]{32}\\.webp");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/monitoring-background.webp"))
+                .containsPattern("/images/landing/optimized/monitoring-background-[0-9a-f]{32}\\.webp");
+        assertThat(resourceUrlProvider.getForLookupPath("/images/landing/optimized/personal-course-background.webp"))
+                .containsPattern("/images/landing/optimized/personal-course-background-[0-9a-f]{32}\\.webp");
         mvc.perform(get("/css/style.css")).andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-cache"));
         mvc.perform(get(versionedStyle)).andExpect(status().isOk())
