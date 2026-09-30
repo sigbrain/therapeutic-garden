@@ -52,6 +52,7 @@ public class AdminController {
 
     private final AdminService adminService;
     private final MemberService memberService;
+    private final com.example.manage.service.HealingEffectQueryService healingEffects;
     private final ScheduleService scheduleService;
     private final WeatherService weatherService;
     private final SiteService siteService;
@@ -604,6 +605,7 @@ public class AdminController {
                 formattedPhone
         );
 
+        model.addAttribute("spotEffects", healingEffects.findImportedMember(memberId));
         return "admin/member-detail";
     }
 

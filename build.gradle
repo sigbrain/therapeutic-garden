@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.apache.poi:poi-ooxml:5.4.1'
 	implementation 'software.amazon.awssdk:s3:2.54.17'
 	testImplementation 'org.springframework.security:spring-security-test'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -40,4 +41,12 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Explicit utility only; bootRun and application startup do not invoke this task.
+tasks.register('healingEffectImport', JavaExec) {
+	group = 'application'
+	description = 'Explicit local healing-effect import/dry-run (external file and Site required)'
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'com.example.manage.healingeffect.HealingEffectImportCli'
 }

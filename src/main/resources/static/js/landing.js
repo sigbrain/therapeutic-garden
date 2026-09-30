@@ -5,37 +5,6 @@
     if (!page) return;
 
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const personalChangeMetrics = {
-        stress: {
-            label: '스트레스',
-            before: 72,
-            after: 51,
-            changeLabel: '29.2% 감소',
-            linePath: 'M32 32 C96 38 116 52 170 57 S252 75 307 79 S390 101 448 108',
-            areaPath: 'M32 32 C96 38 116 52 170 57 S252 75 307 79 S390 101 448 108 L448 132 L32 132Z',
-            series: [
-                { label: 'Baseline', x: 32, y: 32, value: 72 },
-                { label: 'HS1', x: 170, y: 57, value: 65 },
-                { label: 'HS2', x: 307, y: 79, value: 58 },
-                { label: 'HS3', x: 448, y: 108, value: 51 }
-            ]
-        },
-        emotional: {
-            label: '정서적 안정성',
-            before: 18,
-            after: 30,
-            changeLabel: '66.7% 증가',
-            linePath: 'M32 116 C95 108 117 94 170 88 S251 66 307 61 S390 43 448 35',
-            areaPath: 'M32 116 C95 108 117 94 170 88 S251 66 307 61 S390 43 448 35 L448 132 L32 132Z',
-            series: [
-                { label: 'Baseline', x: 32, y: 116, value: 18 },
-                { label: 'HS1', x: 170, y: 88, value: 22 },
-                { label: 'HS2', x: 307, y: 61, value: 27 },
-                { label: 'HS3', x: 448, y: 35, value: 30 }
-            ]
-        }
-    };
-
     function initializeRevealAnimations() {
         const elements = page.querySelectorAll('[data-reveal]');
         if (!elements.length || motion.matches || !('IntersectionObserver' in window)) return;
@@ -92,10 +61,10 @@
 
         const stress = course.querySelector('[data-field="stress-reduction"]');
         const emotional = course.querySelector('[data-field="emotional-increase"]');
-        stress.textContent = `${activeSpot.stress}% 감소`;
-        stress.dataset.value = activeSpot.stress;
-        emotional.textContent = `${activeSpot.emotional}% 증가`;
-        emotional.dataset.value = activeSpot.emotional;
+        stress.textContent = activeSpot.stress || '데이터 준비 중';
+        stress.dataset.value = activeSpot.stress || '';
+        emotional.textContent = activeSpot.emotional || '데이터 준비 중';
+        emotional.dataset.value = activeSpot.emotional || '';
         course.activeSpotIndex = nextIndex;
     }
 
@@ -149,155 +118,66 @@
     function initializePersonalChangeAnimation() {
         const chart = page.querySelector('[data-personal-change-chart]');
         if (!chart) return;
-        const card = chart.closest('.landing-person-effect');
-        const guide = chart.querySelector('.landing-chart-active-guide');
-        const line = chart.querySelector('.landing-chart-line');
-        const area = chart.querySelector('.landing-chart-area');
-        const points = Array.from(chart.querySelectorAll('.landing-chart-points circle'));
-        const metricButtons = Array.from(chart.querySelectorAll('[data-personal-metric]'));
-        const stageButtons = Array.from(chart.querySelectorAll('[data-chart-stage]'));
-        const current = chart.querySelector('.landing-chart-current');
-        const currentLabel = chart.querySelector('[data-chart-current-label]');
-        const currentMetricLabel = chart.querySelector('[data-chart-current-metric-label]');
-        const currentValue = chart.querySelector('[data-chart-current-value]');
-        const metricKeys = Object.keys(personalChangeMetrics);
-        let activeMetricKey = 'stress';
+        const spots = Array.from(chart.querySelectorAll('[data-personal-spot]'));
+        if (!spots.length) return;
+        const metrics = Array.from(chart.querySelectorAll('[data-personal-metric]'));
+        const labels = {
+            stress: { title: '평균 스트레스 증감률' },
+            emotional: { title: '평균 정서적 안정성 증감률' }
+        };
+        let activeMetric = 'stress';
         let activeIndex = 0;
-        let timelineTimer;
-        let timelineStartTimer;
-        let metricSwitchTimer;
-        let observer;
+        let timer;
 
-        const showTimelineStep = (index) => {
-            const metric = personalChangeMetrics[activeMetricKey];
-            activeIndex = Math.max(0, Math.min(index, metric.series.length - 1));
-            const stage = metric.series[activeIndex];
-            guide.style.transform = `translateX(${stage.x - metric.series[0].x}px)`;
-            points.forEach((point, pointIndex) => point.classList.toggle('is-timeline-active', pointIndex === activeIndex));
-            stageButtons.forEach((button, buttonIndex) => {
-                const active = buttonIndex === activeIndex;
+        const render = () => {
+            chart.dataset.activeMetric = activeMetric;
+            const values = spots.map(spot => Number(spot.dataset[activeMetric]));
+            const max = Math.max(...values.map(Math.abs), 1);
+            metrics.forEach(button => {
+                const active = button.dataset.personalMetric === activeMetric;
                 button.classList.toggle('is-active', active);
                 button.setAttribute('aria-pressed', String(active));
             });
-            current.classList.add('is-updating');
-            window.setTimeout(() => {
-                currentLabel.textContent = stage.label;
-                currentValue.textContent = stage.value;
-                current.classList.remove('is-updating');
-            }, motion.matches ? 0 : 120);
-        };
-
-        const applyMetric = (metricKey, stageIndex = 0, animate = false) => {
-            if (!personalChangeMetrics[metricKey]) return;
-            window.clearTimeout(metricSwitchTimer);
-            activeMetricKey = metricKey;
-            const metric = personalChangeMetrics[metricKey];
-            chart.dataset.activeMetric = metricKey;
-            metricButtons.forEach((button) => {
-                const active = button.dataset.personalMetric === metricKey;
-                button.classList.toggle('is-active', active);
-                button.setAttribute('aria-pressed', String(active));
+            spots.forEach((spot, index) => {
+                const active = index === activeIndex;
+                spot.classList.toggle('is-active', active);
+                spot.setAttribute('aria-pressed', String(active));
+                const display = spot.dataset[`${activeMetric}Display`];
+                spot.querySelector('[data-comparison-value]').textContent = display;
+                spot.setAttribute('aria-label', `${spot.dataset.personalSpot} · ${spot.dataset.name}, ${labels[activeMetric].title} ${display}`);
+                const bar = spot.querySelector('.landing-comparison-track i');
+                bar.style.height = `${Math.abs(values[index]) / max * 50}%`;
+                bar.style.top = values[index] < 0 ? '50%' : 'auto';
+                bar.style.bottom = values[index] < 0 ? 'auto' : '50%';
             });
-
-            const updateMetricGeometry = () => {
-                line.setAttribute('d', metric.linePath);
-                area.setAttribute('d', metric.areaPath);
-                points.forEach((point, index) => point.setAttribute('cy', metric.series[index].y));
-                currentMetricLabel.textContent = metric.label;
-                showTimelineStep(stageIndex);
-            };
-
-            if (animate && !motion.matches) {
-                chart.classList.add('is-switching');
-                updateMetricGeometry();
-                metricSwitchTimer = window.setTimeout(() => {
-                    chart.classList.remove('is-switching');
-                }, 360);
-            } else {
-                chart.classList.remove('is-switching');
-                updateMetricGeometry();
-            }
+            const spot = spots[activeIndex];
+            chart.querySelector('[data-current-spot]').textContent = `${spot.dataset.personalSpot} · ${spot.dataset.name}`;
+            chart.querySelector('[data-current-metric]').textContent = labels[activeMetric].title;
+            chart.querySelector('[data-current-rate]').textContent = spot.dataset[`${activeMetric}Display`];
         };
-
-        const scheduleTimeline = (delay) => {
-            window.clearTimeout(timelineTimer);
-            if (motion.matches) return;
-            const metric = personalChangeMetrics[activeMetricKey];
-            const nextDelay = delay ?? (activeIndex === metric.series.length - 1 ? 2200 : 1500);
-            timelineTimer = window.setTimeout(() => {
-                if (activeIndex < metric.series.length - 1) {
-                    showTimelineStep(activeIndex + 1);
-                } else {
-                    const nextMetricIndex = (metricKeys.indexOf(activeMetricKey) + 1) % metricKeys.length;
-                    applyMetric(metricKeys[nextMetricIndex], 0, true);
-                }
-                scheduleTimeline();
-            }, nextDelay);
+        const scheduleNext = (delay = 6500) => {
+            window.clearTimeout(timer);
+            if (motion.matches || document.hidden) return;
+            timer = window.setTimeout(() => {
+                activeIndex = (activeIndex + 1) % spots.length;
+                render();
+                scheduleNext();
+            }, delay);
         };
-
-        const startTimeline = () => {
-            chart.classList.add('is-timeline-started');
-            applyMetric(activeMetricKey, activeIndex);
-            scheduleTimeline();
-        };
-
-        const show = () => {
-            chart.classList.add('is-chart-visible');
-            card.classList.add('is-person-visible');
-        };
-
-        metricButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                applyMetric(button.dataset.personalMetric, 0, true);
-                scheduleTimeline(5500);
-            });
-        });
-        stageButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                showTimelineStep(Number(button.dataset.chartStage));
-                scheduleTimeline(5500);
-            });
-        });
-
-        applyMetric('stress', 0);
-
-        if (motion.matches) {
-            show();
-            chart.classList.add('is-timeline-started');
-        } else {
-            document.documentElement.classList.add('landing-motion-enabled');
-            if (!('IntersectionObserver' in window)) {
-                show();
-                timelineStartTimer = window.setTimeout(startTimeline, 1700);
-            } else {
-                observer = new IntersectionObserver((entries) => {
-                    if (entries.some((entry) => entry.isIntersecting)) {
-                        show();
-                        timelineStartTimer = window.setTimeout(startTimeline, 1700);
-                        observer.disconnect();
-                    }
-                }, { threshold: .32 });
-                observer.observe(chart);
-            }
-        }
-
-        if (motion.addEventListener) {
-            motion.addEventListener('change', (event) => {
-                window.clearTimeout(timelineTimer);
-                window.clearTimeout(timelineStartTimer);
-                window.clearTimeout(metricSwitchTimer);
-                if (event.matches) {
-                    document.documentElement.classList.remove('landing-motion-enabled');
-                    show();
-                    chart.classList.add('is-timeline-started');
-                    applyMetric('stress', 0);
-                    if (observer) observer.disconnect();
-                } else if (chart.classList.contains('is-chart-visible')) {
-                    document.documentElement.classList.add('landing-motion-enabled');
-                    startTimeline();
-                }
-            });
-        }
+        spots.forEach((spot, index) => spot.addEventListener('click', () => {
+            activeIndex = index;
+            render();
+            scheduleNext(8500);
+        }));
+        metrics.forEach(button => button.addEventListener('click', () => {
+            activeMetric = button.dataset.personalMetric;
+            render();
+            scheduleNext(8500);
+        }));
+        if (motion.addEventListener) motion.addEventListener('change', () => scheduleNext());
+        document.addEventListener('visibilitychange', () => scheduleNext());
+        render();
+        scheduleNext();
     }
 
     initializeRevealAnimations();

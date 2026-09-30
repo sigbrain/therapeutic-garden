@@ -22,6 +22,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
+    private final com.example.manage.repository.MemberHealingSpotEffectSummaryRepository effectSummaries;
 
     /**
      * In-process concurrent registrations are serialized so they cannot select
@@ -174,7 +175,7 @@ public class MemberService {
 
     public void deleteMember(Long memberId) {
 
-        Member member = memberRepository.findById(memberId).orElse(null);
+        Member member = memberRepository.findLockedById(memberId).orElse(null);
 
         if (member == null) {
             return;
@@ -189,6 +190,8 @@ public class MemberService {
 
         scheduleRepository.deleteAll(schedules);
 
+        effectSummaries.deleteByMemberMemberId(memberId);
+        effectSummaries.flush();
         memberRepository.delete(member);
     }
 }

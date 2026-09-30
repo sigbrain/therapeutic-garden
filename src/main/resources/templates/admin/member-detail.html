@@ -23,7 +23,7 @@
         <dl class="member-detail-list">
             <div class="member-detail-item">
                 <dt>참가자 번호</dt>
-                <dd th:text="${member.participantNo}"></dd>
+                <dd th:text="${'P' + #numbers.formatInteger(member.participantNo, 3)}"></dd>
             </div>
 
             <div class="member-detail-item">
@@ -74,6 +74,22 @@
             </a>
         </div>
 
+    </section>
+    <section class="card member-effects-card" aria-labelledby="member-effects-title">
+        <div class="card-header">
+            <p class="card-eyebrow">Healing Spot</p>
+            <h2 id="member-effects-title" class="card-title">스팟별 치유 효과</h2>
+        </div>
+        <p th:if="${#lists.isEmpty(spotEffects)}">데이터 준비 중</p>
+        <div class="member-effects-grid">
+            <article class="member-effect-spot" th:each="effect : ${spotEffects}">
+                <h3 th:text="${effect.spotCode + ' · ' + effect.spotName}"></h3>
+                <dl>
+                    <div><dt>평균 스트레스 증감률</dt><dd th:text="${effect.stressChangeDisplay}"></dd></div>
+                    <div><dt>평균 정서적 안정성 증감률</dt><dd th:text="${effect.emotionalChangeDisplay}"></dd></div>
+                </dl>
+            </article>
+        </div>
     </section>
 </main>
 

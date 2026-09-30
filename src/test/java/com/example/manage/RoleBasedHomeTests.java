@@ -182,20 +182,18 @@ class RoleBasedHomeTests {
                 "/images/landing/optimized/effect-hs6.webp",
                 "data-course-id=\"HC-A\"", "data-course-id=\"HC-B\"", "data-course-id=\"HC-C\"",
                 "data-field=\"stress-reduction\"", "data-field=\"emotional-increase\"",
-                "data-field=\"participant-id\"", "29.2% 감소", "66.7% 증가");
+                "데이터 변화", "데이터 준비 중");
         assertThat(html).contains("/images/landing/optimized/monitoring-background.webp",
                 "/images/landing/optimized/personal-course-background.webp",
                 "landing-effect-overview-hero", "landing-monitoring-hero", "landing-connection-hero",
                 "landing-effect-overview-content", "landing-monitoring-content", "landing-connection-content",
-                "data-chart-current-label", "data-chart-current-metric-label", "data-chart-current-value",
-                "data-personal-metric=\"stress\"", "data-personal-metric=\"emotional\"",
-                "data-chart-stage=\"0\"", "data-chart-stage=\"3\"")
+                "PERSON / HEALING SPOT")
                 .doesNotContain(".local/", "http://", "https://");
         String effect = html.substring(html.indexOf("<section id=\"healing-effect\""),
                 html.indexOf("<section class=\"landing-section landing-monitoring"));
         assertThat(effect).contains("HS1 · 호스타 정원", "HS2 · 곶자왈원",
                 "HS3 · 가든 위스퍼스", "HS4 · 콜로네이드 가든",
-                "HS5 · 블로썸 가든", "HS6 · 극림원", "data-personal-change-chart")
+                "HS5 · 블로썸 가든", "HS6 · 극림원", "데이터 준비 중")
                 .doesNotContain("landing-chart-line-stress", "landing-chart-line-emotional",
                         "data-chart-current-stress", "data-chart-current-emotional",
                         "Healing Course별 대표 공간과 평균 변화를 요약합니다.",
@@ -205,12 +203,10 @@ class RoleBasedHomeTests {
         assertThat(hero).contains("/images/landing/optimized/hero-hs2.webp")
                 .doesNotContain("HC-A", "HC-B", "HS1", "HS2</span>", "공간 구조 개념도");
         assertThat(html).contains("바이오마커", "뇌파", "맥파", "공간별 치유효과", "Sample Monitoring",
-                "35% 감소", "12% 증가", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
+                "데이터 준비 중", "개인 힐링코스 구성", "href=\"/css/landing.css\"")
                 .doesNotContain(".codex-reference", "home-course-overlay.js", "id=\"siteSelect\"", "<canvas");
-        assertThat(html).contains("몸이 보내는 신호,", "공간이 만드는 변화", "생체신호와 공간별 반응을 함께 살피며",
-                "치유효과를 모니터링합니다.", "곶자왈원", "콜로네이드 가든",
-                "블로썸 가든", "극림원", "data-stress=\"18\"", "data-emotional=\"6\"",
-                "29% 감소", "15% 증가")
+        assertThat(html).contains("몸이 보내는 신호,", "공간이 만드는 변화", "곶자왈원", "콜로네이드 가든",
+                "블로썸 가든", "극림원", "데이터 준비 중")
                 .doesNotContain("HRV", "Sample Data", "아래 수치는 설명을 위한 예시 데이터입니다.",
                         "머리에 착용하는 생체신호 측정 장비");
         assertThat(experience).contains("HS4 · 콜로네이드 가든", "HS5 · 블로썸 가든", "HS6 · 극림원")
@@ -239,7 +235,7 @@ class RoleBasedHomeTests {
         assertThat(js).contains("'IntersectionObserver' in window", "motion.matches", "showAll",
                 "observer.disconnect()", "prefers-reduced-motion: reduce", "focusin",
                 "initializeHealingSpotCarousels", "changeHealingSpot", "initializePersonalChangeAnimation",
-                "personalChangeMetrics", "applyMetric", "scheduleTimeline", "is-timeline-active", "5500");
+                "data-personal-spot", "scheduleNext", "activeMetric", "8500");
         assertThat(Files.readString(resources.resolve("static/css/landing.css")))
                 .contains("@media (prefers-reduced-motion: reduce)", "data-active-metric=\"stress\"",
                         "data-active-metric=\"emotional\"", "landing-effect-overview-background",

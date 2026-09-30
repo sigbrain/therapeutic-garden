@@ -22,6 +22,8 @@ public class HealingSpotService {
     private final HealingSpotImageService healingSpotImageService;
     private final HealingCourseRepository healingCourseRepository;
     private final ScheduleSpotRepository scheduleSpotRepository;
+    private final com.example.manage.repository.HealingSpotEffectSummaryRepository effectSummaries;
+    private final com.example.manage.repository.MemberHealingSpotEffectSummaryRepository memberEffectSummaries;
 
     public HealingSpot createHealingSpot(HealingCourse course, String code, String name,
                                          Double latitude, Double longitude) {
@@ -88,6 +90,10 @@ public class HealingSpotService {
         }
         healingSpotImageService.deleteAll(spotId);
         positions.deleteByHealingSpotSpotId(spotId);
+        memberEffectSummaries.deleteByHealingSpotSpotId(spotId);
+        effectSummaries.deleteByHealingSpotSpotId(spotId);
+        memberEffectSummaries.flush();
+        effectSummaries.flush();
         healingSpotRepository.delete(spot);
         healingSpotRepository.flush();
     }

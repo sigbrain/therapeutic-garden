@@ -1,4 +1,4 @@
-/* Landing experiment only: shared header, admin styles and runtime data are untouched. */
+/* Landing presentation; shared header and service screens keep their own styles. */
 .landing-page .home-header-inner { padding-top: 14px; padding-bottom: 14px; }
 .landing-page .home-logo { width: 220px; height: 46px; }
 .landing-page .home-brand .home-title { font-size: 15px; color: #53675d; }
@@ -170,63 +170,28 @@
 .landing-page .landing-person-identity { display: flex; justify-content: space-between; align-items: end; margin-top: 20px; padding-bottom: 13px; border-bottom: 1px solid #d8ded3; }
 .landing-page .landing-person-identity span { color: var(--landing-muted); font-size: 11px; }
 .landing-page .landing-person-identity strong { font-size: 25px; font-weight: 600; }
-.landing-page .landing-person-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 18px; }
-.landing-page .landing-person-results > div { min-width: 0; }
-.landing-page .landing-person-results p { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 5px; color: var(--landing-muted); font-size: 11px; }
-.landing-page .landing-person-results p strong { color: #8d7040; font-size: 10px; }
-.landing-page .landing-person-results > div > div { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
-.landing-page .landing-person-results span, .landing-page .landing-person-results > div > div strong { font-size: clamp(31px, 3vw, 45px); font-weight: 600; letter-spacing: -.05em; }
-.landing-page .landing-person-results span { color: #7f8b82; font-weight: 450; }
-.landing-page .landing-person-results i { color: #a4ada4; font-size: 14px; font-style: normal; transform: translateY(-1px); }
-.landing-page .landing-person-chart { margin: 20px 0 0; padding: 12px 14px 8px; border-radius: 11px; background: #f1f2ea; }
+.landing-page .landing-person-chart { margin: 20px 0 0; padding: 14px; border-radius: 11px; background: #f1f2ea; }
 .landing-page .landing-chart-metric-selector { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; padding: 4px; border-radius: 9px; background: #e5e8de; }
-.landing-page .landing-chart-metric-selector button { min-height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--landing-muted); font: inherit; font-size: 10px; font-weight: 600; cursor: pointer; transition: background 260ms ease, color 260ms ease, box-shadow 260ms ease; }
-.landing-page .landing-chart-metric-selector button.is-active { background: #fcfbf6; color: var(--landing-ink); box-shadow: 0 1px 5px rgba(25,61,51,.08); }
-.landing-page .landing-chart-metric-selector button:focus-visible,
-.landing-page .landing-chart-stage-controls button:focus-visible { outline: 2px solid #617c60; outline-offset: 2px; }
-.landing-page .landing-chart-current { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; padding: 8px 10px; border-radius: 7px; background: rgba(252,251,246,.72); color: var(--landing-muted); font-size: 8px; line-height: 1.4; transition: opacity 180ms ease, transform 180ms ease; }
-.landing-page .landing-chart-current span { min-width: 0; }
-.landing-page .landing-chart-current strong { display: block; margin-top: 2px; color: var(--landing-ink); font-size: 11px; font-weight: 650; }
-.landing-page .landing-chart-current > span:last-child { text-align: right; }
-.landing-page .landing-person-chart[data-active-metric="stress"] .landing-chart-current > span:last-child strong { color: #708b67; }
-.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-chart-current > span:last-child strong { color: #9a7945; }
-.landing-page .landing-chart-current.is-updating { opacity: .5; transform: translateY(2px); }
-.landing-page .landing-person-chart svg { display: block; width: 100%; height: 125px; overflow: visible; fill: #899c7d; stroke: none; }
-.landing-page .landing-person-chart .landing-chart-gridline { fill: none; stroke: #d8dfd3; stroke-width: 1; }
-.landing-page .landing-person-chart .landing-chart-active-guide { stroke: #617269; stroke-width: 1; stroke-dasharray: 3 5; opacity: .34; transform-box: fill-box; transform-origin: center; transition: transform 620ms ease; }
-.landing-page .landing-person-chart .landing-chart-area { opacity: .17; transition: opacity 380ms ease; }
-.landing-page .landing-person-chart .landing-chart-line { fill: none; stroke-width: 3; stroke-linecap: round; transition: opacity 380ms ease; }
-.landing-page .landing-person-chart[data-active-metric="stress"] .landing-chart-area { fill: #809a75; }
-.landing-page .landing-person-chart[data-active-metric="stress"] .landing-chart-line { stroke: #708b67; }
-.landing-page .landing-person-chart[data-active-metric="stress"] .landing-chart-points { fill: #708b67; }
-.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-chart-area { fill: #c2a36c; }
-.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-chart-line { stroke: #aa8952; }
-.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-chart-points { fill: #aa8952; }
-.landing-page .landing-person-chart.is-switching .landing-chart-line,
-.landing-page .landing-person-chart.is-switching .landing-chart-area,
-.landing-page .landing-person-chart.is-switching .landing-chart-points { opacity: 0; }
-.landing-page .landing-chart-stage-controls { display: flex; justify-content: space-between; gap: 6px; }
-.landing-page .landing-chart-stage-controls button { min-width: 40px; min-height: 30px; padding: 4px 7px; border: 0; border-radius: 5px; background: transparent; color: #748176; font: inherit; font-size: 9px; cursor: pointer; transition: color 300ms ease, background 300ms ease, font-weight 300ms ease; }
-.landing-page .landing-chart-stage-controls button.is-active { background: rgba(252,251,246,.74); color: var(--landing-ink); font-weight: 700; }
-.landing-page .landing-chart-points circle.is-timeline-active { opacity: 1; transform: scale(1.55); filter: drop-shadow(0 1px 2px rgba(25,61,51,.18)); }
-.landing-motion-enabled .landing-page .landing-person-chart:not(.is-chart-visible) .landing-chart-line { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.landing-motion-enabled .landing-page .landing-person-chart .landing-chart-line { transition: stroke-dashoffset 1.45s ease, opacity 380ms ease; }
-.landing-motion-enabled .landing-page .landing-person-chart:not(.is-chart-visible) .landing-chart-area { opacity: 0; }
-.landing-motion-enabled .landing-page .landing-person-chart:not(.is-chart-visible) .landing-chart-points circle { opacity: 0; transform: scale(.45); }
-.landing-motion-enabled .landing-page .landing-person-chart:not(.is-timeline-started) .landing-chart-active-guide,
-.landing-motion-enabled .landing-page .landing-person-chart:not(.is-timeline-started) .landing-chart-current { opacity: 0; }
-.landing-motion-enabled .landing-page .landing-chart-points circle { transform-box: fill-box; transform-origin: center; transition: opacity 250ms ease, transform 300ms ease; }
-.landing-motion-enabled .landing-page .landing-person-chart.is-chart-visible .landing-chart-points circle { animation: landing-chart-point-reveal 300ms ease backwards; }
-.landing-motion-enabled .landing-page .landing-person-chart.is-chart-visible .landing-chart-points circle:nth-child(1) { animation-delay: 100ms; }
-.landing-motion-enabled .landing-page .landing-person-chart.is-chart-visible .landing-chart-points circle:nth-child(2) { animation-delay: 450ms; }
-.landing-motion-enabled .landing-page .landing-person-chart.is-chart-visible .landing-chart-points circle:nth-child(3) { animation-delay: 800ms; }
-.landing-motion-enabled .landing-page .landing-person-chart.is-chart-visible .landing-chart-points circle:nth-child(4) { animation-delay: 1150ms; }
-@keyframes landing-chart-point-reveal { from { opacity: 0; transform: scale(.45); } to { opacity: 1; transform: scale(1); } }
-.landing-motion-enabled .landing-page .landing-person-effect:not(.is-person-visible) .landing-person-identity,
-.landing-motion-enabled .landing-page .landing-person-effect:not(.is-person-visible) .landing-person-results { opacity: 0; transform: translateY(8px); }
-.landing-motion-enabled .landing-page .landing-person-identity,
-.landing-motion-enabled .landing-page .landing-person-results { transition: opacity 500ms ease, transform 500ms ease; }
-.landing-motion-enabled .landing-page .landing-person-results { transition-delay: 140ms; }
+.landing-page .landing-chart-metric-selector button { border: 0; border-radius: 6px; background: transparent; color: var(--landing-muted); font: inherit; font-size: 12px; min-height: 40px; cursor: pointer; }
+.landing-page .landing-chart-metric-selector button.is-active { background: #fcfbf6; color: var(--landing-ink); box-shadow: 0 1px 5px #193d3314; }
+.landing-page .landing-spot-comparison { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; margin-top: 18px; }
+.landing-page .landing-spot-comparison button { min-width: 0; padding: 8px 2px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--landing-muted); font: inherit; font-size: 11px; cursor: pointer; }
+.landing-page .landing-spot-comparison button.is-active { border-color: #91a48c; background: #fcfbf6; color: var(--landing-ink); }
+.landing-page .landing-spot-comparison small { display: block; min-height: 2.5em; font-size: 9px; line-height: 1.25; overflow-wrap: anywhere; }
+.landing-page .landing-comparison-track { display: block; position: relative; height: 68px; width: 13px; margin: 8px auto; background: linear-gradient(transparent 49%, #c2cbbd 49%, #c2cbbd 51%, transparent 51%); }
+.landing-page .landing-comparison-track i { position: absolute; left: 1px; right: 1px; background: #708b67; border-radius: 3px; }
+.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-comparison-track i { background: #aa8952; }
+.landing-page .landing-person-current { margin-top: 18px; padding: 18px 8px 8px; border-top: 1px solid #d3d9cd; }
+.landing-page .landing-person-current h4 { font-size: 17px; font-weight: 600; }
+.landing-page .landing-person-current p { margin: 14px 0 4px; font-size: 12px; color: var(--landing-muted); }
+.landing-page .landing-person-current strong { display: block; font-size: clamp(25px, 2.5vw, 38px); font-weight: 600; overflow-wrap: anywhere; }
+.landing-page .landing-person-chart[data-active-metric="stress"] .landing-person-current strong { color: #58734f; }
+.landing-page .landing-person-chart[data-active-metric="emotional"] .landing-person-current strong { color: #92703d; }
+.landing-page .landing-spot-comparison button:focus-visible,
+.landing-page .landing-chart-metric-selector button:focus-visible { outline: 2px solid #617c60; outline-offset: 2px; }
+.landing-page .landing-effect-empty { padding: 28px 0; color: var(--landing-muted); }
+/* Preserve the photographic band height; title is the last element after copy removal. */
+.landing-page .landing-section-hero h2 { margin-bottom: 0; }
 
 @media (min-width: 1600px) {
     .landing-page .landing-hero { min-height: 850px; }
@@ -293,11 +258,8 @@
     .landing-page .landing-course-summary { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .landing-page .landing-course-summary-image { height: 230px; }
     .landing-page .landing-person-effect-photo img { height: 260px; }
-    .landing-page .landing-person-results { gap: 10px; }
-    .landing-page .landing-person-results span, .landing-page .landing-person-results > div > div strong { font-size: 30px; }
     .landing-page .landing-person-chart { padding-left: 9px; padding-right: 9px; }
     .landing-page .landing-chart-metric-selector button { min-height: 42px; font-size: 11px; }
-    .landing-page .landing-chart-stage-controls button { min-width: 48px; min-height: 40px; font-size: 10px; }
     .landing-page .landing-connection-flow { margin: 30px 0; gap: 22px; }
     .landing-page .landing-connection-flow li { padding-top: 14px; }
     .landing-page .landing-connection-flow h3 { margin: 0; }
@@ -316,14 +278,5 @@
     .landing-page .landing-wave-track { animation: none; }
     .landing-page .landing-course-summary-image img,
     .landing-page .landing-course-spots button,
-    .landing-page .landing-course-spots button::before,
-    .landing-page .landing-chart-metric-selector button,
-    .landing-page .landing-chart-stage-controls button,
-    .landing-page .landing-person-chart .landing-chart-line,
-    .landing-page .landing-person-chart .landing-chart-area,
-    .landing-page .landing-person-chart .landing-chart-active-guide,
-    .landing-page .landing-chart-current,
-    .landing-page .landing-chart-points circle,
-    .landing-page .landing-person-identity,
-    .landing-page .landing-person-results { animation: none; transition: none; }
+    .landing-page .landing-course-spots button::before { animation: none; transition: none; }
 }

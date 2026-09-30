@@ -7570,3 +7570,15 @@ input[type="time"].form-input {
 .site-form .site-location-status:empty { display: none; }
 
 .admin-course-page #spot-map-status:empty { display: none; }
+
+/* Protected participant detail: independent Spot categories, including missing measurements. */
+.member-effects-card { margin-top: 24px; }
+.member-effects-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.member-effect-spot { padding: 20px; border: 1px solid #dce3dc; border-radius: 12px; background: #f8faf7; }
+.member-effect-spot h3 { margin: 0 0 16px; font-size: 17px; }
+.member-effect-spot dl { margin: 0; }
+.member-effect-spot dl > div + div { margin-top: 16px; }
+.member-effect-spot dt { color: #647467; font-size: 13px; }
+.member-effect-spot dd { margin: 5px 0 0; font-size: 21px; font-weight: 600; }
+@media (max-width: 900px) { .member-effects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .member-effects-grid { grid-template-columns: minmax(0, 1fr); } }

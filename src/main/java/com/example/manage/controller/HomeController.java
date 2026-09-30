@@ -17,18 +17,24 @@ public class HomeController {
 
     private final SiteService siteService;
     private final com.example.manage.service.SiteImageService siteImages;
+    private final com.example.manage.service.HealingEffectQueryService healingEffects;
 
     @Value("${kakao.maps.javascript-key}")
     private String kakaoMapsJavaScriptKey;
 
     @GetMapping("/")
-    public String landing(HttpSession session) {
+    public String landing(HttpSession session, Model model) {
         if (session.getAttribute("loginAdminId") != null) {
             return "redirect:/admin/monitoring";
         }
         if (session.getAttribute("loginMemberId") != null) {
             return "redirect:/member";
         }
+        var overall = healingEffects.findPublishedOverall();
+        model.addAttribute("healingEffects", overall);
+        model.addAttribute("effectsBySpot", overall.stream().collect(java.util.stream.Collectors.toMap(
+                com.example.manage.dto.HealingEffectView::spotCode, java.util.function.Function.identity())));
+        model.addAttribute("anonymousEffects", healingEffects.findAnonymousExample());
         return "landing";
     }
 
