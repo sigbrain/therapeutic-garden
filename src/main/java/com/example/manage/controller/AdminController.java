@@ -605,8 +605,23 @@ public class AdminController {
                 formattedPhone
         );
 
-        model.addAttribute("spotEffects", healingEffects.findImportedMember(memberId));
         return "admin/member-detail";
+    }
+
+    @GetMapping("/members/{memberId}/data")
+    public String memberData(
+            @PathVariable Long memberId,
+            Model model
+    ) {
+        Member member = memberService.findMember(memberId);
+
+        if (member == null) {
+            return "redirect:/admin/members";
+        }
+
+        model.addAttribute("member", member);
+        model.addAttribute("spotEffects", healingEffects.findImportedMember(memberId));
+        return "admin/member-data";
     }
 
 

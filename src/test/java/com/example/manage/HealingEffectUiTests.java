@@ -126,28 +126,51 @@ class HealingEffectUiTests {
                 "모니터링한 생체신호와 공간별 치유효과를 바탕으로 개인에게 맞는 힐링코스를 제안합니다.");
     }
 
-    @Test void adminShowsActualMemberAndSixSpotsIncludingMissingAndZero() throws Exception {
+    @Test void adminMemberDetailShowsBasicInformationAndDataLinkWithoutEffects() throws Exception {
         fixture();
-        var result = mvc.perform(get("/admin/members/"+partial.getMemberId()).sessionAttr("loginAdminId", 1L))
-                .andExpect(status().isOk()).andExpect(model().attributeExists("spotEffects")).andReturn();
+        String html = mvc.perform(get("/admin/members/" + partial.getMemberId()).sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("member", "formattedPhone"))
+                .andExpect(model().attributeDoesNotExist("spotEffects"))
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("P001", "secret-login-one", "비공개이름하나", "[PHONE_REDACTED]",
+                        "href=\"/admin/members/" + partial.getMemberId() + "/data\"", "데이터 보기",
+                        "참가자 정보 수정", "참가자 삭제", "참가자 목록으로")
+                .doesNotContain("스팟별 치유 효과", "member-effect-spot", "HS1 ·");
+    }
+
+    @Test void adminMemberDataShowsActualMemberAndSixSpotsIncludingMissingAndZero() throws Exception {
+        fixture();
+        var result = mvc.perform(get("/admin/members/" + partial.getMemberId() + "/data")
+                        .sessionAttr("loginAdminId", 1L))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/member-data"))
+                .andExpect(model().attributeExists("member", "spotEffects"))
+                .andReturn();
         @SuppressWarnings("unchecked") var views=(List<HealingEffectView>)result.getModelAndView().getModel().get("spotEffects");
         assertThat(views).extracting(HealingEffectView::spotCode).containsExactly("HS1","HS2","HS3","HS4","HS5","HS6");
         assertThat(views.getFirst().stressReductionDisplay()).isEqualTo("0.0%");
         assertThat(views.get(4).hasMeasurement()).isFalse();
         assertThat(views.get(5).stressReductionDisplay()).isEqualTo("측정 없음");
         String html=result.getResponse().getContentAsString();
-        assertThat(html).contains("P001","secret-login-one","비공개이름하나","스팟별 치유 효과",
+        assertThat(html).contains("P001", "비공개이름하나", "참가자 데이터", "스팟별 치유 효과",
                         "평균 스트레스 증감률", "평균 정서적 안정성 증감률",
-                        "0.0% 변화 없음", "측정 없음", "4.3% 감소")
-                .doesNotContain("-4.3% 증가");
+                        "0.0% 변화 없음", "측정 없음", "4.3% 감소",
+                        "href=\"/admin/members/" + partial.getMemberId() + "\"", "← 참가자 상세로")
+                .doesNotContain("secret-login-one", "[PHONE_REDACTED]", "-4.3% 증가");
         assertThat(html.indexOf("HS1 ·")).isLessThan(html.indexOf("HS6 ·"));
     }
 
     @Test void adminEffectDetailRemainsProtected() throws Exception {
         fixture();
-        mvc.perform(get("/admin/members/"+partial.getMemberId())).andExpect(redirectedUrl("/admin/login"));
-        mvc.perform(get("/admin/members/"+partial.getMemberId()).sessionAttr("loginMemberId",partial.getMemberId()))
-                .andExpect(redirectedUrl("/admin/login"));
+        for (String path : List.of(
+                "/admin/members/" + partial.getMemberId(),
+                "/admin/members/" + partial.getMemberId() + "/data")) {
+            mvc.perform(get(path)).andExpect(redirectedUrl("/admin/login"));
+            mvc.perform(get(path).sessionAttr("loginMemberId", partial.getMemberId()))
+                    .andExpect(redirectedUrl("/admin/login"));
+        }
     }
 
     @Test void metricSpecificDisplayFormattingPreservesRawSigns() {

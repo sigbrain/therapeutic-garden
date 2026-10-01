@@ -6,17 +6,17 @@
     <title>참가자 상세 정보</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body class="page-body service-page">
+<body class="page-body service-page member-detail-page">
 <header th:replace="~{fragments/header :: header}"></header>
 
-<main class="page-container">
+<main class="page-container member-detail-layout">
     <section class="card member-detail-card">
 
         <div class="card-header">
             <p class="card-eyebrow">Administrator</p>
             <h1 class="card-title">참가자 상세 정보</h1>
             <p class="card-description">
-                선택한 참가자의 등록 정보를 확인합니다.
+                선택한 참가자의 등록 정보를 확인하고 관리합니다.
             </p>
         </div>
 
@@ -53,6 +53,16 @@
                 참가자 정보 수정
             </a>
 
+            <a class="data-link-button"
+               th:href="@{/admin/members/{memberId}/data(memberId=${member.memberId})}">
+                데이터 보기
+            </a>
+
+            <a class="secondary-link-button"
+               th:href="@{/admin/members}">
+                참가자 목록으로
+            </a>
+
             <form
                 class="delete-form"
                 th:action="@{/admin/members/{memberId}/delete(memberId=${member.memberId})}"
@@ -67,29 +77,8 @@
                 </button>
 
             </form>
-
-            <a class="secondary-link-button"
-               th:href="@{/admin/members}">
-                참가자 목록으로
-            </a>
         </div>
 
-    </section>
-    <section class="card member-effects-card" aria-labelledby="member-effects-title">
-        <div class="card-header">
-            <p class="card-eyebrow">Healing Spot</p>
-            <h2 id="member-effects-title" class="card-title">스팟별 치유 효과</h2>
-        </div>
-        <p th:if="${#lists.isEmpty(spotEffects)}">데이터 준비 중</p>
-        <div class="member-effects-grid">
-            <article class="member-effect-spot" th:each="effect : ${spotEffects}">
-                <h3 th:text="${effect.spotCode + ' · ' + effect.spotName}"></h3>
-                <dl>
-                    <div><dt>평균 스트레스 증감률</dt><dd th:text="${effect.stressChangeDisplay}"></dd></div>
-                    <div><dt>평균 정서적 안정성 증감률</dt><dd th:text="${effect.emotionalChangeDisplay}"></dd></div>
-                </dl>
-            </article>
-        </div>
     </section>
 </main>
 
