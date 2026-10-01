@@ -61,9 +61,10 @@ test('photo-only visual layers preserve hotspot priority and mobile styling', ()
     assert.match(css, /--focus-mid-feather: 36px/);
     assert.match(css, /--focus-near-saturate: 1\.15/);
     assert.match(css, /--focus-near-feather: 20px/);
-    assert.match(css, /--spot-ring-width: 3px/);
-    assert.match(css, /--spot-glow-size: 16px/);
-    assert.match(css, /--spot-glow-alpha: 55%/);
+    assert.match(css, /--spot-ring-white-width: 2px/);
+    assert.match(css, /--spot-ring-color-width: 3px/);
+    assert.match(css, /--spot-glow-size: 12px/);
+    assert.match(css, /--spot-glow-alpha: 28%/);
     assert.match(css, /filter: blur\(var\(--focus-far-blur\)\) brightness\(var\(--focus-far-brightness\)\) saturate\(var\(--focus-far-saturate\)\)/);
     assert.match(css, /\.monitoring-focus-layer\s*\{[^}]*overflow: hidden;[^}]*pointer-events: none/);
     assert.match(css, /\.monitoring-focus-near-image\s*\{[^}]*saturate\(var\(--focus-near-saturate\)\)/);
@@ -77,12 +78,12 @@ test('photo-only visual layers preserve hotspot priority and mobile styling', ()
     assert.doesNotMatch(js, /'clipPath'/);
     assert.doesNotMatch(js, /style\.(fillOpacity|strokeOpacity)/);
     assert.doesNotMatch(js, /aggregate\(/);
-    assert.match(js, /--halo-color', summary\.haloColor/);
+    assert.match(js, /--halo-color', color/);
     assert.doesNotMatch(js, /circle\.style\.borderColor/);
     assert.doesNotMatch(js, /monitoring-course-regions|region\.style\.stroke/);
     const html = fs.readFileSync('src/main/resources/templates/home.html', 'utf8');
-    assert.match(html, /id="hcStress" aria-pressed="true"/);
-    assert.match(html, /id="hcEmotional" aria-pressed="false"/);
+    assert.doesNotMatch(html, /id="hcStress"|id="hcEmotional"|monitoring-effect-controls/);
+    assert.match(html, /monitoring-effect-legend/);
     assert.doesNotMatch(html, /Demo 데이터|시연용 데이터/);
 });
 

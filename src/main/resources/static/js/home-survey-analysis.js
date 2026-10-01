@@ -5,14 +5,18 @@ window.HomeSurvey = (() => {
         stress: {name: '스트레스 변화', rate: 'stressReductionRate', display: 'stressChangeDisplay'},
         emotional: {name: '정서적 안정성 변화', rate: 'emotionalIncreaseRate', display: 'emotionalChangeDisplay'}
     };
+    const SPOT_METRIC = Object.freeze({
+        HS1: 'stress', HS2: 'emotional', HS3: 'stress',
+        HS4: 'emotional', HS5: 'emotional', HS6: 'stress'
+    });
     const HALO_SCALE = Object.freeze({
         stress: Object.freeze({neutral: 0, min: -20, max: 20}),
         emotional: Object.freeze({neutral: 0, min: -100, max: 100})
     });
     const HALO_TONES = Object.freeze({
-        neutral: Object.freeze({h: 45, s: 70, l: 78}),
-        good: Object.freeze({h: 140, s: 75, l: 52}),
-        bad: Object.freeze({h: 5, s: 85, l: 55})
+        neutral: Object.freeze({h: 40, s: 35, l: 82}),
+        good: Object.freeze({h: 150, s: 45, l: 40}),
+        bad: Object.freeze({h: 8, s: 58, l: 50})
     });
     const element = (tag, text, className) => {
         const node = document.createElement(tag);
@@ -44,19 +48,52 @@ window.HomeSurvey = (() => {
     function indexByCode(effects) {
         return new Map((Array.isArray(effects) ? effects : []).map(effect => [effect.spotCode, effect]));
     }
-    // Single extension point for Course-level presentation metrics.
-    // Current Summary semantics: arithmetic mean of available Spot participant means; no second weighting.
-    function courseMetricValue(course, effects, metric) {
-        if (!course || !metrics[metric]) return null;
+    // Single read boundary for the fixed Spot metric presentation. Tomorrow's data semantic change belongs here.
+    function getSpotDisplay(spotId, effects) {
+        const metric = SPOT_METRIC[spotId];
         const lookup = effects instanceof Map ? effects : indexByCode(effects);
-        const values = (Array.isArray(course.spots) ? course.spots : [])
-            .map(spot => metricValue(lookup.get(spot.code), metric))
-            .filter(value => value != null && Number.isFinite(value));
-        return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+        const effect = metric ? lookup.get(spotId) : null;
+        const raw = effect && effect.hasMeasurement ? Number(effect[metrics[metric].rate]) : null;
+        const value = raw != null && Number.isFinite(raw) ? raw : null;
+        const status = value == null ? 'missing' : value > 0 ? 'good' : value < 0 ? 'bad' : 'neutral';
+        return {
+            metric: metric || null,
+            metricLabel: metric === 'stress' ? '스트레스' : metric === 'emotional' ? '정서 안정' : '',
+            value: value,
+            numberLabel: value == null ? '데이터 없음' : Math.abs(value).toFixed(1) + '%',
+            unitLabel: value == null ? '' : value > 0 ? '개선' : value < 0 ? '악화' : '변화 없음',
+            status: status,
+            color: value == null || value === 0 ? 'hsl(40 35% 82%)' : haloColor(value, metric)
+        };
+    }
+    function normalizedImprovementScore(display) {
+        if (!display || display.value == null || !HALO_SCALE[display.metric]) return null;
+        const scale = HALO_SCALE[display.metric], value = display.value;
+        if (value >= scale.neutral) {
+            const range = scale.max - scale.neutral;
+            return .5 + .5 * (range ? Math.min(1, (value - scale.neutral) / range) : 0);
+        }
+        const range = scale.neutral - scale.min;
+        return .5 - .5 * (range ? Math.min(1, (scale.neutral - value) / range) : 0);
+    }
+    function courseImprovementScore(course, getDisplay) {
+        const scores = (course && Array.isArray(course.spots) ? course.spots : [])
+            .map(spot => normalizedImprovementScore(getDisplay(spot.code)))
+            .filter(score => score != null && Number.isFinite(score));
+        return scores.length ? scores.reduce((sum, score) => sum + score, 0) / scores.length : null;
+    }
+    function scoreColor(score) {
+        if (score == null || !Number.isFinite(Number(score))) return 'hsl(40 35% 82%)';
+        const clamped = Math.max(0, Math.min(1, Number(score)));
+        const improving = clamped >= .5;
+        const ratio = Math.abs(clamped - .5) * 2;
+        const target = improving ? HALO_TONES.good : HALO_TONES.bad;
+        const mix = key => HALO_TONES.neutral[key] + (target[key] - HALO_TONES.neutral[key]) * ratio;
+        return `hsl(${mix('h').toFixed(1)} ${mix('s').toFixed(1)}% ${mix('l').toFixed(1)}%)`;
     }
     function haloColor(value, metric) {
         const scale = HALO_SCALE[metric];
-        if (!scale || value == null || !Number.isFinite(Number(value))) return 'hsl(45 70% 78%)';
+        if (!scale || value == null || !Number.isFinite(Number(value))) return 'hsl(40 35% 82%)';
         const number = Number(value), improving = number >= scale.neutral;
         const limit = improving ? scale.max : scale.min;
         const range = Math.abs(limit - scale.neutral);
@@ -156,6 +193,7 @@ window.HomeSurvey = (() => {
         });
         section.append(grid); container.append(section);
     }
-    return {metrics, HALO_SCALE, formatDirection, metricValue, metricDisplay, metricColor, semanticState, indexByCode,
-        courseMetricValue, haloColor, selectEffects, renderSpot, renderModal, bestImprovement, renderHighlights};
+    return {metrics, SPOT_METRIC, HALO_SCALE, formatDirection, metricValue, metricDisplay, metricColor, semanticState, indexByCode,
+        getSpotDisplay, normalizedImprovementScore, courseImprovementScore, scoreColor,
+        haloColor, selectEffects, renderSpot, renderModal, bestImprovement, renderHighlights};
 })();

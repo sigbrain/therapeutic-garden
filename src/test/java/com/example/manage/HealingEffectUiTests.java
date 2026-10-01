@@ -132,9 +132,9 @@ class HealingEffectUiTests {
 
         String html = result.getResponse().getContentAsString();
         assertThat(html).contains("P001", "P002", "P004", "19.5% 감소", "54.3% 증가", "200.4% 증가",
-                        "스트레스 변화", "정서적 안정성 변화", "상세 분석 보기", "측정 데이터",
+                        "스트레스: 낮아질수록 개선", "정서 안정: 높아질수록 개선", "상세 분석 보기", "측정 데이터",
                         "analysisHistorySection", "monitoringHistory", "measurement-history.js")
-                .doesNotContain("Demo 데이터", "시연용 데이터", "id=\"metricSelect\"", ">ISI<", ">PSS<",
+                .doesNotContain("Demo 데이터", "시연용 데이터", "id=\"metricSelect\"", "id=\"hcStress\"", "id=\"hcEmotional\"", ">ISI<", ">PSS<",
                         "1차", "2차", "3차", "4차", "5차", "방문 횟수", "<details id=\"analysisHistorySection\"");
     }
 

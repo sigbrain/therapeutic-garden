@@ -23,7 +23,6 @@ var survey = window.HomeSurvey;
 var monitoringEffects = window.monitoringEffects || {};
 var selectedSpot = null;
 var selectedParticipant = 'all';
-var selectedMetric = 'stress';
 var loadVersion = 0;
 function validNumber(value) {
     return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
@@ -497,9 +496,9 @@ function currentParticipantLabel() {
 }
 function updateAnalysis() {
     var effects = currentEffects();
-    spatial.setAnalysis(selectedMetric, effects);
+    spatial.setAnalysis(effects);
     courseCircles.forEach(circle => circle.setOptions({fillColor: courseAnalysisColor(circle.surveyCourse)}));
-    document.getElementById('surveyLegendTitle').textContent = survey.metrics[selectedMetric].name;
+    document.getElementById('surveyLegendTitle').textContent = 'Healing Spot 개선';
     document.getElementById('surveyLegendRange').textContent = currentParticipantLabel();
     document.getElementById('surveyLegendContext').textContent = 'Course 단위 수치는 계산하지 않으며 Spot별 Summary만 표시합니다.';
     if (selectedSpot) {
@@ -573,10 +572,7 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
-var spatial = window.HomeSpatial(openSpotDetail, function(metric) {
-    selectedMetric = metric;
-    updateAnalysis();
-});
+var spatial = window.HomeSpatial(openSpotDetail);
 var mapModal = document.getElementById('mapModal');
 var mapDialog = mapModal.querySelector('[role="dialog"]');
 var mapPreviousFocus = null;

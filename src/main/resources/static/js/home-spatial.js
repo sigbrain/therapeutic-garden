@@ -1,5 +1,5 @@
 /* Read-only monitoring view. Saved positions anchor course groups; photo positions are display-only. */
-window.HomeSpatial = function(onSelect, onMetricChange) {
+window.HomeSpatial = function(onSelect) {
     var canvas = document.getElementById('monitoringCanvas');
     var status = document.getElementById('monitoringStatus');
     var settings = document.getElementById('monitoringSettings');
@@ -13,45 +13,37 @@ window.HomeSpatial = function(onSelect, onMetricChange) {
     var buttons = [];
     var selectedId = null;
     var courses = [], badges = [];
-    var metric = 'stress';
     var effects = window.HomeCourseOverlay;
     var summary = window.HomeSurvey;
     var effectsByCode = new Map();
     var haloDebug = Boolean(window.location && /(?:\?|&)haloDebug=on(?:&|$)/.test(window.location.search || ''));
     var debugSpotValues = {HS1: 20, HS2: -15, HS3: 0, HS4: 8, HS5: -5, HS6: 25};
-    var metricButtons = ['hcStress', 'hcEmotional'].map(id => document.getElementById(id));
+    function getSpotDisplay(spotId) {
+        return summary.getSpotDisplay(spotId, effectsByCode);
+    }
     function updateSpotEffects() {
         buttons.forEach(entry => {
-            var effect = effectsByCode.get(entry.code);
-            var value = summary.metricValue(effect, metric);
-            var display = summary.metricDisplay(effect, metric);
-            entry.value.textContent = display;
-            entry.value.className = value == null ? 'monitoring-hotspot-value is-missing' : 'monitoring-hotspot-value';
-            entry.value.style.color = summary.metricColor(value, metric);
-            var ringColor = value == null || Number(value) === 0 ? 'rgba(255, 255, 255, .9)' : summary.haloColor(value, metric);
+            var display = getSpotDisplay(entry.code);
+            entry.metric.textContent = display.metricLabel;
+            entry.number.textContent = display.numberLabel;
+            entry.unit.textContent = display.unitLabel;
+            entry.value.className = 'monitoring-hotspot-value effect-' + display.status;
+            var ringColor = display.status === 'missing' || display.status === 'neutral'
+                ? 'hsl(40 35% 82%)' : display.color;
             if (entry.circle.style.setProperty) entry.circle.style.setProperty('--spot-data-color', ringColor);
             else entry.circle.style['--spot-data-color'] = ringColor;
-            entry.button.setAttribute('aria-label', entry.name + ' · ' + summary.metrics[metric].name + ' ' + display + ' · 상세 보기');
+            var result = display.value == null ? '데이터 없음' : display.numberLabel + ' ' + display.unitLabel;
+            entry.button.setAttribute('aria-label', entry.name + ' · ' + display.metricLabel + ' ' + result + ' · 상세 보기');
         });
         badges.forEach(entry => {
-            var value = summary.courseMetricValue(entry.course, effectsByCode, metric);
-            var display = summary.formatDirection(value, metric);
-            if (entry.halo.style.setProperty) entry.halo.style.setProperty('--halo-color', summary.haloColor(value, metric));
-            else entry.halo.style['--halo-color'] = summary.haloColor(value, metric);
-            entry.value.textContent = display;
-            entry.value.className = value == null ? 'monitoring-course-value is-missing' : 'monitoring-course-value';
-            entry.badge.setAttribute('aria-label', entry.title + ' · 코스 평균 ' + display);
+            var score = summary.courseImprovementScore(entry.course, getSpotDisplay);
+            var color = summary.scoreColor(score);
+            if (entry.halo.style.setProperty) entry.halo.style.setProperty('--halo-color', color);
+            else entry.halo.style['--halo-color'] = color;
+            entry.badge.setAttribute('aria-label', entry.title);
         });
     }
-    function updateMetric(next) {
-        metric = next;
-        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'emotional' : 'stress'))));
-        updateSpotEffects();
-        if (onMetricChange) onMetricChange(metric);
-    }
-    metricButtons.forEach((button, index) => button.addEventListener('click', () => updateMetric(index ? 'emotional' : 'stress')));
-    function setAnalysis(nextMetric, nextEffects) {
-        metric = nextMetric;
+    function setAnalysis(nextEffects) {
         effectsByCode = summary.indexByCode(nextEffects);
         if (haloDebug) Object.entries(debugSpotValues).forEach(([spotCode, value]) => effectsByCode.set(spotCode, {
             ...(effectsByCode.get(spotCode) || {}), spotCode: spotCode, hasMeasurement: true,
@@ -59,7 +51,6 @@ window.HomeSpatial = function(onSelect, onMetricChange) {
             stressChangeDisplay: summary.formatDirection(value, 'stress'),
             emotionalChangeDisplay: summary.formatDirection(value, 'emotional')
         }));
-        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'emotional' : 'stress'))));
         updateSpotEffects();
     }
     function select(spotId) {
@@ -232,13 +223,9 @@ window.HomeSpatial = function(onSelect, onMetricChange) {
                 var title = document.createElement('span');
                 var courseTitle = [course.code, course.name].filter(Boolean).join(' · ');
                 title.textContent = courseTitle;
-                var courseValue = document.createElement('strong');
-                courseValue.className = 'monitoring-course-value is-missing';
-                courseValue.textContent = '측정 없음';
-                badge.append(title, courseValue);
+                badge.append(title);
                 badgeLayer.append(badge);
-                badges.push({course: course, title: courseTitle, badge: badge, value: courseValue,
-                    halo: halo, midRect: midRect});
+                badges.push({course: course, title: courseTitle, badge: badge, halo: halo, midRect: midRect});
             });
             placed.forEach(spot => {
                 var button = document.createElement('button');
@@ -265,17 +252,28 @@ window.HomeSpatial = function(onSelect, onMetricChange) {
                 var label = document.createElement('span');
                 label.className = 'monitoring-hotspot-label';
                 var name = [spot.code, spot.name].filter(Boolean).join(' · ');
-                var spotValue = document.createElement('strong');
-                spotValue.className = 'monitoring-hotspot-value';
-                label.textContent = name;
-                label.append(spotValue);
+                var metricTag = document.createElement('span');
+                metricTag.className = 'monitoring-hotspot-metric';
+                var spotValue = document.createElement('span');
+                spotValue.className = 'monitoring-hotspot-value effect-missing';
+                var number = document.createElement('strong');
+                var unit = document.createElement('span');
+                spotValue.append(number, unit);
+                var auxiliary = document.createElement('span');
+                auxiliary.className = 'monitoring-hotspot-auxiliary';
+                auxiliary.setAttribute('aria-hidden', 'true');
+                var spotName = document.createElement('strong');
+                spotName.className = 'monitoring-hotspot-name';
+                spotName.textContent = name;
+                label.append(metricTag, spotValue, auxiliary, spotName);
                 label.setAttribute('aria-hidden', 'true');
                 button.append(circle, label);
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
                 button.addEventListener('mouseenter', positionLabels);
                 button.addEventListener('focus', positionLabels);
                 buttons.push({id: spot.spotId, code: spot.code, name: name, button: button, circle: circle,
-                    label: label, value: spotValue, nearCircle: nearCircle,
+                    label: label, metric: metricTag, value: spotValue, number: number, unit: unit,
+                    auxiliary: auxiliary, nearCircle: nearCircle,
                     xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
                 overlay.append(button);
             });
@@ -300,5 +298,5 @@ window.HomeSpatial = function(onSelect, onMetricChange) {
             settings.hidden = false;
         }
     }
-    return {load: load, select: select, setAnalysis: setAnalysis, updateMetric: updateMetric};
+    return {load: load, select: select, setAnalysis: setAnalysis};
 };

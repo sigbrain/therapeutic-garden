@@ -108,11 +108,11 @@
             <h1 id="spatialTitle">공간 모니터링</h1>
             <button type="button" id="openMapButton" aria-haspopup="dialog">지도 보기</button>
         </div>
-        <div class="monitoring-effect-controls">
-            <div role="group" aria-label="Healing Spot 변화 지표">
-                <button type="button" id="hcStress" aria-pressed="true">스트레스 변화</button>
-                <button type="button" id="hcEmotional" aria-pressed="false">정서적 안정성 변화</button>
-            </div>
+        <div class="monitoring-effect-legend" aria-label="Healing Spot 개선 상태 범례">
+            <span><i class="is-good" aria-hidden="true"></i>개선</span>
+            <span><i class="is-bad" aria-hidden="true"></i>악화</span>
+            <span class="monitoring-legend-divider" aria-hidden="true">|</span>
+            <span>스트레스: 낮아질수록 개선 · 정서 안정: 높아질수록 개선</span>
         </div>
         <div class="monitoring-content">
             <p id="monitoringStatus" role="status" data-loading="true">공간 정보를 불러오는 중입니다.</p>

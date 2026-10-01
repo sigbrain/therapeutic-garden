@@ -46,23 +46,43 @@ test('direction formatter preserves raw sign and distinguishes zero from missing
     assert.equal(api.formatDirection(null, 'stress'), '측정 없음');
 });
 
-test('Course metric has one unweighted valid-Spot aggregation point', () => {
-    const course={spots:[{code:'HS1'},{code:'HS2'},{code:'HS3'}]};
-    const data=[measured,{...measured,spotCode:'HS2',stressReductionRate:10.5,emotionalIncreaseRate:45.7},
-        {...missing,spotCode:'HS3'}];
-    assert.equal(api.courseMetricValue(course,data,'stress'),15);
-    assert.equal(api.courseMetricValue(course,data,'emotional'),19.6);
-    assert.equal(api.courseMetricValue(course,[missing],'stress'),null);
-});
-
 test('halo scale is continuous, clamped and configurable around neutral', () => {
     assert.deepEqual(JSON.parse(JSON.stringify(api.HALO_SCALE)),{
         stress:{neutral:0,min:-20,max:20},emotional:{neutral:0,min:-100,max:100}});
-    assert.equal(api.haloColor(null,'stress'),'hsl(45 70% 78%)');
-    assert.equal(api.haloColor(0,'stress'),'hsl(45.0 70.0% 78.0%)');
+    assert.equal(api.haloColor(null,'stress'),'hsl(40 35% 82%)');
+    assert.equal(api.haloColor(0,'stress'),'hsl(40.0 35.0% 82.0%)');
     assert.equal(api.haloColor(20,'stress'),api.haloColor(200,'stress'));
     assert.equal(api.haloColor(-20,'stress'),api.haloColor(-200,'stress'));
     assert.notEqual(api.haloColor(10,'stress'),api.haloColor(-10,'stress'));
+});
+
+test('fixed Spot metric display is the only field-selection and direction boundary', () => {
+    const effects = [
+        {...measured, spotCode:'HS1', stressReductionRate:12, emotionalIncreaseRate:-90},
+        {...measured, spotCode:'HS2', stressReductionRate:-80, emotionalIncreaseRate:-15},
+        {...measured, spotCode:'HS3', stressReductionRate:0},
+        {...missing, spotCode:'HS4'}
+    ];
+    assert.deepEqual(JSON.parse(JSON.stringify(api.SPOT_METRIC)), {
+        HS1:'stress',HS2:'emotional',HS3:'stress',HS4:'emotional',HS5:'emotional',HS6:'stress'});
+    assert.deepEqual(JSON.parse(JSON.stringify(api.getSpotDisplay('HS1', effects))).value, 12);
+    assert.equal(api.getSpotDisplay('HS1', effects).unitLabel, '개선');
+    assert.equal(api.getSpotDisplay('HS2', effects).value, -15);
+    assert.equal(api.getSpotDisplay('HS2', effects).unitLabel, '악화');
+    assert.equal(api.getSpotDisplay('HS3', effects).unitLabel, '변화 없음');
+    assert.equal(api.getSpotDisplay('HS4', effects).numberLabel, '데이터 없음');
+});
+
+test('Course halo score averages normalized mixed-metric Spot improvements once', () => {
+    const effects = [
+        {...measured, spotCode:'HS1', stressReductionRate:20},
+        {...measured, spotCode:'HS2', emotionalIncreaseRate:-100}
+    ];
+    const lookup = api.indexByCode(effects);
+    const score = api.courseImprovementScore({spots:[{code:'HS1'},{code:'HS2'}]},
+        code => api.getSpotDisplay(code, lookup));
+    assert.equal(score, .5);
+    assert.equal(api.scoreColor(score), 'hsl(40.0 35.0% 82.0%)');
 });
 
 test('site and audience selection returns the exact Summary arrays', () => {

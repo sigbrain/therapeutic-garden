@@ -45,13 +45,14 @@ window.HomeCourseOverlay = (function() {
     function photoLayout(courses, width, imageHeight) {
         var diameter = width >= 800 ? 180 : width >= 550 ? 145 : 110;
         diameter = Math.min(diameter, Math.max(40, width - 32));
-        var gap = 16, padding = 12, cell = Math.min(Math.max(diameter, width < 550 ? Math.min(140, (width - padding * 2 - gap) / 2) : 160), width - padding * 2);
+        var gap = 16, padding = 12, labelHeight = 96;
+        var cell = Math.min(Math.max(diameter, width < 550 ? Math.min(140, (width - padding * 2 - gap) / 2) : 160), width - padding * 2);
         var placed = [], height = imageHeight;
         courses.forEach(course => {
             var columns = Math.max(1, Math.min(course.spots.length, 3, Math.floor((width - padding * 2 + gap) / (cell + gap))));
             var rows = Math.ceil(course.spots.length / columns);
             var w = columns * cell + (columns - 1) * gap + padding * 2;
-            var h = 64 + rows * (diameter + 54) + (rows - 1) * gap + padding;
+            var h = 64 + rows * (diameter + labelHeight) + (rows - 1) * gap + padding;
             var preferred = {x: (course.bounds.left + course.bounds.right) / 200 * width - w / 2,
                 y: course.bounds.top / 100 * imageHeight};
             var clamp = p => ({x: Math.max(0, Math.min(width - w, p.x)), y: Math.max(0, p.y), w: w, h: h});
@@ -71,7 +72,7 @@ window.HomeCourseOverlay = (function() {
             box.spots = course.spots.map((spot, index) => {
                 var row = Math.floor(index / columns), count = Math.min(columns, course.spots.length - row * columns);
                 return {id: spot.spotId, x: box.x + (w - count * cell - (count - 1) * gap) / 2 + (index % columns) * (cell + gap) + cell / 2,
-                    y: box.y + 64 + row * (diameter + 54 + gap), labelWidth: cell};
+                    y: box.y + 64 + row * (diameter + labelHeight + gap), labelWidth: cell};
             });
             placed.push(box);
             height = Math.max(height, box.y + box.h);

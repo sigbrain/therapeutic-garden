@@ -140,10 +140,11 @@ test('halo debug values are opt-in and exercise good, bad and neutral Spot color
             xPercent: 15 + index * 13, yPercent: 20 + Math.floor(index / 2) * 30}))};
     const ui = setup({search: '?haloDebug=on', fetch: layoutFetch(layout)}); await flush(); image(ui).load();
     assert.deepEqual(hotspots(ui).map(button => button.children[1].children[0].textContent),
-        ['20.0% 감소', '15.0% 증가', '0.0% 변화 없음', '8.0% 감소', '5.0% 증가', '25.0% 감소']);
-    assert.equal(hotspots(ui)[2].children[0].style['--spot-data-color'], 'rgba(255, 255, 255, .9)');
-    assert.deepEqual(halos(ui).map(halo => halo.style['--halo-color']), [2.5, 4, 10]
-        .map(value => ui.context.window.HomeSurvey.haloColor(value, 'stress')));
+        ['스트레스', '정서 안정', '스트레스', '정서 안정', '정서 안정', '스트레스']);
+    assert.deepEqual(hotspots(ui).map(button => button.children[1].children[1].children.map(child => child.textContent).join(' ')),
+        ['20.0% 개선', '15.0% 악화', '0.0% 변화 없음', '8.0% 개선', '5.0% 악화', '25.0% 개선']);
+    assert.equal(hotspots(ui)[2].children[0].style['--spot-data-color'], 'hsl(40 35% 82%)');
+    assert.equal(halos(ui).length, 3);
 });
 test('right image is spatial; hotspot percentages and representative photo open the shared detail modal', async () => {
     const ui = setup(); await flush();
@@ -219,7 +220,7 @@ test('map is lazy, relayout preserves center on resize, and Course color stays n
     const photo = image(ui);
     assert.equal(ui.maps.length, 0);
     ui.open(); assert.equal(ui.maps.length, 1); assert.equal(ui.elements.mapModal.hidden, false);
-    assert.equal(ui.circles[0].fillColor, '#749d80'); assert.equal(ui.elements.surveyLegendTitle.textContent, '스트레스 변화');
+    assert.equal(ui.circles[0].fillColor, '#749d80'); assert.equal(ui.elements.surveyLegendTitle.textContent, 'Healing Spot 개선');
     ui.maps[0].setCenter({lat: 39, lng: 128}); ui.windowEvents.resize();
     assert.equal(ui.maps[0].center.lat, 39); assert.equal(ui.maps[0].relayouts, 1);
     ui.elements.closeMapButton.click(); assert.equal(ui.elements.mapModal.hidden, true);
@@ -424,7 +425,8 @@ test('display layout keeps photos and labels inside the stage without mutating s
         const center = parseFloat(button.style.left), width = parseFloat(button.style.width);
         assert.ok(center - width / 2 >= 0 && center + width / 2 <= 334);
         assert.equal(button.children[0].style.width, '110px');
-        assert.equal(button.children[1].textContent, 'GARDEN · 정원');
+        assert.equal(button.children[1].children[3].textContent, 'GARDEN · 정원');
+        assert.ok(parseFloat(button.style.top) + 110 + 96 <= parseFloat(canvas(ui).style.minHeight));
     }
     canvas(ui).clientWidth = 1000; ui.windowEvents.resize();
     assert.equal(hotspots(ui)[0].children[0].style.width, '180px');
@@ -435,28 +437,23 @@ const midFocus = ui => canvas(ui).children[1].children;
 const nearFocus = ui => canvas(ui).children[2].children;
 const halos = ui => canvas(ui).children[3].children;
 const badges = ui => canvas(ui).children[4].children;
-test('Spot summary defaults to stress, metric and audience changes stay synchronized', async () => {
+test('fixed Spot metric, Course score and audience changes stay synchronized', async () => {
     const ui = setup(); await flush(); image(ui).load();
     assert.equal(halos(ui).length, 1);
     const halo = halos(ui)[0];
     const before = [halo.style.left, halo.style.top, halo.style.width, halo.style.height];
-    assert.equal(badges(ui)[0].children.length, 2);
-    assert.equal(badges(ui)[0].children[1].textContent, '19.5% 감소');
-    assert.equal(halo.style['--halo-color'],ui.context.window.HomeSurvey.haloColor(19.5,'stress'));
+    assert.equal(badges(ui)[0].children.length, 1);
+    assert.equal(badges(ui)[0].children[0].textContent, 'HC1 · 코스');
     assert.equal(hotspots(ui)[0].children[0].style['--spot-data-color'],ui.context.window.HomeSurvey.haloColor(19.5,'stress'));
-    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '19.5% 감소');
-    ui.elements.hcEmotional.click();
-    assert.equal(ui.elements.hcEmotional['aria-pressed'], 'true');
-    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '54.3% 증가');
-    assert.equal(badges(ui)[0].children[1].textContent, '54.3% 증가');
-    assert.equal(halo.style['--halo-color'],ui.context.window.HomeSurvey.haloColor(54.3,'emotional'));
+    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '스트레스');
+    assert.equal(hotspots(ui)[0].children[1].children[1].children[0].textContent, '19.5%');
+    assert.equal(hotspots(ui)[0].children[1].children[1].children[1].textContent, '개선');
     assert.deepEqual([halo.style.left, halo.style.top, halo.style.width, halo.style.height], before);
     ui.elements.participantSelect.selectedIndex = 1;
     ui.elements.participantSelect.value = '2';
     ui.elements.participantSelect.change();
-    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '100.4% 증가');
-    ui.elements.hcStress.click();
-    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '38.6% 증가');
+    assert.equal(hotspots(ui)[0].children[1].children[1].children[0].textContent, '38.6%');
+    assert.equal(hotspots(ui)[0].children[1].children[1].children[1].textContent, '악화');
     hotspots(ui)[0].click(); await flush(); assert.equal(ui.elements.spotDetailModal.hidden, false);
     assert.ok(ui.elements.spotAnalysis.children.some(row => row.children && row.children.some(child => child.textContent === '스트레스 유효 측정')));
     ui.change(1); assert.equal(canvas(ui).children.length, 0); await flush();
