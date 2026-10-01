@@ -7155,7 +7155,12 @@ input[type="time"].form-input {
 .home-survey-page [hidden] { display: none !important; }
 .home-brand { display: flex; flex-direction: column; gap: 3px; min-width: 0; color: inherit; text-decoration: none; }
 .home-brand:hover { opacity: .9; }
-.home-logo { width: 180px; height: 38px; object-fit: contain; object-position: left center; max-width: 100%; }
+.home-logo { width: 220px; height: 46px; object-fit: contain; object-position: left center; max-width: 100%; }
+.home-header-inner { padding-top: 14px; padding-bottom: 14px; box-sizing: border-box; }
+@media (max-width: 800px) {
+    .home-logo { width: 200px; height: 42px; }
+    .home-header-inner { flex-wrap: wrap; }
+}
 .home-brand .home-title { font-size: 13px; color: #64748b; }
 .home-analysis-controls { margin: 24px 0 20px; padding-top: 18px; border-top: 1px solid #e5e7eb; }
 #analysisControlsTitle { margin: 0 0 12px; color: #374151; font-size: 14px; font-weight: 700; }
@@ -7180,25 +7185,32 @@ input[type="time"].form-input {
 #closeAnalysisButton { flex-shrink: 0; width: 40px; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 26px; cursor: pointer; }
 .survey-analysis-section { border-top: 1px solid #e5e7eb; margin-top: 24px; padding-top: 20px; }
 .survey-analysis-section h3 { margin: 0; font-size: 18px; }
-.survey-chart svg { display: block; width: 100%; height: auto; }
-.survey-chart svg text { fill: #64748b; font: 12px sans-serif; }
-.survey-chart-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; font-weight: 700; }
-.survey-chart details { margin-top: 12px; color: #64748b; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
-.survey-chart summary { cursor: pointer; }
-.survey-spot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-.survey-spot-average { padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; }
-.survey-spot-average p { margin: 8px 0 0; color: #64748b; }
+.survey-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 14px; }
+.survey-summary-card { padding: 13px; border: 1px solid #e5e7eb; border-radius: 9px; background: #fff; font-size: 13px; }
+.survey-summary-card p { margin: 8px 0; color: #365d48; font-weight: 700; }
+.home-survey-page .effect-good { color: #347553; }
+.home-survey-page .effect-bad { color: #b4534b; }
+.home-survey-page .effect-neutral { color: #86743f; }
+.home-survey-page .effect-missing { color: #9ca3af; font-weight: 500; }
+.survey-summary-track { height: 6px; overflow: hidden; border-radius: 4px; background: #edf0eb; }
+.survey-summary-track span { display: block; height: 100%; border-radius: inherit; }
+.survey-summary-track span { background: currentColor; }
+.survey-highlight-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+.survey-highlight-card { padding: 14px; border: 1px solid #e5e7eb; border-radius: 9px; background: #fff; }
+.survey-highlight-card strong { display: block; margin-top: 7px; font-size: 14px; }
+.survey-highlight-card p { margin: 6px 0 0; font-weight: 700; }
+.survey-highlight-label { color: #64748b; font-size: 12px; font-weight: 700; }
 @media (max-width: 900px) {
     .home-analysis-controls { max-width: 420px; }
 }
 @media (max-width: 520px) {
     .home-header-inner { gap: 12px; }
-    .home-logo { width: 160px; height: 32px; }
     .home-login-link { padding: 0 8px; font-size: 12px; white-space: nowrap; }
     .survey-modal { padding: 10px; }
     .survey-modal-dialog { padding: 16px; }
     .survey-modal-heading h2 { font-size: 18px; }
-    .survey-spot-grid { grid-template-columns: 1fr; }
+    .survey-summary-grid { grid-template-columns: 1fr; }
+    .survey-highlight-grid { grid-template-columns: 1fr; }
 }
 
 /* HealingCourse 관리자 화면에만 적용 */

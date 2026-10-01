@@ -22,6 +22,9 @@ function setup(options = {}) {
         address: '주소', latitude: String(36 + id), longitude: '127', mapLevel: String(id + 2),
         representativeImageUrl: id < 3 ? '/authenticated/site-' + id : ''}}));
     select.selectedIndex = 0;
+    const participantSelect = element('participantSelect');
+    participantSelect.options = [{value: 'all', textContent: '전체 평균'}, {value: '2', textContent: 'P002'}, {value: '8', textContent: 'P008'}];
+    participantSelect.selectedIndex = 0;
     const maps = [], circles = [], markers = [], frames = [], windowEvents = {}, documentEvents = {};
     let elementSequence = 0;
     const kakao = {maps: {
@@ -31,13 +34,22 @@ function setup(options = {}) {
         Marker: function(options) { Object.assign(this, options); this.setMap = m => this.map = m; markers.push(this); },
         event: {addListener(target, event, fn) { target[event] = fn; }}
     }};
-    const survey = {participants: [], metrics: {stress: {name: 'VAS', spatial: true}}, range() {}, courseMean() {},
-        normalize() {}, getSurveyColor() { return '#abc'; }, renderSpot() {}, renderModal() {}};
+    const effect = (stress, emotional) => ({spotCode: 'HS1', spotName: '정원', hasMeasurement: true,
+        stressReductionRate: stress, stressChangeDisplay: Math.abs(stress).toFixed(1) + '% ' + (stress >= 0 ? '감소' : '증가'),
+        emotionalIncreaseRate: emotional, emotionalChangeDisplay: Math.abs(emotional).toFixed(1) + '% ' + (emotional >= 0 ? '증가' : '감소'),
+        stressParticipantCount: 3, emotionalParticipantCount: 2, stressValidSessionCount: 5, emotionalValidSessionCount: 4});
+    const monitoringEffects = {
+        '1': {overall: [effect(19.5, 54.3)], members: {'2': [effect(-38.6, 100.4)], '8':[effect(24.8,77.9)]}},
+        '2': {overall: [effect(21.2, 200.4)], members: {'2': []}},
+        '3': {overall: [], members: {'2': []}}
+    };
     const context = {document: {getElementById: element, querySelector: element,
             createElementNS(ns, tag) { return this.createElement(tag); },
             createElement(tag) { return Object.assign(element('created' + ++elementSequence), {tag}); },
             addEventListener(event, fn) { (documentEvents[event] ||= []).push(fn); }, body: {style: {}}},
-        window: {kakao: options.noSdk ? null : kakao, HomeSurvey: survey,
+        window: {kakao: options.noSdk ? null : kakao, monitoringEffects, location: {search: options.search || ''},
+            monitoringHistory: {'1': {'2': [{spotCode:'HS1',records:[]}], '8':[{spotCode:'HS4',records:[]}]}, '2': {'2':[]}},
+            MeasurementHistory: {render(container, data) {container.historyData=data;container.selectedSpot='';}},
             requestAnimationFrame(fn) { frames.push(fn); },
             addEventListener(event, fn) { const previous = windowEvents[event]; windowEvents[event] = (...args) => { if (previous) previous(...args); fn(...args); }; }}, kakao, Option: function() {},
         fetch: options.fetch || (async url => ({ok: true, json: async () => url.endsWith('/data')
@@ -50,13 +62,41 @@ function setup(options = {}) {
                 images: [{imageId: 1, displayOrder: 1, representative: true, readUrl: '/authenticated/hs-1'}]}
             : [{spotId: 1, code: 'HS1', name: '정원', courseCode: 'HC1', courseName: '코스', latitude: 37, longitude: 127,
                 representativeImageUrl: '/authenticated/hs-1', images: [{imageId: 1, displayOrder: 1, representative: true, readUrl: '/authenticated/hs-1'}]}]}))};
-    vm.createContext(context); vm.runInContext(fs.readFileSync('src/main/resources/static/js/home-course-overlay.js', 'utf8'), context); vm.runInContext(spatialScript, context); vm.runInContext(script, context);
+    vm.createContext(context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/home-survey-analysis.js', 'utf8'), context);
+    vm.runInContext(fs.readFileSync('src/main/resources/static/js/home-course-overlay.js', 'utf8'), context);
+    vm.runInContext(spatialScript, context); vm.runInContext(script, context);
     return {elements, maps, circles, markers, context, windowEvents,
         key(event) { event.stopImmediatePropagation = () => { event.stopped = true; }; for (const fn of documentEvents.keydown) { fn(event); if (event.stopped) break; } },
         open() { elements.openMapButton.click(); frames.splice(0).forEach(fn => fn()); },
         change(index) { select.selectedIndex = index; select.change(); }};
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
+test('Monitoring only exposes personal history and refreshes it with audience and Site', async () => {
+    const ui=setup();await flush();
+    ui.elements.analysisModal.hidden=false;
+    ui.context.renderAnalysisModal();
+    assert.equal(ui.elements.analysisHistorySection.hidden,true);
+    assert.equal(ui.elements.analysisModalContent.children.length,2);
+    ui.elements.participantSelect.selectedIndex=1;
+    ui.elements.participantSelect.value='2';ui.elements.participantSelect.change();
+    ui.context.renderAnalysisModal();
+    assert.equal(ui.elements.analysisHistorySection.hidden,false);
+    assert.equal(ui.elements.analysisModalContent.children.length,1);
+    assert.equal(ui.elements.analysisModalContent.children[0].children[0].textContent,'핵심 변화');
+    assert.equal(ui.elements.analysisHistoryContent.historyData[0].spotCode,'HS1');
+    ui.elements.analysisHistoryContent.selectedSpot='HS1';
+    ui.elements.participantSelect.selectedIndex=2;
+    ui.elements.participantSelect.value='8';ui.elements.participantSelect.change();
+    assert.equal(ui.elements.analysisHistoryContent.historyData[0].spotCode,'HS4');
+    assert.equal(ui.elements.analysisHistoryContent.selectedSpot,'');
+    ui.change(1);await flush();ui.context.renderAnalysisModal();
+    assert.equal(ui.elements.analysisHistoryContent.historyData.length,0);
+    ui.elements.participantSelect.selectedIndex=0;
+    ui.elements.participantSelect.value='all';ui.elements.participantSelect.change();
+    ui.context.renderAnalysisModal();
+    assert.equal(ui.elements.analysisHistorySection.hidden,true);
+});
 test('Site selection replaces representative image and keeps map center/level movement', async () => {
     const ui = setup(); await flush(); ui.open();
     assert.equal(ui.elements.siteImage.src, '/authenticated/site-1');
@@ -85,13 +125,26 @@ test('Monitoring runtime has no filename inference or static Site/HS image mappi
 
 const canvas = ui => ui.elements.monitoringCanvas;
 const image = ui => canvas(ui).children[0];
-const hotspots = ui => canvas(ui).children[3].children;
+const hotspots = ui => canvas(ui).children[5].children;
 function layoutFetch(layout) {
     return async url => ({ok: true, json: async () => url.endsWith('/data') ? layout : []});
 }
 const baseLayout = () => ({siteId: 1, name: 'Site', image: {readUrl: '/storage/spatial'}, spots: [
     {spotId: 9, code: 'GARDEN', name: '정원', course: 'HC · 코스', xPercent: 0, yPercent: 100, readUrl: '/storage/representative'}
 ]});
+test('halo debug values are opt-in and exercise good, bad and neutral Spot colors', async () => {
+    const layout = {siteId: 1, name: 'Site', image: {readUrl: '/storage/spatial'}, spots:
+        [20, -15, 0, 8, -5, 25].map((value, index) => ({spotId: index + 1, code: 'HS' + (index + 1),
+            name: 'Spot ' + (index + 1), courseId: Math.floor(index / 2) + 1,
+            courseCode: 'HC-' + String.fromCharCode(65 + Math.floor(index / 2)), courseName: '코스',
+            xPercent: 15 + index * 13, yPercent: 20 + Math.floor(index / 2) * 30}))};
+    const ui = setup({search: '?haloDebug=on', fetch: layoutFetch(layout)}); await flush(); image(ui).load();
+    assert.deepEqual(hotspots(ui).map(button => button.children[1].children[0].textContent),
+        ['20.0% 감소', '15.0% 증가', '0.0% 변화 없음', '8.0% 감소', '5.0% 증가', '25.0% 감소']);
+    assert.equal(hotspots(ui)[2].children[0].style['--spot-data-color'], 'rgba(255, 255, 255, .9)');
+    assert.deepEqual(halos(ui).map(halo => halo.style['--halo-color']), [2.5, 4, 10]
+        .map(value => ui.context.window.HomeSurvey.haloColor(value, 'stress')));
+});
 test('right image is spatial; hotspot percentages and representative photo open the shared detail modal', async () => {
     const ui = setup(); await flush();
     assert.equal(image(ui).src, '/spatial/1');
@@ -161,12 +214,12 @@ test('spatial request failure does not prevent existing HC / HS map rendering', 
     assert.match(ui.elements.monitoringStatus.textContent, /불러오지 못했습니다/);
     ui.open(); assert.equal(ui.circles.length, 1); assert.equal(ui.markers.length, 1);
 });
-test('map is lazy, relayout preserves center on resize, reopen reuses one instance and keeps VAS', async () => {
+test('map is lazy, relayout preserves center on resize, and Course color stays neutral', async () => {
     const ui = setup(); await flush(); image(ui).load();
     const photo = image(ui);
     assert.equal(ui.maps.length, 0);
     ui.open(); assert.equal(ui.maps.length, 1); assert.equal(ui.elements.mapModal.hidden, false);
-    assert.equal(ui.circles[0].fillColor, '#abc'); assert.equal(ui.elements.surveyLegendTitle.textContent, 'VAS');
+    assert.equal(ui.circles[0].fillColor, '#749d80'); assert.equal(ui.elements.surveyLegendTitle.textContent, '스트레스 변화');
     ui.maps[0].setCenter({lat: 39, lng: 128}); ui.windowEvents.resize();
     assert.equal(ui.maps[0].center.lat, 39); assert.equal(ui.maps[0].relayouts, 1);
     ui.elements.closeMapButton.click(); assert.equal(ui.elements.mapModal.hidden, true);
@@ -354,6 +407,17 @@ test('display layout keeps photos and labels inside the stage without mutating s
     canvas(ui).clientWidth = 334;
     image(ui).naturalWidth = 1000; image(ui).naturalHeight = 700;
     image(ui).load();
+    for (const [focus, shapes, deviation] of [[midFocus(ui), 1, 18], [nearFocus(ui), 3, 10]]) {
+        assert.equal(focus.length, 2);
+        const definitions=focus[0], mask=definitions.children[0], filter=definitions.children[1], focusImage=focus[1];
+        assert.equal(mask.tag,'mask');
+        assert.equal(mask.children[0].children.length,shapes);
+        assert.equal(filter.children[0].tag,'feGaussianBlur');
+        assert.equal(filter.children[0].stdDeviation,deviation);
+        assert.equal(focusImage.href,'/storage/spatial');
+        assert.equal(focusImage.width,334);
+        assert.equal(focusImage.height,parseFloat(canvas(ui).style.minHeight));
+    }
     assert.equal(JSON.stringify(layout), before);
     assert.equal(hotspots(ui)[0].style.top, hotspots(ui)[1].style.top);
     for (const button of hotspots(ui)) {
@@ -367,23 +431,36 @@ test('display layout keeps photos and labels inside the stage without mutating s
     assert.equal(JSON.stringify(layout), before);
 });
 
-const regions = ui => canvas(ui).children[1].children;
-const badges = ui => canvas(ui).children[2].children;
-test('HC demo defaults to stress, selector changes only text and retains hotspot/modal interactions', async () => {
+const midFocus = ui => canvas(ui).children[1].children;
+const nearFocus = ui => canvas(ui).children[2].children;
+const halos = ui => canvas(ui).children[3].children;
+const badges = ui => canvas(ui).children[4].children;
+test('Spot summary defaults to stress, metric and audience changes stay synchronized', async () => {
     const ui = setup(); await flush(); image(ui).load();
-    assert.equal(regions(ui).length, 1);
-    const region = regions(ui)[0];
-    const before = [region.x, region.y, region.width, region.height];
-    const stress = badges(ui)[0].children[1].textContent;
-    assert.match(stress, /스트레스 \d+% 감소/);
-    ui.elements.hcRelaxation.click();
-    assert.equal(ui.elements.hcRelaxation['aria-pressed'], 'true');
-    assert.match(badges(ui)[0].children[1].textContent, /이완감 (\d+% (증가|감소)|변화 없음)/);
-    assert.deepEqual([region.x, region.y, region.width, region.height], before);
-    ui.elements.hcStress.click(); assert.equal(badges(ui)[0].children[1].textContent, stress);
+    assert.equal(halos(ui).length, 1);
+    const halo = halos(ui)[0];
+    const before = [halo.style.left, halo.style.top, halo.style.width, halo.style.height];
+    assert.equal(badges(ui)[0].children.length, 2);
+    assert.equal(badges(ui)[0].children[1].textContent, '19.5% 감소');
+    assert.equal(halo.style['--halo-color'],ui.context.window.HomeSurvey.haloColor(19.5,'stress'));
+    assert.equal(hotspots(ui)[0].children[0].style['--spot-data-color'],ui.context.window.HomeSurvey.haloColor(19.5,'stress'));
+    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '19.5% 감소');
+    ui.elements.hcEmotional.click();
+    assert.equal(ui.elements.hcEmotional['aria-pressed'], 'true');
+    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '54.3% 증가');
+    assert.equal(badges(ui)[0].children[1].textContent, '54.3% 증가');
+    assert.equal(halo.style['--halo-color'],ui.context.window.HomeSurvey.haloColor(54.3,'emotional'));
+    assert.deepEqual([halo.style.left, halo.style.top, halo.style.width, halo.style.height], before);
+    ui.elements.participantSelect.selectedIndex = 1;
+    ui.elements.participantSelect.value = '2';
+    ui.elements.participantSelect.change();
+    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '100.4% 증가');
+    ui.elements.hcStress.click();
+    assert.equal(hotspots(ui)[0].children[1].children[0].textContent, '38.6% 증가');
     hotspots(ui)[0].click(); await flush(); assert.equal(ui.elements.spotDetailModal.hidden, false);
+    assert.ok(ui.elements.spotAnalysis.children.some(row => row.children && row.children.some(child => child.textContent === '스트레스 유효 측정')));
     ui.change(1); assert.equal(canvas(ui).children.length, 0); await flush();
-    assert.equal(regions(ui).length, 1); assert.notEqual(regions(ui)[0], region);
+    assert.equal(halos(ui).length, 1); assert.notEqual(halos(ui)[0], halo);
 });
 test('stale HC response cannot restore another Site overlay', async () => {
     let finish;
@@ -392,7 +469,7 @@ test('stale HC response cannot restore another Site overlay', async () => {
         : layoutFetch({...baseLayout(), siteId: 2})(url)});
     ui.change(1); await flush();
     finish({ok: true, json: async () => ({...baseLayout(), spots: [{...baseLayout().spots[0], courseId: 99}]})});
-    await flush(); assert.equal(regions(ui).length, 0); assert.equal(badges(ui).length, 0);
+    await flush(); assert.equal(halos(ui).length, 0); assert.equal(badges(ui).length, 0);
 });
 
 test('detail clears previous Site text during preview and rejects mismatched detail identities', async () => {

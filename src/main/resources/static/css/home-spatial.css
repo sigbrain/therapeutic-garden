@@ -1,3 +1,4 @@
+@property --halo-color { syntax: "<color>"; inherits: false; initial-value: hsl(45 70% 78%); }
 .monitoring-space { min-width: 0; overflow-y: auto; background: #f7f8f2; }
 .monitoring-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; }
 .monitoring-heading h1, .monitoring-heading h2 { margin: 0; font-size: 20px; color: #244b3b; overflow-wrap: anywhere; }
@@ -23,15 +24,47 @@
 }
 #monitoringStatus:empty { display: none; }
 #monitoringSettings { display: inline-block; color: #36644d; font-size: 13px; margin-bottom: 18px; text-underline-offset: 4px; }
-.monitoring-canvas { position: relative; width: 100%; margin-top: 12px; }
-.monitoring-image { display: block; width: 100%; height: auto; min-height: inherit; object-fit: cover; border-radius: 6px; }
+.monitoring-canvas {
+    --focus-far-blur: 3.4px;
+    --focus-far-saturate: .75;
+    --focus-far-brightness: .99;
+    --focus-mid-blur: 1.2px;
+    --focus-mid-saturate: .9;
+    --focus-mid-feather: 36px;
+    --focus-mid-padding: 20px;
+    --focus-near-saturate: 1.15;
+    --focus-near-contrast: 1.04;
+    --focus-near-feather: 20px;
+    --focus-near-padding: 12px;
+    --halo-opacity: .68;
+    --halo-padding: 28px;
+    --spot-ring-width: 3px;
+    --spot-ring-color: rgba(255, 255, 255, .85);
+    --spot-glow-size: 16px;
+    --spot-glow-alpha: 55%;
+    --spot-data-color: rgba(255, 255, 255, .9);
+    position: relative; width: 100%; margin-top: 12px; overflow: hidden; border-radius: 6px;
+}
+.monitoring-image {
+    display: block; width: 100%; height: auto; min-height: inherit; object-fit: cover; border-radius: inherit;
+    position: relative; z-index: 0;
+    filter: blur(var(--focus-far-blur)) brightness(var(--focus-far-brightness)) saturate(var(--focus-far-saturate));
+}
+.monitoring-focus-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.monitoring-focus-mid-layer { z-index: 1; }
+.monitoring-focus-near-layer { z-index: 2; }
+.monitoring-focus-mid-image { filter: blur(var(--focus-mid-blur)) saturate(var(--focus-mid-saturate)); }
+.monitoring-focus-near-image { filter: saturate(var(--focus-near-saturate)) contrast(var(--focus-near-contrast)); }
+.monitoring-focus-image { pointer-events: none; user-select: none; }
 .monitoring-hotspots { position: absolute; inset: 0; pointer-events: none; }
 .monitoring-hotspot { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
-.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(110px, 13vw, 180px); height: clamp(110px, 13vw, 180px); box-sizing: border-box; border: 3px solid #fff; border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 3px 10px #182d3540; transition: transform .16s, box-shadow .16s; }
+.monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(110px, 13vw, 180px); height: clamp(110px, 13vw, 180px); box-sizing: border-box; border: var(--spot-ring-width) solid var(--spot-data-color, var(--spot-ring-color)); border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 0 var(--spot-glow-size) 4px color-mix(in srgb, var(--spot-data-color) var(--spot-glow-alpha), transparent), 0 6px 18px rgba(0, 0, 0, .28); transition: transform .16s, box-shadow .16s, border-color .4s; }
 .monitoring-hotspot-circle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .monitoring-hotspot-label { display: block; box-sizing: border-box; max-width: 100%; padding: 6px 9px; border-radius: 16px; background: #fffef8f5; color: #244b3b; font-size: 12px; line-height: 1.4; font-weight: 600; text-align: center; white-space: normal; overflow-wrap: anywhere; box-shadow: 0 2px 6px #182d3526; pointer-events: none; }
+.monitoring-hotspot-value { display: block; margin-top: 2px; font-size: 12px; white-space: nowrap; }
+.monitoring-hotspot-value.is-missing { color: #778078 !important; font-weight: 500; }
 .monitoring-hotspot:hover, .monitoring-hotspot:focus-visible, .monitoring-hotspot[aria-pressed="true"] { z-index: 2; }
-.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.03); box-shadow: 0 5px 14px #182d3555; }
+.monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.04); box-shadow: 0 0 calc(var(--spot-glow-size) + 5px) 6px color-mix(in srgb, var(--spot-data-color) 68%, transparent), 0 9px 24px rgba(0, 0, 0, .32); }
 .monitoring-hotspot[aria-pressed="true"] .monitoring-hotspot-circle { outline: 2px solid #427e5c; outline-offset: 3px; }
 .monitoring-hotspot:focus-visible { outline: 2px solid #427e5c; outline-offset: 4px; border-radius: 50%; }
 .monitoring-map-dialog { display: flex; flex-direction: column; width: 88vw; height: 88vh; height: 88dvh; max-width: 1600px; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px #0f172a33; }
@@ -70,6 +103,8 @@
 .spot-detail-section dl div { display: grid; grid-template-columns: 130px 1fr; gap: 16px; margin-top: 10px; font-size: 14px; }
 .spot-detail-section dt { color: #66776c; }
 .spot-detail-section dd { margin: 0; overflow-wrap: anywhere; }
+.spot-measurement-audience { margin: 0 0 12px; color: #244b3b; font-weight: 700; }
+.survey-empty { margin: 8px 0 0; color: #66776c; }
 @media (max-width: 900px) { .spot-detail-dialog { width: min(94vw, 760px); } }
 @media (max-width: 520px) {
     .monitoring-hotspot-circle { width: 110px; height: 110px; }
@@ -84,17 +119,16 @@
 .monitoring-effect-controls button { padding: 7px 10px; border: 1px solid #d3dfd4; border-radius: 7px; background: #fffefa; color: #536b5b; font: inherit; font-size: 12px; cursor: pointer; }
 .monitoring-effect-controls button[aria-pressed="true"] { background: #365d48; border-color: #365d48; color: white; }
 .monitoring-effect-controls button:focus-visible { outline: 2px solid #365d48; outline-offset: 3px; }
-.monitoring-demo { padding: 4px 7px; border: 1px solid #d8d1ac; border-radius: 5px; background: #faf6df; color: #6b6138; font-size: 11px; white-space: nowrap; }
-.monitoring-course-regions, .monitoring-course-badges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.monitoring-course-regions { z-index: 1; overflow: hidden; }
-.monitoring-course-regions rect { fill: #749d80; fill-opacity: .24; stroke: #52745d; stroke-opacity: .98; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
-.monitoring-course-badges { z-index: 2; }
+.monitoring-course-halos, .monitoring-course-badges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.monitoring-course-halos { z-index: 3; overflow: hidden; }
+.monitoring-course-halo { position: absolute; border-radius: 50%; opacity: var(--halo-opacity); background: radial-gradient(ellipse at center, var(--halo-color, hsl(45 70% 78%)) 0%, color-mix(in srgb, var(--halo-color, hsl(45 70% 78%)) 66%, transparent) 38%, color-mix(in srgb, var(--halo-color, hsl(45 70% 78%)) 24%, transparent) 62%, transparent 78%); mix-blend-mode: normal; transition: --halo-color .4s ease, opacity .4s ease; }
+.monitoring-course-badges { z-index: 4; }
 .monitoring-course-badge { position: absolute; box-sizing: border-box; max-width: min(180px, 58%); padding: 6px 9px; border: 1px solid #edf2e6bf; border-radius: 8px; background: #fffef2e8; color: #2b503e; box-shadow: 0 2px 5px #243b2614; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .monitoring-course-badge span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.monitoring-course-badge strong { display: block; font-size: 12px; white-space: nowrap; }
-.monitoring-hotspots { z-index: 3; }
+.monitoring-course-value { display: block; margin-top: 2px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.monitoring-course-value.is-missing { color: #706c5d; font-weight: 500; }
+.monitoring-hotspots { z-index: 5; }
 @media (max-width: 520px) {
     .monitoring-effect-controls { padding: 0 18px 8px; gap: 7px; }
     .monitoring-course-badge { max-width: 120px; padding: 4px 6px; font-size: 9px; border-radius: 6px; }
-    .monitoring-course-badge strong { font-size: 10px; }
 }

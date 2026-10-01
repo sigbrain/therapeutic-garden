@@ -2,7 +2,7 @@
 window.HomeCourseOverlay = (function() {
     function groups(spots) {
         var courses = new Map();
-        demoSpots(spots).forEach(spot => {
+        spots.filter(Boolean).forEach(spot => {
             if (spot.courseId == null || ![spot.xPercent, spot.yPercent].every(v =>
                 v !== null && v !== undefined && v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 100)) return;
             var key = String(spot.courseId);
@@ -15,58 +15,6 @@ window.HomeCourseOverlay = (function() {
                 top: Math.max(0, Math.min(...ys) - 10), bottom: Math.min(100, Math.max(...ys) + 10)};
             return course;
         });
-    }
-    // TEMPORARY DEMO ONLY. TODO: replace this adapter with real HealingSpot-level VAS data.
-    // Never persist these illustrative values or expose them as measured results.
-    function hashValue(value) {
-        var hash = 0;
-        for (var char of String(value)) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
-        hash = (hash ^ (hash >>> 16)) >>> 0;
-        hash = Math.imul(hash, 0x45d9f3b) >>> 0;
-        return (hash ^ (hash >>> 16)) >>> 0;
-    }
-    function demoSpots(spots) {
-        // Site-local, stable course bands; no course codes or particular IDs are special.
-        // Generate on copies before excluding unpositioned HS. Never mutate API/DB data.
-        var ids = Array.from(new Set(spots.filter(s => s.courseId != null).map(s => String(s.courseId)))).sort();
-        var bands = [-48, 0, 48];
-        var values = new Map();
-        ids.forEach((id, courseIndex) => {
-            var members = Array.from(new Set(spots.filter(s => String(s.courseId) === id).map(s => String(s.spotId))));
-            ['stress', 'relaxation'].forEach((metric, metricIndex) => {
-                members.sort((a, b) => hashValue(a + ':' + metric) - hashValue(b + ':' + metric) || a.localeCompare(b));
-                members.forEach((spotId, rank) => {
-                    // Disjoint variation intervals guarantee different values within a course.
-                    var fraction = hashValue(spotId + ':' + metric) / 4294967296;
-                    var variation = -12 + 24 * (rank + fraction) / members.length;
-                    values.set(id + ':' + spotId + ':' + metric, bands[(courseIndex + metricIndex) % bands.length] + variation);
-                });
-            });
-        });
-        return spots.map(spot => Object.assign({}, spot, {demoChanges: {
-            stress: values.get(String(spot.courseId) + ':' + spot.spotId + ':stress'),
-            relaxation: values.get(String(spot.courseId) + ':' + spot.spotId + ':relaxation')
-        }}));
-    }
-    function spotChange(spot, metric) {
-        return spot.demoChanges[metric];
-    }
-    function aggregate(course, metric) {
-        var total = course.spots.reduce((sum, spot) => sum + spotChange(spot, metric), 0);
-        return total / course.spots.length;
-    }
-    function formatChange(change, metric) {
-        var rounded = Math.round(Math.abs(change));
-        if (rounded === 0) return metric === 'relaxation' ? '이완감 변화 없음' : '스트레스 변화 없음';
-        var positive = change > 0;
-        var direction = positive ? '증가' : '감소';
-        return (metric === 'relaxation' ? '이완감 ' : '스트레스 ') + rounded + '% ' + direction;
-    }
-    function metricColor(change, metric) {
-        // Positive score means a good change: stress decrease or relaxation increase.
-        var goodChange = metric === 'relaxation' ? change : -change;
-        var hue = 60 + Math.max(-40, Math.min(40, goodChange)) * 1.5;
-        return 'hsl(' + hue.toFixed(1) + ' 58% 43%)';
     }
     function overlap(a, b) {
         return Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) *
@@ -130,6 +78,38 @@ window.HomeCourseOverlay = (function() {
         });
         return {courses: placed, height: height, diameter: diameter};
     }
-    return {photoLayout: photoLayout, groups: groups, demoSpots: demoSpots, spotChange: spotChange, aggregate: aggregate, formatChange: formatChange,
-        metricColor: metricColor, badgePosition: badgePosition};
+    // Give the upper-right HC-B group the same edge breathing room as HC-C.
+    // This changes display geometry only; API/DB coordinates and input objects stay untouched.
+    function applyCourseBreathingRoom(geometry, courses, width) {
+        var reference = courses.find(c => c.code === 'HC-C');
+        var target = courses.find(c => c.code === 'HC-B');
+        var referenceBox = reference && geometry.courses.find(box => box.courseId === reference.id);
+        var targetBox = target && geometry.courses.find(box => box.courseId === target.id);
+        if (!referenceBox || !targetBox) return geometry;
+        var inset = Math.max(0, width - referenceBox.x - referenceBox.w);
+        if (!inset) return geometry;
+        var shifted = geometry.courses.map(box => box !== targetBox ? box : {...box,
+            x: box.x - inset, y: box.y + inset,
+            spots: box.spots.map(spot => ({...spot, x: spot.x - inset, y: spot.y + inset}))});
+        return {...geometry, courses: shifted,
+            height: Math.max(geometry.height, targetBox.y + inset + targetBox.h)};
+    }
+    // HC-B is the only clamped right-edge course in the current layout. Match HC-C's
+    // visual inset as far as the unchanged HS photo geometry safely permits.
+    function visualBoundary(box, courses, width, diameter, boxes) {
+        var base = 2;
+        var right = box.x + box.w - base;
+        var course = courses.find(c => c.id === box.courseId);
+        if (course && course.code === 'HC-B') {
+            var reference = courses.find(c => c.code === 'HC-C');
+            var referenceBox = reference ? boxes.find(b => b.courseId === reference.id) : null;
+            var targetInset = referenceBox ? Math.max(base, width - (referenceBox.x + referenceBox.w) + base) : base;
+            var rightmostPhoto = Math.max(...box.spots.map(s => s.x + diameter / 2));
+            right = Math.max(rightmostPhoto + base, width - targetInset);
+        }
+        return {x: box.x + base, y: box.y + base,
+            width: Math.max(0, right - box.x - base), height: Math.max(0, box.h - base * 2)};
+    }
+    return {photoLayout: photoLayout, applyCourseBreathingRoom: applyCourseBreathingRoom,
+        groups: groups, badgePosition: badgePosition, visualBoundary: visualBoundary};
 })();

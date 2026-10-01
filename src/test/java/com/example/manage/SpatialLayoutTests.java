@@ -488,7 +488,8 @@ class SpatialLayoutTests {
 
     @Test void monitoringTemplatePlacesMapAndLegendInsideSecondaryDialog() throws Exception {
         String html = monitoringHtml();
-        assertThat(html).contains("공간 모니터링", "지도 보기", "id=\"monitoringCanvas\"", "/js/home-spatial.js", "/css/home-spatial.css", "Demo 데이터", "id=\"hcStress\"", "id=\"hcRelaxation\"", "스트레스 수준", "이완감 수준", "/js/home-course-overlay.js");
+        assertThat(html).contains("공간 모니터링", "지도 보기", "id=\"monitoringCanvas\"", "/js/home-spatial.js", "/css/home-spatial.css", "id=\"hcStress\"", "id=\"hcEmotional\"", "스트레스 변화", "정서적 안정성 변화", "/js/home-course-overlay.js")
+                .doesNotContain("Demo 데이터", "스트레스 수준", "이완감 수준", "id=\"metricSelect\"");
         int dialogStart = html.indexOf("id=\"mapModal\"");
         assertThat(html.indexOf("id=\"map\"")).isGreaterThan(dialogStart);
         assertThat(html.indexOf("id=\"surveyLegendTitle\"")).isGreaterThan(dialogStart);
@@ -566,7 +567,8 @@ class SpatialLayoutTests {
                 .andExpect(jsonPath("$[0].siteAddress").doesNotExist());
         String html = monitoringHtml();
         String modal = html.substring(html.indexOf("id=\"spotDetailModal\""), html.indexOf("id=\"mapModal\""));
-        assertThat(modal).contains("id=\"spotSiteName\"", "id=\"spotSiteAddress\"", "시연용 데이터");
+        assertThat(modal).contains("id=\"spotSiteName\"", "id=\"spotSiteAddress\"", "측정 데이터")
+                .doesNotContain("시연용 데이터", "방문 횟수");
     }
 
     @Test void singleSpotDetailRejectsForeignAndMissingSiteOrSpot() throws Exception {

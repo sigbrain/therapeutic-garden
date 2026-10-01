@@ -20,6 +20,7 @@ var selectedSite =
 // Site가 없거나 SDK 로딩에 실패해도 정보 패널은 사용할 수 있다.
 var map = null;
 var survey = window.HomeSurvey;
+var monitoringEffects = window.monitoringEffects || {};
 var selectedSpot = null;
 var selectedParticipant = 'all';
 var selectedMetric = 'stress';
@@ -485,31 +486,39 @@ function setImage(image, empty, path, alt) {
     else image.removeAttribute('src');
 }
 function courseAnalysisColor(course) {
-    var raw = survey.courseMean(selectedMetric, selectedParticipant, selectedSite.value, course, healingSpots);
-    return survey.getSurveyColor(survey.normalize(selectedMetric, raw));
+    return '#749d80';
+}
+function currentEffects() {
+    return selectedSite ? survey.selectEffects(monitoringEffects, selectedSite.value, selectedParticipant) : [];
+}
+function currentParticipantLabel() {
+    var option = participantSelect.options[participantSelect.selectedIndex];
+    return option ? option.textContent || option.text || '전체 평균' : '전체 평균';
 }
 function updateAnalysis() {
+    var effects = currentEffects();
+    spatial.setAnalysis(selectedMetric, effects);
     courseCircles.forEach(circle => circle.setOptions({fillColor: courseAnalysisColor(circle.surveyCourse)}));
     document.getElementById('surveyLegendTitle').textContent = survey.metrics[selectedMetric].name;
-    document.getElementById('surveyLegendRange').textContent = survey.range(selectedMetric);
-    document.getElementById('surveyLegendContext').textContent = survey.metrics[selectedMetric].spatial
-        ? 'Spot 5회 평균 → Course 평균 · 회색: 데이터 없음'
-        : '주간 설문 5회 평균 · 모든 Course에 동일 적용';
-    if (selectedSpot) survey.renderSpot(document.getElementById('spotAnalysis'), {
-        metric: selectedMetric, participant: selectedParticipant, site: selectedSite.value, spot: selectedSpot
-    });
+    document.getElementById('surveyLegendRange').textContent = currentParticipantLabel();
+    document.getElementById('surveyLegendContext').textContent = 'Course 단위 수치는 계산하지 않으며 Spot별 Summary만 표시합니다.';
+    if (selectedSpot) {
+        var effect = survey.indexByCode(effects).get(selectedSpot.code);
+        survey.renderSpot(document.getElementById('spotAnalysis'), {
+            participant: selectedParticipant, participantLabel: currentParticipantLabel(), effect: effect
+        });
+    }
     if (!modal.hidden) renderAnalysisModal();
 }
 var participantSelect = document.getElementById('participantSelect');
-survey.participants.forEach(participant => participantSelect.add(new Option(participant, participant)));
 participantSelect.addEventListener('change', function() { selectedParticipant = this.value; updateAnalysis(); });
-document.getElementById('metricSelect').addEventListener('change', function() { selectedMetric = this.value; updateAnalysis(); });
 siteSelect.addEventListener('change', function() {
     selectedSite = siteSelect.options[siteSelect.selectedIndex];
     closeAnalysisModal();
     closeSpotDetail(false);
     showSiteInformation(selectedSite);
     spatial.load(selectedSite);
+    updateAnalysis();
     document.getElementById('mapModalTitle').textContent = selectedSite ? selectedSite.dataset.name + ' · 지도' : '지도';
     document.getElementById('mapSelectionStatus').textContent = '';
     moveSiteMap(selectedSite);
@@ -522,11 +531,17 @@ var previousFocus = null;
 var previousOverflow = '';
 function renderAnalysisModal() {
     document.getElementById('analysisModalTitle').textContent = selectedParticipant === 'all'
-        ? '전체 참가자 평균 분석' : selectedParticipant + ' 개인 분석';
+        ? '참가자 전체 평균 분석' : currentParticipantLabel() + ' 분석';
     document.getElementById('analysisModalSite').textContent = selectedSite ? selectedSite.dataset.name : '';
-    survey.renderModal(document.getElementById('analysisModalContent'), {
-        participant: selectedParticipant, site: selectedSite ? selectedSite.value : '', courses: healingCourses, spots: healingSpots
-    });
+    var analysisContent = document.getElementById('analysisModalContent');
+    if (selectedParticipant === 'all') survey.renderModal(analysisContent, currentEffects());
+    else survey.renderHighlights(analysisContent, currentEffects());
+    var historySection = document.getElementById('analysisHistorySection');
+    historySection.hidden = selectedParticipant === 'all';
+    var histories = selectedSite && window.monitoringHistory ? window.monitoringHistory[selectedSite.value] : null;
+    if (selectedParticipant !== 'all') window.MeasurementHistory.render(document.getElementById('analysisHistoryContent'),
+        histories ? histories[selectedParticipant] || [] : []);
+    else document.getElementById('analysisHistoryContent').replaceChildren();
 }
 function closeAnalysisModal() {
     if (modal.hidden) return;
@@ -549,7 +564,7 @@ document.addEventListener('keydown', function(event) {
     if (modal.hidden || !spotModal.hidden) return;
     if (event.key === 'Escape') closeAnalysisModal();
     if (event.key === 'Tab') {
-        var controls = Array.from(dialog.querySelectorAll('button, summary, [tabindex="0"]'));
+        var controls = Array.from(dialog.querySelectorAll('button, select, [tabindex="0"]'));
         var first = controls[0], last = controls[controls.length - 1];
         if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
             event.preventDefault(); last.focus();
@@ -558,7 +573,10 @@ document.addEventListener('keydown', function(event) {
         }
     }
 });
-var spatial = window.HomeSpatial(openSpotDetail);
+var spatial = window.HomeSpatial(openSpotDetail, function(metric) {
+    selectedMetric = metric;
+    updateAnalysis();
+});
 var mapModal = document.getElementById('mapModal');
 var mapDialog = mapModal.querySelector('[role="dialog"]');
 var mapPreviousFocus = null;

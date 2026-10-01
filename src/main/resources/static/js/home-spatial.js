@@ -1,5 +1,5 @@
 /* Read-only monitoring view. Saved positions anchor course groups; photo positions are display-only. */
-window.HomeSpatial = function(onSelect) {
+window.HomeSpatial = function(onSelect, onMetricChange) {
     var canvas = document.getElementById('monitoringCanvas');
     var status = document.getElementById('monitoringStatus');
     var settings = document.getElementById('monitoringSettings');
@@ -15,36 +15,136 @@ window.HomeSpatial = function(onSelect) {
     var courses = [], badges = [];
     var metric = 'stress';
     var effects = window.HomeCourseOverlay;
-    var metricButtons = ['hcStress', 'hcRelaxation'].map(id => document.getElementById(id));
-    function updateMetric(next) {
-        metric = next;
-        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'relaxation' : 'stress'))));
+    var summary = window.HomeSurvey;
+    var effectsByCode = new Map();
+    var haloDebug = Boolean(window.location && /(?:\?|&)haloDebug=on(?:&|$)/.test(window.location.search || ''));
+    var debugSpotValues = {HS1: 20, HS2: -15, HS3: 0, HS4: 8, HS5: -5, HS6: 25};
+    var metricButtons = ['hcStress', 'hcEmotional'].map(id => document.getElementById(id));
+    function updateSpotEffects() {
+        buttons.forEach(entry => {
+            var effect = effectsByCode.get(entry.code);
+            var value = summary.metricValue(effect, metric);
+            var display = summary.metricDisplay(effect, metric);
+            entry.value.textContent = display;
+            entry.value.className = value == null ? 'monitoring-hotspot-value is-missing' : 'monitoring-hotspot-value';
+            entry.value.style.color = summary.metricColor(value, metric);
+            var ringColor = value == null || Number(value) === 0 ? 'rgba(255, 255, 255, .9)' : summary.haloColor(value, metric);
+            if (entry.circle.style.setProperty) entry.circle.style.setProperty('--spot-data-color', ringColor);
+            else entry.circle.style['--spot-data-color'] = ringColor;
+            entry.button.setAttribute('aria-label', entry.name + ' · ' + summary.metrics[metric].name + ' ' + display + ' · 상세 보기');
+        });
         badges.forEach(entry => {
-            var change = effects.aggregate(entry.course, metric);
-            var color = effects.metricColor(change, metric);
-            entry.value.textContent = effects.formatChange(change, metric);
-            entry.value.style.color = color;
-            entry.region.style.fill = color;
-            entry.region.style.stroke = color;
+            var value = summary.courseMetricValue(entry.course, effectsByCode, metric);
+            var display = summary.formatDirection(value, metric);
+            if (entry.halo.style.setProperty) entry.halo.style.setProperty('--halo-color', summary.haloColor(value, metric));
+            else entry.halo.style['--halo-color'] = summary.haloColor(value, metric);
+            entry.value.textContent = display;
+            entry.value.className = value == null ? 'monitoring-course-value is-missing' : 'monitoring-course-value';
+            entry.badge.setAttribute('aria-label', entry.title + ' · 코스 평균 ' + display);
         });
     }
-    metricButtons.forEach((button, index) => button.addEventListener('click', () => updateMetric(index ? 'relaxation' : 'stress')));
+    function updateMetric(next) {
+        metric = next;
+        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'emotional' : 'stress'))));
+        updateSpotEffects();
+        if (onMetricChange) onMetricChange(metric);
+    }
+    metricButtons.forEach((button, index) => button.addEventListener('click', () => updateMetric(index ? 'emotional' : 'stress')));
+    function setAnalysis(nextMetric, nextEffects) {
+        metric = nextMetric;
+        effectsByCode = summary.indexByCode(nextEffects);
+        if (haloDebug) Object.entries(debugSpotValues).forEach(([spotCode, value]) => effectsByCode.set(spotCode, {
+            ...(effectsByCode.get(spotCode) || {}), spotCode: spotCode, hasMeasurement: true,
+            stressReductionRate: value, emotionalIncreaseRate: value,
+            stressChangeDisplay: summary.formatDirection(value, 'stress'),
+            emotionalChangeDisplay: summary.formatDirection(value, 'emotional')
+        }));
+        metricButtons.forEach((button, index) => button.setAttribute('aria-pressed', String(metric === (index ? 'emotional' : 'stress'))));
+        updateSpotEffects();
+    }
     function select(spotId) {
         selectedId = spotId;
         buttons.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.id === spotId)));
     }
-    var currentImage = null;
+    var currentImage = null, currentMidFocus = null, currentNearFocus = null, currentHaloLayer = null;
+    function cssPixels(name, fallback) {
+        if (!window.getComputedStyle) return fallback;
+        var parsed = parseFloat(window.getComputedStyle(canvas).getPropertyValue(name));
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    function createFocusLayer(kind, source, key) {
+        var layer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        layer.setAttribute('class', 'monitoring-focus-layer monitoring-focus-' + kind + '-layer');
+        layer.setAttribute('preserveAspectRatio', 'none');
+        layer.setAttribute('aria-hidden', 'true');
+        var definitions = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        var mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+        var maskId = 'monitoring-focus-' + kind + '-' + key;
+        mask.setAttribute('id', maskId);
+        mask.setAttribute('maskUnits', 'userSpaceOnUse');
+        mask.setAttribute('maskContentUnits', 'userSpaceOnUse');
+        mask.setAttribute('mask-type', 'alpha');
+        var filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+        var filterId = maskId + '-feather';
+        filter.setAttribute('id', filterId);
+        filter.setAttribute('filterUnits', 'userSpaceOnUse');
+        filter.setAttribute('color-interpolation-filters', 'sRGB');
+        var blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+        blur.setAttribute('in', 'SourceGraphic');
+        filter.append(blur);
+        var shapes = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        shapes.setAttribute('filter', 'url(#' + filterId + ')');
+        mask.append(shapes);
+        definitions.append(mask, filter);
+        var image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+        image.setAttribute('class', 'monitoring-focus-image monitoring-focus-' + kind + '-image');
+        image.setAttribute('preserveAspectRatio', 'none');
+        image.setAttribute('mask', 'url(#' + maskId + ')');
+        image.setAttribute('href', source);
+        layer.append(definitions, image);
+        return {layer: layer, image: image, mask: mask, filter: filter, blur: blur, shapes: shapes};
+    }
+    function sizeFocusLayer(focus, width, height, feather) {
+        if (!focus) return;
+        focus.layer.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+        Object.entries({x: 0, y: 0, width: width, height: height})
+            .forEach(([key, value]) => focus.mask.setAttribute(key, value));
+        Object.entries({x: -feather, y: -feather, width: width + feather * 2, height: height + feather * 2})
+            .forEach(([key, value]) => focus.filter.setAttribute(key, value));
+        focus.blur.setAttribute('stdDeviation', feather / 2);
+        Object.entries({width: width, height: height})
+            .forEach(([key, value]) => focus.image.setAttribute(key, value));
+    }
     function positionLabels() {
         var width = canvas.clientWidth;
         if (!width || !currentImage || !currentImage.naturalWidth) return;
         var geometry = effects.photoLayout(courses, width, width * currentImage.naturalHeight / currentImage.naturalWidth);
+        geometry = effects.applyCourseBreathingRoom(geometry, courses, width);
         canvas.style.minHeight = geometry.height + 'px';
+        var midFeather = Math.max(0, cssPixels('--focus-mid-feather', 36));
+        var nearFeather = Math.max(0, cssPixels('--focus-near-feather', 20));
+        var midPadding = Math.max(0, cssPixels('--focus-mid-padding', 20));
+        var nearPadding = Math.max(0, cssPixels('--focus-near-padding', 12));
+        var haloPadding = Math.max(0, cssPixels('--halo-padding', 28));
+        sizeFocusLayer(currentMidFocus, width, geometry.height, midFeather);
+        sizeFocusLayer(currentNearFocus, width, geometry.height, nearFeather);
         geometry.courses.forEach(box => {
             var entry = badges.find(b => b.course.id === box.courseId);
             if (entry) {
-                Object.entries({x: box.x / width * 100, y: box.y / geometry.height * 100,
-                    width: box.w / width * 100, height: box.h / geometry.height * 100, rx: 3, ry: 3})
-                    .forEach(([key, value]) => entry.region.setAttribute(key, value));
+                // Adjust only the SVG boundary; photo, label and saved coordinates stay intact.
+                const boundary = effects.visualBoundary(box, courses, width, geometry.diameter, geometry.courses);
+                const focus = {x: Math.max(0, boundary.x - midPadding), y: Math.max(0, boundary.y - midPadding),
+                    right: Math.min(width, boundary.x + boundary.width + midPadding),
+                    bottom: Math.min(geometry.height, boundary.y + boundary.height + midPadding)};
+                Object.entries({x: focus.x, y: focus.y, width: focus.right - focus.x,
+                    height: focus.bottom - focus.y, rx: 10, ry: 10})
+                    .forEach(([key, value]) => entry.midRect.setAttribute(key, value));
+                entry.halo.style.left = Math.max(0, boundary.x - haloPadding) + 'px';
+                entry.halo.style.top = Math.max(0, boundary.y - haloPadding) + 'px';
+                entry.halo.style.width = Math.min(width, boundary.x + boundary.width + haloPadding)
+                    - Math.max(0, boundary.x - haloPadding) + 'px';
+                entry.halo.style.height = Math.min(geometry.height, boundary.y + boundary.height + haloPadding)
+                    - Math.max(0, boundary.y - haloPadding) + 'px';
                 entry.badge.style.left = box.x + 12 + 'px';
                 entry.badge.style.top = box.y + 10 + 'px';
             }
@@ -56,6 +156,9 @@ window.HomeSpatial = function(onSelect) {
                 entry.button.style.width = spot.labelWidth + 'px';
                 entry.circle.style.width = geometry.diameter + 'px';
                 entry.circle.style.height = geometry.diameter + 'px';
+                Object.entries({cx: spot.x, cy: spot.y + geometry.diameter / 2,
+                    r: geometry.diameter / 2 + nearPadding})
+                    .forEach(([key, value]) => entry.nearCircle.setAttribute(key, value));
             });
         });
     }
@@ -68,6 +171,9 @@ window.HomeSpatial = function(onSelect) {
         courses = [];
         badges = [];
         currentImage = null;
+        currentMidFocus = null;
+        currentNearFocus = null;
+        currentHaloLayer = null;
         canvas.style.minHeight = '';
         canvas.replaceChildren();
         canvas.hidden = true;
@@ -102,39 +208,37 @@ window.HomeSpatial = function(onSelect) {
                 id: 'unassigned-' + spot.spotId, code: '', name: '', spots: [spot], unassigned: true,
                 bounds: {left: Number(spot.xPercent), right: Number(spot.xPercent), top: Number(spot.yPercent), bottom: Number(spot.yPercent)}
             }));
-            var regions = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            regions.setAttribute('viewBox', '0 0 100 100');
-            regions.setAttribute('preserveAspectRatio', 'none');
-            regions.setAttribute('aria-hidden', 'true');
-            regions.setAttribute('class', 'monitoring-course-regions');
+            var midFocus = createFocusLayer('mid', layout.image.readUrl, current);
+            var nearFocus = createFocusLayer('near', layout.image.readUrl, current);
+            currentMidFocus = midFocus;
+            currentNearFocus = nearFocus;
+            var haloLayer = document.createElement('div');
+            haloLayer.setAttribute('aria-hidden', 'true');
+            haloLayer.setAttribute('class', 'monitoring-course-halos');
+            currentHaloLayer = haloLayer;
             var badgeLayer = document.createElement('div');
             badgeLayer.className = 'monitoring-course-badges';
-            badgeLayer.setAttribute('aria-label', 'HC 공간효과 예시 데이터');
+            badgeLayer.setAttribute('aria-label', 'Healing Course 영역');
             courses.forEach((course, index) => {
                 if (course.unassigned) return;
-                var bounds = course.bounds;
-                var region = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                Object.entries({x: bounds.left, y: bounds.top, width: bounds.right - bounds.left,
-                    height: bounds.bottom - bounds.top,
-                    // Flatten corners at the image edge so even edge-positioned HS centers stay inside.
-                    rx: Math.min(6, ...course.spots.map(s => Math.min(Number(s.xPercent) - bounds.left, bounds.right - Number(s.xPercent)))),
-                    ry: Math.min(7, ...course.spots.map(s => Math.min(Number(s.yPercent) - bounds.top, bounds.bottom - Number(s.yPercent)))),
-                    class: 'hc-tone-' + index % 3}).forEach(([key, value]) => region.setAttribute(key, value));
-                regions.append(region);
+                var midRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                midRect.setAttribute('fill', 'white');
+                midFocus.shapes.append(midRect);
+                var halo = document.createElement('div');
+                halo.className = 'monitoring-course-halo';
+                haloLayer.append(halo);
                 var badge = document.createElement('div');
                 badge.className = 'monitoring-course-badge hc-tone-' + index % 3;
                 var title = document.createElement('span');
-                title.textContent = [course.code, course.name].filter(Boolean).join(' · ');
-                var value = document.createElement('strong');
-                var change = effects.aggregate(course, metric);
-                value.textContent = effects.formatChange(change, metric);
-                var color = effects.metricColor(change, metric);
-                region.style.fill = color;
-                region.style.stroke = color;
-                value.style.color = color;
-                badge.append(title, value);
+                var courseTitle = [course.code, course.name].filter(Boolean).join(' · ');
+                title.textContent = courseTitle;
+                var courseValue = document.createElement('strong');
+                courseValue.className = 'monitoring-course-value is-missing';
+                courseValue.textContent = '측정 없음';
+                badge.append(title, courseValue);
                 badgeLayer.append(badge);
-                badges.push({course: course, badge: badge, value: value, region: region});
+                badges.push({course: course, title: courseTitle, badge: badge, value: courseValue,
+                    halo: halo, midRect: midRect});
             });
             placed.forEach(spot => {
                 var button = document.createElement('button');
@@ -147,6 +251,9 @@ window.HomeSpatial = function(onSelect) {
                 var circle = document.createElement('span');
                 circle.className = 'monitoring-hotspot-circle';
                 circle.textContent = spot.code || spot.name;
+                var nearCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                nearCircle.setAttribute('fill', 'white');
+                nearFocus.shapes.append(nearCircle);
                 if (spot.readUrl) {
                     var photo = document.createElement('img');
                     photo.alt = '';
@@ -157,15 +264,22 @@ window.HomeSpatial = function(onSelect) {
                 }
                 var label = document.createElement('span');
                 label.className = 'monitoring-hotspot-label';
-                label.textContent = [spot.code, spot.name].filter(Boolean).join(' · ');
+                var name = [spot.code, spot.name].filter(Boolean).join(' · ');
+                var spotValue = document.createElement('strong');
+                spotValue.className = 'monitoring-hotspot-value';
+                label.textContent = name;
+                label.append(spotValue);
                 label.setAttribute('aria-hidden', 'true');
                 button.append(circle, label);
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
                 button.addEventListener('mouseenter', positionLabels);
                 button.addEventListener('focus', positionLabels);
-                buttons.push({id: spot.spotId, button: button, circle: circle, label: label, xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
+                buttons.push({id: spot.spotId, code: spot.code, name: name, button: button, circle: circle,
+                    label: label, value: spotValue, nearCircle: nearCircle,
+                    xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
                 overlay.append(button);
             });
+            updateSpotEffects();
             image.addEventListener('load', () => {
                 if (current !== version) return;
                 canvas.hidden = false;
@@ -178,7 +292,7 @@ window.HomeSpatial = function(onSelect) {
                 updateStatus('모니터링 이미지를 불러오지 못했습니다. Site를 다시 선택하거나 새로고침해 주세요.');
                 settings.hidden = false;
             });
-            canvas.append(image, regions, badgeLayer, overlay);
+            canvas.append(image, midFocus.layer, nearFocus.layer, haloLayer, badgeLayer, overlay);
             image.src = layout.image.readUrl;
         } catch (error) {
             if (current !== version) return;
@@ -186,5 +300,5 @@ window.HomeSpatial = function(onSelect) {
             settings.hidden = false;
         }
     }
-    return {load: load, select: select};
+    return {load: load, select: select, setAnalysis: setAnalysis, updateMetric: updateMetric};
 };

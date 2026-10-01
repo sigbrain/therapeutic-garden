@@ -23,58 +23,13 @@ test('bounds clamp at each image edge and all coordinates remain unchanged', () 
     assert.equal(JSON.stringify(spots), before);
     assert.equal(api.groups([spot(1, -1, 10), spot(2, 20, ''), spot(3, Infinity, 20)]).length, 0);
 });
-const demoInput = Array.from({length: 18}, (_, i) => ({...spot(100 + Math.floor(i / 3), 10 + i, 20 + i), spotId: 200 + i}));
-test('spot demo is deterministic, bounded, distinct within each HC and independent of response order', () => {
-    const before = JSON.stringify(demoInput);
-    const courses = api.groups(demoInput);
-    const reversed = api.groups([...demoInput].reverse());
-    for (const course of courses) for (const metric of ['stress', 'relaxation']) {
-        const values = course.spots.map(s => api.spotChange(s, metric));
-        assert.equal(new Set(values).size, values.length);
-        assert.ok(values.every(v => v >= -60 && v <= 60));
-        for (const s of course.spots) {
-            const other = reversed.find(c => c.id === course.id).spots.find(o => o.spotId === s.spotId);
-            assert.equal(api.spotChange(s, metric), api.spotChange(other, metric));
-        }
-        assert.equal(api.aggregate(course, metric), values.reduce((a, b) => a + b, 0) / values.length);
-    }
-    assert.equal(JSON.stringify(demoInput), before);
-});
-test('each three-course cycle contains clearly negative, neutral and positive HC means', () => {
-    for (const count of [3, 6, 9, 30]) {
-        const input = Array.from({length: count * 2}, (_, i) => ({...spot(100 + Math.floor(i / 2), 20, 30), spotId: i + 1}));
-        const courses = api.groups(input);
-        for (const metric of ['stress', 'relaxation']) {
-            const means = courses.map(c => api.aggregate(c, metric));
-            assert.ok(means.some(v => v < -36));
-            assert.ok(means.some(v => v > 36));
-            assert.ok(means.some(v => Math.abs(v) < 12));
-        }
-    }
-});
-test('signed labels preserve stress and relaxation direction', () => {
-    assert.equal(api.formatChange(-24, 'stress'), '스트레스 24% 감소');
-    assert.equal(api.formatChange(8, 'stress'), '스트레스 8% 증가');
-    assert.equal(api.formatChange(31, 'relaxation'), '이완감 31% 증가');
-    assert.equal(api.formatChange(-7, 'relaxation'), '이완감 7% 감소');
-    assert.match(api.formatChange(0, 'stress'), /변화 없음/);
-});
-test('HC mean excludes unpositioned HS after generating individual demo values', () => {
-    const input = demoInput.map((s, i) => i === 0 ? {...s, xPercent: null} : s);
-    const generated = api.demoSpots(input);
-    const courses = api.groups(input);
-    assert.equal(courses[0].spots.length, 2);
-    for (const metric of ['stress', 'relaxation']) {
-        const expected = generated.slice(1, 3).map(s => api.spotChange(s, metric));
-        assert.equal(api.aggregate(courses[0], metric), (expected[0] + expected[1]) / 2);
-    }
-});
-test('metric colors move green/amber/red in the correct direction', () => {
-    function hue(color) { return Number(color.match(/hsl\(([0-9.]+)/)[1]); }
-    assert.ok(hue(api.metricColor(-35, 'stress')) > hue(api.metricColor(35, 'stress')));
-    assert.ok(hue(api.metricColor(35, 'relaxation')) > hue(api.metricColor(-35, 'relaxation')));
-    assert.ok(hue(api.metricColor(0, 'stress')) > 50 && hue(api.metricColor(0, 'stress')) < 70);
-    assert.equal(hue(api.metricColor(-35, 'stress')), hue(api.metricColor(35, 'relaxation')));
+test('course grouping never creates or aggregates analytical values', () => {
+    const input = [spot(1, 20, 30), spot(1, 40, 50)];
+    const before = JSON.stringify(input);
+    assert.equal(api.groups(input)[0].spots.length, 2);
+    assert.equal(JSON.stringify(input), before);
+    assert.equal(api.aggregate, undefined);
+    assert.equal(api.demoSpots, undefined);
 });
 test('badge search avoids hotspots, stays within desktop/mobile planes and never changes region', () => {
     for (const plane of [{w: 1000, h: 700}, {w: 334, h: 220}]) {
@@ -95,22 +50,40 @@ test('exact obstacle edges find a narrow mobile gap missed by grid candidates', 
 });
 test('photo-only visual layers preserve hotspot priority and mobile styling', () => {
     const css = fs.readFileSync('src/main/resources/static/css/home-spatial.css', 'utf8');
-    assert.match(css, /\.monitoring-course-regions, \.monitoring-course-badges\s*\{[^}]*pointer-events: none/);
-    assert.match(css, /\.monitoring-course-regions\s*\{[^}]*z-index: 1/);
-    assert.match(css, /\.monitoring-course-badges\s*\{[^}]*z-index: 2/);
-    assert.match(css, /\.monitoring-hotspots\s*\{ z-index: 3/);
-    assert.match(css, /stroke-opacity: \.98/);
-    assert.match(css, /stroke-width: 2\.5/);
-    assert.match(css, /fill-opacity: \.24/);
-    assert.match(css, /vector-effect: non-scaling-stroke/);
+    assert.match(css, /\.monitoring-course-halos, \.monitoring-course-badges\s*\{[^}]*pointer-events: none/);
+    assert.match(css, /\.monitoring-course-halos\s*\{[^}]*z-index: 3/);
+    assert.match(css, /\.monitoring-course-badges\s*\{[^}]*z-index: 4/);
+    assert.match(css, /\.monitoring-hotspots\s*\{ z-index: 5/);
+    assert.match(css, /--focus-far-blur: 3\.4px/);
+    assert.match(css, /--focus-far-saturate: \.75/);
+    assert.match(css, /--focus-far-brightness: \.99/);
+    assert.match(css, /--focus-mid-blur: 1\.2px/);
+    assert.match(css, /--focus-mid-feather: 36px/);
+    assert.match(css, /--focus-near-saturate: 1\.15/);
+    assert.match(css, /--focus-near-feather: 20px/);
+    assert.match(css, /--spot-ring-width: 3px/);
+    assert.match(css, /--spot-glow-size: 16px/);
+    assert.match(css, /--spot-glow-alpha: 55%/);
+    assert.match(css, /filter: blur\(var\(--focus-far-blur\)\) brightness\(var\(--focus-far-brightness\)\) saturate\(var\(--focus-far-saturate\)\)/);
+    assert.match(css, /\.monitoring-focus-layer\s*\{[^}]*overflow: hidden;[^}]*pointer-events: none/);
+    assert.match(css, /\.monitoring-focus-near-image\s*\{[^}]*saturate\(var\(--focus-near-saturate\)\)/);
+    assert.match(css, /--halo-opacity: \.68/);
+    assert.match(css, /\.monitoring-course-halo\s*\{[^}]*radial-gradient/);
+    assert.match(css, /mix-blend-mode: normal/);
+    assert.doesNotMatch(css, /\.monitoring-course-halo[^}]*filter: blur/);
     const js = fs.readFileSync('src/main/resources/static/js/home-spatial.js', 'utf8');
+    assert.match(js, /createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'mask'\)/);
+    assert.match(js, /createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'feGaussianBlur'\)/);
+    assert.doesNotMatch(js, /'clipPath'/);
     assert.doesNotMatch(js, /style\.(fillOpacity|strokeOpacity)/);
-    assert.match(js, /region\.style\.fill = color/);
-    assert.match(js, /region\.style\.stroke = color/);
-    assert.match(js, /value\.style\.color = color/);
+    assert.doesNotMatch(js, /aggregate\(/);
+    assert.match(js, /--halo-color', summary\.haloColor/);
+    assert.doesNotMatch(js, /circle\.style\.borderColor/);
+    assert.doesNotMatch(js, /monitoring-course-regions|region\.style\.stroke/);
     const html = fs.readFileSync('src/main/resources/templates/home.html', 'utf8');
     assert.match(html, /id="hcStress" aria-pressed="true"/);
-    assert.match(html, /Demo 데이터/);
+    assert.match(html, /id="hcEmotional" aria-pressed="false"/);
+    assert.doesNotMatch(html, /Demo 데이터|시연용 데이터/);
 });
 
 test('photo groups use arbitrary identities, keep pairs horizontal, avoid collisions and preserve input', () => {
@@ -128,5 +101,31 @@ test('photo groups use arbitrary identities, keep pairs horizontal, avoid collis
             for (const other of result.courses) if (box !== other)
                 assert.ok(box.x + box.w <= other.x || other.x + other.w <= box.x || box.y + box.h <= other.y || other.y + other.h <= box.y);
         }
+    }
+});
+
+test('HC-B display group matches HC-C edge inset while preserving its internal photo padding', () => {
+    const input = [['A',1,17.0068,35.447],['A',2,29.1498,21.918],['B',3,86.9433,9.4522],
+        ['B',4,80.1942,24.4408],['C',5,70.5466,72.3295],['C',6,85.0202,86.5763]]
+        .map(([course,id,x,y]) => ({spotId:id,courseId:course,courseCode:'HC-'+course,courseName:course,xPercent:x,yPercent:y}));
+    const courses=api.groups(input), original=api.photoLayout(courses,1040,728);
+    const before=JSON.stringify(original), geometry=api.applyCourseBreathingRoom(original,courses,1040);
+    const b=geometry.courses.find(box=>box.courseId==='B'), c=geometry.courses.find(box=>box.courseId==='C');
+    const originalB=original.courses.find(box=>box.courseId==='B');
+    const referenceInset=1040-c.x-c.w;
+    assert.equal(b.x,originalB.x-referenceInset);
+    assert.equal(b.y,originalB.y+referenceInset);
+    assert.equal(b.spots[1].x,originalB.spots[1].x-referenceInset);
+    assert.equal(b.spots[1].y,originalB.spots[1].y+referenceInset);
+    assert.equal(JSON.stringify(original),before);
+    const boundary=api.visualBoundary(b,courses,1040,geometry.diameter,geometry.courses);
+    assert.equal(1040-(boundary.x+boundary.width),referenceInset+2);
+    assert.equal(boundary.y,referenceInset+2);
+    assert.ok(boundary.x+boundary.width >= Math.max(...b.spots.map(s=>s.x+geometry.diameter/2))+2);
+    for (const code of ['A','C']) {
+        const box=geometry.courses.find(item=>item.courseId===code);
+        const unchanged=api.visualBoundary(box,courses,1040,geometry.diameter,geometry.courses);
+        assert.equal(unchanged.width,box.w-4);
+        assert.deepEqual(box,original.courses.find(item=>item.courseId===code));
     }
 });

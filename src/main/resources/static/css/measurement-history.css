@@ -1,0 +1,13 @@
+.measurement-history { margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+.measurement-history h3 { margin: 0 0 16px; font-size: 18px; }
+.measurement-history label { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.measurement-history select { max-width: 100%; padding: 8px; border: 1px solid #cbd8cf; border-radius: 6px; background: white; font: inherit; }
+.measurement-metric { margin-top: 20px; }
+.measurement-metric h4 { margin: 0; font-size: 15px; }
+.measurement-metric svg { display: block; width: 100%; max-height: 260px; }
+.measurement-metric svg text { fill: #64748b; font: 11px sans-serif; }
+.measurement-table-scroll { overflow-x: auto; }
+.measurement-history table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.measurement-history th, .measurement-history td { padding: 8px; text-align: right; border-bottom: 1px solid #e5e7eb; font-variant-numeric: tabular-nums; }
+.measurement-history th:first-child, .measurement-history td:first-child { text-align: left; white-space: nowrap; }
+.measurement-history td { overflow-wrap: anywhere; }

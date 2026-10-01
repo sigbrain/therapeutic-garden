@@ -97,7 +97,7 @@ class RoleBasedHomeTests {
         mvc.perform(get("/admin/monitoring")).andExpect(redirectedUrl("/admin/login"));
         String html = mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk()).andExpect(view().name("home"))
-                .andExpect(model().attributeExists("sites"))
+                .andExpect(model().attributeExists("sites", "monitoringParticipants", "monitoringEffects"))
                 .andExpect(model().attribute("kakaoMapsJavaScriptKey", kakaoKey))
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("id=\"siteSelect\"", "id=\"map\"", "id=\"analysisModal\"",

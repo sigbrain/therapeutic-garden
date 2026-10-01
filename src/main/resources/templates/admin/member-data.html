@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>참가자 데이터</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/measurement-history.css}">
 </head>
 <body class="page-body service-page member-data-page">
 <header th:replace="~{fragments/header :: header}"></header>
@@ -44,8 +45,11 @@
                 </article>
             </div>
         </section>
+        <section id="memberMeasurementHistory" class="card measurement-history" aria-label="측정 기록"></section>
     </div>
 </main>
 
+<script th:inline="javascript">window.memberMeasurementHistory = /*[[${measurementHistory}]]*/ [];</script>
+<script th:src="@{/js/measurement-history.js?v=analysis-ux}"></script>
 </body>
 </html>
