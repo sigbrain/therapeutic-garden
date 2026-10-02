@@ -424,13 +424,13 @@
                         headerToolbar: {
 
                             left:
-                                "prev,next today",
+                                "prev,next",
 
                             center:
                                 "title",
 
                             right:
-                                ""
+                                "today"
 
                         },
 
@@ -600,6 +600,27 @@
 
 
             calendar.render();
+
+            const calendarTitle =
+                calendarElement.querySelector(
+                    '[role="heading"][aria-level="2"]'
+                );
+
+            if (calendarTitle) {
+                const calendarToolbar =
+                    calendarTitle.parentElement.parentElement;
+
+                calendarToolbar.classList.add(
+                    "calendar-toolbar-grid"
+                );
+
+                Array.from(calendarToolbar.children)
+                    .forEach(function (toolbarColumn) {
+                        toolbarColumn.classList.add(
+                            "calendar-toolbar-column"
+                        );
+                    });
+            }
 
 
             /*

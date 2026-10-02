@@ -76,8 +76,9 @@ class AdminNavigationTests {
                 .doesNotContain("href=\"/admin/courses\"");
         String calendar = mvc.perform(get("/admin/schedules/calendar").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-        assertThat(calendar).contains("ADMIN CALENDAR", "id=\"calendar\"", "id=\"schedule-data\"", "href=\"/admin\"")
-                .doesNotContain("dashboard-header", "dashboard-title", "dashboard-eyebrow");
+        assertThat(calendar).contains("ADMIN CALENDAR", "id=\"calendar\"", "id=\"schedule-data\"", "href=\"/admin\"",
+                        "\"prev,next\"", "\"title\"", "\"today\"", "calendar-toolbar-grid")
+                .doesNotContain("\"prev,next today\"", "dashboard-header", "dashboard-title", "dashboard-eyebrow");
     }
 
     @Test

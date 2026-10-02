@@ -44,10 +44,14 @@
                 <h2 id="myHealingTitle" class="section-title">나의 치유 분석</h2>
                 <p class="my-healing-description">나의 공간별 치유 효과와 측정 변화를 확인합니다.</p>
             </div>
-            <button type="button" id="openMemberAnalysisButton" class="primary-button">상세 분석 보기</button>
         </div>
         <div class="calendar-card my-healing-card">
             <div id="memberAnalysisHighlights" aria-live="polite"></div>
+            <section class="member-analysis-detail" aria-labelledby="memberAnalysisDetailTitle">
+                <h3 id="memberAnalysisDetailTitle">Spot별 변화 / 상세 분석</h3>
+                <div id="memberAnalysisSummary"></div>
+            </section>
+            <section id="memberAnalysisHistory" class="measurement-history" aria-label="나의 측정 기록"></section>
         </div>
     </section>
 
@@ -183,18 +187,6 @@
     </section>
 
 </main>
-
-<div id="memberAnalysisModal" class="survey-modal" hidden>
-    <div class="survey-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="memberAnalysisModalTitle" tabindex="-1">
-        <div class="survey-modal-heading">
-            <h2 id="memberAnalysisModalTitle">나의 치유 분석</h2>
-            <button type="button" id="closeAnalysisButton" aria-label="나의 치유 분석 닫기">×</button>
-        </div>
-        <p class="survey-note">Healing Spot별 변화와 실제 측정 기록입니다.</p>
-        <div id="memberAnalysisSummary"></div>
-        <section id="memberAnalysisHistory" class="measurement-history" aria-label="나의 측정 기록"></section>
-    </div>
-</div>
 
 <script th:inline="javascript">
     window.memberHealingEffects = /*[[${spotEffects}]]*/ [];
@@ -377,13 +369,13 @@
                         headerToolbar: {
 
                             left:
-                                "prev,next today",
+                                "prev,next",
 
                             center:
                                 "title",
 
                             right:
-                                ""
+                                "today"
                         },
 
 
@@ -680,6 +672,27 @@
              * 달력 출력
              */
             calendar.render();
+
+            const calendarTitle =
+                calendarElement.querySelector(
+                    '[role="heading"][aria-level="2"]'
+                );
+
+            if (calendarTitle) {
+                const calendarToolbar =
+                    calendarTitle.parentElement.parentElement;
+
+                calendarToolbar.classList.add(
+                    "calendar-toolbar-grid"
+                );
+
+                Array.from(calendarToolbar.children)
+                    .forEach(function (toolbarColumn) {
+                        toolbarColumn.classList.add(
+                            "calendar-toolbar-column"
+                        );
+                    });
+            }
 
         }
     );

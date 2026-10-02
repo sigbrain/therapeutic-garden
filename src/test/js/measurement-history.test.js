@@ -45,3 +45,21 @@ test('missing baseline produces no fabricated dot and missing history no graph',
     render(container,[]);
     assert.equal(all(container).filter(n=>n.tag==='svg').length,0);
 });
+test('optional default Spot renders immediately and keeps a missing HS1 selected',()=>{
+    const container=node('div');
+    render(container,[{spotCode:'HS1',spotName:'호스타 정원',records:[record('2026-09-04',30,20)]},
+        {spotCode:'HS2',spotName:'곶자왈원',records:[]}],{defaultSpotCode:'HS1'});
+    const select=all(container).find(n=>n.tag==='select');
+    assert.equal(select.value,'HS1');
+    assert.equal(select.children[1].textContent,'HS1 · 호스타 정원');
+    assert.equal(all(container).filter(n=>n.tag==='svg').length,2);
+
+    render(container,[{spotCode:'HS1',spotName:'호스타 정원',records:[]},
+        {spotCode:'HS2',spotName:'곶자왈원',records:[record('2026-09-05',20,10)]}],{defaultSpotCode:'HS1'});
+    const missingSelect=all(container).find(n=>n.tag==='select');
+    assert.equal(missingSelect.value,'HS1');
+    assert.equal(all(container).filter(n=>n.tag==='svg').length,0);
+    assert.ok(all(container).some(n=>n.textContent==='측정 기록 없음'));
+    missingSelect.value='HS2'; missingSelect.events.change();
+    assert.equal(all(container).filter(n=>n.tag==='svg').length,2);
+});

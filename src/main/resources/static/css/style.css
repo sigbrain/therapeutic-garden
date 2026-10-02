@@ -7281,7 +7281,6 @@ input[type="time"].form-input {
 .survey-modal-dialog { width: min(960px, 100%); max-height: 88vh; max-height: 88dvh; overflow-y: auto; overscroll-behavior: contain; padding: 24px; background: white; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 20px 60px #0f172a33; }
 .survey-modal-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .survey-modal-heading h2 { margin: 0; font-size: 22px; }
-#closeAnalysisButton { flex-shrink: 0; width: 40px; height: 40px; border: 1px solid #e5e7eb; border-radius: 8px; background: white; font-size: 26px; cursor: pointer; }
 .survey-analysis-section { border-top: 1px solid #e5e7eb; margin-top: 24px; padding-top: 20px; }
 .survey-analysis-section h3 { margin: 0; font-size: 18px; }
 .survey-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 14px; }
@@ -7303,17 +7302,46 @@ input[type="time"].form-input {
 .participant-analysis-page .effect-bad { color: #b4534b; }
 .participant-analysis-page .effect-neutral { color: #86743f; }
 .participant-analysis-page .effect-missing { color: #9ca3af; font-weight: 500; }
-.participant-analysis-page [hidden] { display: none !important; }
 .my-healing-section { margin-bottom: 28px; }
 .my-healing-heading { align-items: center; }
 .my-healing-description { margin: 8px 0 0; color: #64748b; font-size: 14px; line-height: 1.6; }
-.my-healing-heading .primary-button { flex: 0 0 auto; width: auto; margin: 0; padding: 0 18px; }
 .my-healing-card { padding: 4px 20px 22px; }
-.my-healing-card .survey-analysis-section { border-top: 0; margin-top: 0; padding-top: 18px; }
+.my-healing-card #memberAnalysisHighlights > .survey-analysis-section { border-top: 0; margin-top: 0; padding-top: 18px; }
+.member-analysis-detail { margin-top: 28px; padding-top: 24px; border-top: 1px solid #e5e7eb; }
+.member-analysis-detail > h3 { margin: 0; font-size: 18px; }
+.member-analysis-detail #memberAnalysisSummary > .survey-analysis-section:first-child { border-top: 0; margin-top: 20px; padding-top: 0; }
 .participant-analysis-page .survey-note { color: #64748b; font-size: 13px; line-height: 1.7; }
+.participant-analysis-page .measurement-history select {
+    min-width: min(100%, 280px);
+    height: 44px;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0 46px 0 12px;
+    border-color: #d1d5db;
+    border-radius: 9px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.25 6 6.25 11 1.25' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 12px 8px;
+    color: #111827;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+.participant-analysis-page .measurement-history select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.calendar-toolbar-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+.calendar-toolbar-column:first-child { justify-self: start; }
+.calendar-toolbar-column:nth-child(2) { justify-self: center; }
+.calendar-toolbar-column:last-child { justify-self: end; }
 @media (max-width: 620px) {
-    .my-healing-heading { align-items: stretch; flex-direction: column; }
-    .my-healing-heading .primary-button { width: 100%; }
     .my-healing-card { padding: 2px 14px 18px; }
 }
 @media (max-width: 900px) {
@@ -7327,6 +7355,7 @@ input[type="time"].form-input {
     .survey-modal-heading h2 { font-size: 18px; }
     .survey-summary-grid { grid-template-columns: 1fr; }
     .survey-highlight-grid { grid-template-columns: 1fr; }
+    .calendar-toolbar-grid { gap: 6px; }
 }
 
 /* HealingCourse 관리자 화면에만 적용 */

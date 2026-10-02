@@ -116,7 +116,7 @@ test('overall and member Spot detail keep count semantics and missing state', ()
 
 test('detail analysis renders two categorical Summary sections without line charts', () => {
     const container = node('div');
-    api.renderModal(container, [measured, missing]);
+    api.renderSummary(container, [measured, missing]);
     assert.equal(container.children.length, 2);
     assert.equal(container.children[0].children[0].textContent, '스트레스 변화');
     assert.equal(container.children[1].children[0].textContent, '정서적 안정성 변화');

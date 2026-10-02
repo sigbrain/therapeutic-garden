@@ -62,19 +62,25 @@ window.MeasurementHistory = (() => {
         table.append(body); wrapper.append(table); section.append(wrapper);
         return section;
     }
-    function render(container, histories) {
+    function render(container, histories, options = {}) {
         container.replaceChildren();
         container.append(element('h3','측정 기록'));
         if (!histories || !histories.length) { container.append(element('p','측정 기록 없음')); return; }
         const label=element('label','Healing Spot '), select=element('select');
         select.setAttribute('aria-label','측정 기록 Healing Spot');
         const placeholder=element('option','HS 선택');
-        placeholder.value=''; placeholder.disabled=true; placeholder.selected=true;
+        const defaultSpotCode = histories.some(h => h.spotCode === options.defaultSpotCode) ? options.defaultSpotCode : '';
+        placeholder.value=''; placeholder.disabled=true; placeholder.selected=!defaultSpotCode;
         select.append(placeholder);
-        histories.forEach(h => { const option=element('option',h.spotCode+' · '+h.spotName); option.value=h.spotCode; select.append(option); });
+        histories.forEach(h => {
+            const option=element('option',h.spotCode+' · '+h.spotName);
+            option.value=h.spotCode;
+            option.selected=h.spotCode===defaultSpotCode;
+            select.append(option);
+        });
         label.append(select); container.append(label);
         const content=element('div'); container.append(content);
-        select.value='';
+        select.value=defaultSpotCode;
         function update() {
             content.replaceChildren();
             if (!select.value) return;

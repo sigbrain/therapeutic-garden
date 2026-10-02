@@ -188,7 +188,7 @@ window.HomeSurvey = (() => {
         section.append(grid);
         return section;
     }
-    function renderModal(container, effects) {
+    function renderSummary(container, effects) {
         container.replaceChildren();
         container.append(renderMetricSection('stress', effects), renderMetricSection('emotional', effects));
     }
@@ -215,5 +215,5 @@ window.HomeSurvey = (() => {
     }
     return {metrics, SPOT_METRIC, METRIC_ORDER, HALO_SCALE, formatDirection, metricValue, metricDisplay, metricColor, semanticState, indexByCode,
         getMetricDisplay, getSpotMetricRows, getSpotDisplay, normalizedImprovementScore, courseImprovementScore, scoreColor,
-        haloColor, selectEffects, renderSpot, renderModal, bestImprovement, renderHighlights};
+        haloColor, selectEffects, renderSpot, renderSummary, renderModal: renderSummary, bestImprovement, renderHighlights};
 })();

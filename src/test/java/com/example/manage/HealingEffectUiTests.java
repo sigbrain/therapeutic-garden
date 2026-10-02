@@ -142,9 +142,15 @@ class HealingEffectUiTests {
         assertThat(effects.get(4).hasMeasurement()).isFalse();
         String html = result.getResponse().getContentAsString();
         assertThat(html).contains("나의 치유 분석", "나의 공간별 치유 효과와 측정 변화를 확인합니다.",
-                        "memberHealingEffects", "memberMeasurementHistory", "member-healing-analysis.js", "나의 달력")
-                .doesNotContain("P002", "P004", "secret-login-two", "secret-login-four");
+                        "Spot별 변화 / 상세 분석", "측정 기록",
+                        "memberAnalysisSummary", "memberAnalysisHistory", "memberHealingEffects",
+                        "memberMeasurementHistory", "member-healing-analysis.js", "나의 달력",
+                        "\"prev,next\"", "\"title\"", "\"today\"", "calendar-toolbar-grid")
+                .doesNotContain("상세 분석 보기", "openMemberAnalysisButton", "memberAnalysisModal",
+                        "aria-modal=", "\"prev,next today\"", "P002", "P004", "secret-login-two", "secret-login-four");
         assertThat(html.indexOf("나의 치유 분석")).isLessThan(html.indexOf("나의 달력"));
+        assertThat(html.indexOf("memberAnalysisHighlights")).isLessThan(html.indexOf("memberAnalysisSummary"));
+        assertThat(html.indexOf("memberAnalysisSummary")).isLessThan(html.indexOf("memberAnalysisHistory"));
     }
 
     @Test void emptyDatabaseRendersHonestEmptyStates() throws Exception {
