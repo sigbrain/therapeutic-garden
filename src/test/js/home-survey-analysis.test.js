@@ -33,7 +33,7 @@ test('semantic result colors match metric meaning and existing neutral palette',
     api.renderSpot(container,{participant:'all',effect:measured});
     const rows=container.children.filter(n=>n.children.length);
     assert.equal(rows[1].children[1].className,'effect-good');
-    assert.equal(rows[3].children[1].className,'effect-bad');
+    assert.equal(rows[2].children[1].className,'effect-bad');
     assert.equal(rows[1].children[0].className,'');
 });
 
@@ -71,6 +71,10 @@ test('fixed Spot metric display is the only field-selection and direction bounda
     assert.equal(api.getSpotDisplay('HS2', effects).unitLabel, '악화');
     assert.equal(api.getSpotDisplay('HS3', effects).unitLabel, '변화 없음');
     assert.equal(api.getSpotDisplay('HS4', effects).numberLabel, '데이터 없음');
+    const rows=api.getSpotMetricRows('HS2',effects);
+    assert.deepEqual(JSON.parse(JSON.stringify(rows.map(row=>row.metric))),['stress','emotional']);
+    assert.deepEqual(JSON.parse(JSON.stringify(rows.map(row=>row.metricLabel))),['스트레스','정서적 안정성']);
+    assert.ok(rows.every(row=>!Object.hasOwn(row,'representative')));
 });
 
 test('Course halo score averages normalized mixed-metric Spot improvements once', () => {
@@ -85,18 +89,22 @@ test('Course halo score averages normalized mixed-metric Spot improvements once'
     assert.equal(api.scoreColor(score), 'hsl(40.0 35.0% 82.0%)');
 });
 
-test('site and audience selection returns the exact Summary arrays', () => {
-    const data = {'7': {overall: [measured], members: {'3': [missing]}}};
-    assert.equal(api.selectEffects(data, 7, 'all')[0].stressReductionRate, 19.5);
-    assert.equal(api.selectEffects(data, 7, '3')[0].hasMeasurement, false);
-    assert.equal(api.selectEffects(data, 7, '99').length, 0);
+test('site selection accepts only the overall Monitoring Summary array', () => {
+    const data = {'7': [measured], '8': {overall: [missing], members: {'3': [missing]}}};
+    assert.equal(api.selectEffects(data, 7)[0].stressReductionRate, 19.5);
+    assert.equal(api.selectEffects(data, 8).length, 0);
+    assert.equal(api.selectEffects(data, 99).length, 0);
 });
 
 test('overall and member Spot detail keep count semantics and missing state', () => {
     const overall = node('div');
     api.renderSpot(overall, {participant: 'all', participantLabel: '전체 평균', effect: measured});
     assert.deepEqual(overall.children.filter(child => child.children.length).map(row => row.children[0].textContent),
-        ['스트레스 측정 참가자', '평균 스트레스 증감률', '정서적 안정성 측정 참가자', '평균 정서적 안정성 증감률']);
+        ['측정 인원', '평균 스트레스 증감률', '평균 정서적 안정성 증감률']);
+    assert.equal(overall.children[0].children[1].textContent,'스트레스 11명 · 정서적 안정성 10명');
+    const equal = node('div');
+    api.renderSpot(equal, {participant: 'all', effect: {...measured, emotionalParticipantCount: 11}});
+    assert.equal(equal.children[0].children[1].textContent,'11명');
     const member = node('div');
     api.renderSpot(member, {participant: '3', participantLabel: 'P003', effect: measured});
     assert.equal(member.children[0].textContent, 'P003');

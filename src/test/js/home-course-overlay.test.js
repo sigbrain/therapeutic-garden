@@ -59,6 +59,9 @@ test('photo-only visual layers preserve hotspot priority and mobile styling', ()
     assert.match(css, /--focus-far-brightness: \.99/);
     assert.match(css, /--focus-mid-blur: 1\.2px/);
     assert.match(css, /--focus-mid-feather: 36px/);
+    assert.match(css, /--context-corridor-width-ratio: \.16/);
+    assert.match(css, /--context-corridor-min-width: 120px/);
+    assert.match(css, /--context-corridor-max-width: 210px/);
     assert.match(css, /--focus-near-saturate: 1\.15/);
     assert.match(css, /--focus-near-feather: 20px/);
     assert.match(css, /--spot-ring-white-width: 2px/);
@@ -75,6 +78,8 @@ test('photo-only visual layers preserve hotspot priority and mobile styling', ()
     const js = fs.readFileSync('src/main/resources/static/js/home-spatial.js', 'utf8');
     assert.match(js, /createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'mask'\)/);
     assert.match(js, /createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'feGaussianBlur'\)/);
+    assert.match(js, /monitoring-context-corridor-mask/);
+    assert.match(js, /midFocus\.shapes\.append\(contextCorridor\)/);
     assert.doesNotMatch(js, /'clipPath'/);
     assert.doesNotMatch(js, /style\.(fillOpacity|strokeOpacity)/);
     assert.doesNotMatch(js, /aggregate\(/);

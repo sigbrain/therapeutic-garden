@@ -47,7 +47,10 @@ class AdminNavigationTests {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("loginAdminId", 1L);
         assertThat(header(session))
-                .contains("치유 공간 모니터링", "/images/logo/logo.png", "href=\"/admin\"", "href=\"/admin/logout\"")
+                .contains("치유 공간 모니터링", "/images/logo/logo.png", "href=\"/admin\"", "href=\"/admin/logout\"",
+                        ">통합 설정</a>", "href=\"/admin/sites\"", "href=\"/admin/members\"",
+                        "href=\"/admin/schedules\"", "href=\"/admin/schedules/calendar\"")
+                .doesNotContain("관리자 페이지")
                 .doesNotContain("href=\"/admin/login\"", "href=\"/member/login\"");
         mvc.perform(get("/admin/logout").session(session)).andExpect(redirectedUrl("/"));
         assertThat(session.isInvalid()).isTrue();

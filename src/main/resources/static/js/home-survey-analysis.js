@@ -9,6 +9,7 @@ window.HomeSurvey = (() => {
         HS1: 'stress', HS2: 'emotional', HS3: 'stress',
         HS4: 'emotional', HS5: 'emotional', HS6: 'stress'
     });
+    const METRIC_ORDER = Object.freeze(['stress', 'emotional']);
     const HALO_SCALE = Object.freeze({
         stress: Object.freeze({neutral: 0, min: -20, max: 20}),
         emotional: Object.freeze({neutral: 0, min: -100, max: 100})
@@ -39,7 +40,9 @@ window.HomeSurvey = (() => {
         return Math.abs(number).toFixed(1) + '% ' + direction;
     }
     function metricValue(effect, metric) {
-        return effect && effect.hasMeasurement ? Number(effect[metrics[metric].rate]) : null;
+        if (!effect || !effect.hasMeasurement || !metrics[metric]) return null;
+        const value = Number(effect[metrics[metric].rate]);
+        return Number.isFinite(value) ? value : null;
     }
     function metricDisplay(effect, metric) {
         if (!effect || !effect.hasMeasurement) return '측정 없음';
@@ -53,18 +56,33 @@ window.HomeSurvey = (() => {
         const metric = SPOT_METRIC[spotId];
         const lookup = effects instanceof Map ? effects : indexByCode(effects);
         const effect = metric ? lookup.get(spotId) : null;
-        const raw = effect && effect.hasMeasurement ? Number(effect[metrics[metric].rate]) : null;
-        const value = raw != null && Number.isFinite(raw) ? raw : null;
-        const status = value == null ? 'missing' : value > 0 ? 'good' : value < 0 ? 'bad' : 'neutral';
+        const display = getMetricDisplay(effect, metric);
         return {
             metric: metric || null,
-            metricLabel: metric === 'stress' ? '스트레스' : metric === 'emotional' ? '정서 안정' : '',
-            value: value,
-            numberLabel: value == null ? '데이터 없음' : Math.abs(value).toFixed(1) + '%',
-            unitLabel: value == null ? '' : value > 0 ? '개선' : value < 0 ? '악화' : '변화 없음',
-            status: status,
-            color: value == null || value === 0 ? 'hsl(40 35% 82%)' : haloColor(value, metric)
+            metricLabel: display.metricLabel,
+            value: display.value,
+            numberLabel: display.numberLabel,
+            unitLabel: display.unitLabel,
+            status: display.status,
+            color: display.value == null || display.value === 0 ? 'hsl(40 35% 82%)' : haloColor(display.value, metric)
         };
+    }
+    function getMetricDisplay(effect, metric) {
+        const value = metrics[metric] ? metricValue(effect, metric) : null;
+        const status = semanticState(value, metric);
+        return {
+            metric,
+            metricLabel: metric === 'stress' ? '스트레스' : metric === 'emotional' ? '정서적 안정성' : '',
+            value,
+            numberLabel: value == null ? '데이터 없음' : Math.abs(value).toFixed(1) + '%',
+            unitLabel: value == null ? '' : status === 'good' ? '개선' : status === 'bad' ? '악화' : '변화 없음',
+            status
+        };
+    }
+    function getSpotMetricRows(spotCode, effects) {
+        const lookup = effects instanceof Map ? effects : indexByCode(effects);
+        const effect = lookup.get(spotCode);
+        return METRIC_ORDER.map(metric => getMetricDisplay(effect, metric));
     }
     function normalizedImprovementScore(display) {
         if (!display || display.value == null || !HALO_SCALE[display.metric]) return null;
@@ -102,11 +120,9 @@ window.HomeSurvey = (() => {
         const mix = key => HALO_TONES.neutral[key] + (target[key] - HALO_TONES.neutral[key]) * ratio;
         return `hsl(${mix('h').toFixed(1)} ${mix('s').toFixed(1)}% ${mix('l').toFixed(1)}%)`;
     }
-    function selectEffects(data, siteId, participant) {
+    function selectEffects(data, siteId) {
         const site = data && data[String(siteId)];
-        if (!site) return [];
-        if (participant === 'all') return Array.isArray(site.overall) ? site.overall : [];
-        return site.members && Array.isArray(site.members[String(participant)]) ? site.members[String(participant)] : [];
+        return Array.isArray(site) ? site : [];
     }
     function semanticState(value, metric) {
         if (!metrics[metric] || value == null || !Number.isFinite(Number(value))) return 'missing';
@@ -127,10 +143,14 @@ window.HomeSurvey = (() => {
             return;
         }
         if (participant === 'all') {
+            const stressCount = effect.stressParticipantCount;
+            const emotionalCount = effect.emotionalParticipantCount;
+            const audience = stressCount === emotionalCount
+                ? stressCount + '명'
+                : '스트레스 ' + stressCount + '명 · 정서적 안정성 ' + emotionalCount + '명';
             container.append(
-                valueRow('스트레스 측정 참가자', effect.stressParticipantCount + '명'),
+                valueRow('측정 인원', audience),
                 valueRow('평균 스트레스 증감률', metricDisplay(effect, 'stress'), semanticState(metricValue(effect, 'stress'), 'stress')),
-                valueRow('정서적 안정성 측정 참가자', effect.emotionalParticipantCount + '명'),
                 valueRow('평균 정서적 안정성 증감률', metricDisplay(effect, 'emotional'), semanticState(metricValue(effect, 'emotional'), 'emotional'))
             );
         } else {
@@ -193,7 +213,7 @@ window.HomeSurvey = (() => {
         });
         section.append(grid); container.append(section);
     }
-    return {metrics, SPOT_METRIC, HALO_SCALE, formatDirection, metricValue, metricDisplay, metricColor, semanticState, indexByCode,
-        getSpotDisplay, normalizedImprovementScore, courseImprovementScore, scoreColor,
+    return {metrics, SPOT_METRIC, METRIC_ORDER, HALO_SCALE, formatDirection, metricValue, metricDisplay, metricColor, semanticState, indexByCode,
+        getMetricDisplay, getSpotMetricRows, getSpotDisplay, normalizedImprovementScore, courseImprovementScore, scoreColor,
         haloColor, selectEffects, renderSpot, renderModal, bestImprovement, renderHighlights};
 })();

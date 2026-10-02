@@ -34,6 +34,11 @@ window.HomeSpatial = function(onSelect) {
             else entry.circle.style['--spot-data-color'] = ringColor;
             var result = display.value == null ? '데이터 없음' : display.numberLabel + ' ' + display.unitLabel;
             entry.button.setAttribute('aria-label', entry.name + ' · ' + display.metricLabel + ' ' + result + ' · 상세 보기');
+            entry.detailRows.forEach((row, index) => {
+                var metric = summary.getSpotMetricRows(entry.code, effectsByCode)[index];
+                row.value.textContent = [metric.numberLabel, metric.unitLabel].filter(Boolean).join(' ');
+                row.value.className = 'monitoring-hover-value effect-' + metric.status;
+            });
         });
         badges.forEach(entry => {
             var score = summary.courseImprovementScore(entry.course, getSpotDisplay);
@@ -57,7 +62,8 @@ window.HomeSpatial = function(onSelect) {
         selectedId = spotId;
         buttons.forEach(entry => entry.button.setAttribute('aria-pressed', String(entry.id === spotId)));
     }
-    var currentImage = null, currentMidFocus = null, currentNearFocus = null, currentHaloLayer = null;
+    var currentImage = null, currentMidFocus = null, currentNearFocus = null;
+    var currentContextCorridor = null, currentHaloLayer = null;
     function cssPixels(name, fallback) {
         if (!window.getComputedStyle) return fallback;
         var parsed = parseFloat(window.getComputedStyle(canvas).getPropertyValue(name));
@@ -119,6 +125,18 @@ window.HomeSpatial = function(onSelect) {
         var haloPadding = Math.max(0, cssPixels('--halo-padding', 28));
         sizeFocusLayer(currentMidFocus, width, geometry.height, midFeather);
         sizeFocusLayer(currentNearFocus, width, geometry.height, nearFeather);
+        if (currentContextCorridor) {
+            var corridorRatio = Math.max(.05, Math.min(.4, cssPixels('--context-corridor-width-ratio', .16)));
+            var corridorMin = Math.max(0, cssPixels('--context-corridor-min-width', 120));
+            var corridorMax = Math.max(corridorMin, cssPixels('--context-corridor-max-width', 210));
+            var corridorCenter = Math.max(0, Math.min(1, cssPixels('--context-corridor-center-ratio', .5)));
+            var corridorWidth = Math.min(corridorMax, Math.max(corridorMin, width * corridorRatio));
+            var corridorX = Math.max(-midFeather, Math.min(width - corridorWidth + midFeather,
+                width * corridorCenter - corridorWidth / 2));
+            Object.entries({x: corridorX, y: -midFeather * 2, width: corridorWidth,
+                height: geometry.height + midFeather * 4, rx: corridorWidth / 2, ry: corridorWidth / 2})
+                .forEach(([key, value]) => currentContextCorridor.setAttribute(key, value));
+        }
         geometry.courses.forEach(box => {
             var entry = badges.find(b => b.course.id === box.courseId);
             if (entry) {
@@ -147,6 +165,13 @@ window.HomeSpatial = function(onSelect) {
                 entry.button.style.width = spot.labelWidth + 'px';
                 entry.circle.style.width = geometry.diameter + 'px';
                 entry.circle.style.height = geometry.diameter + 'px';
+                entry.detail.style.top = geometry.diameter + 8 + 'px';
+                var panelWidth = Math.min(280, Math.max(220, width - 16));
+                var idealLeft = spot.x - panelWidth / 2;
+                var clampedLeft = Math.max(8, Math.min(width - panelWidth - 8, idealLeft));
+                entry.detail.style.width = panelWidth + 'px';
+                if (entry.detail.style.setProperty) entry.detail.style.setProperty('--hover-shift-x', clampedLeft - idealLeft + 'px');
+                else entry.detail.style['--hover-shift-x'] = clampedLeft - idealLeft + 'px';
                 Object.entries({cx: spot.x, cy: spot.y + geometry.diameter / 2,
                     r: geometry.diameter / 2 + nearPadding})
                     .forEach(([key, value]) => entry.nearCircle.setAttribute(key, value));
@@ -164,6 +189,7 @@ window.HomeSpatial = function(onSelect) {
         currentImage = null;
         currentMidFocus = null;
         currentNearFocus = null;
+        currentContextCorridor = null;
         currentHaloLayer = null;
         canvas.style.minHeight = '';
         canvas.replaceChildren();
@@ -201,8 +227,13 @@ window.HomeSpatial = function(onSelect) {
             }));
             var midFocus = createFocusLayer('mid', layout.image.readUrl, current);
             var nearFocus = createFocusLayer('near', layout.image.readUrl, current);
+            var contextCorridor = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            contextCorridor.setAttribute('class', 'monitoring-context-corridor-mask');
+            contextCorridor.setAttribute('fill', 'white');
+            midFocus.shapes.append(contextCorridor);
             currentMidFocus = midFocus;
             currentNearFocus = nearFocus;
+            currentContextCorridor = contextCorridor;
             var haloLayer = document.createElement('div');
             haloLayer.setAttribute('aria-hidden', 'true');
             haloLayer.setAttribute('class', 'monitoring-course-halos');
@@ -267,13 +298,32 @@ window.HomeSpatial = function(onSelect) {
                 spotName.textContent = name;
                 label.append(metricTag, spotValue, auxiliary, spotName);
                 label.setAttribute('aria-hidden', 'true');
-                button.append(circle, label);
+                var detail = document.createElement('span');
+                detail.className = 'monitoring-hover-panel';
+                detail.setAttribute('aria-hidden', 'true');
+                var detailTitle = document.createElement('strong');
+                detailTitle.className = 'monitoring-hover-title';
+                detailTitle.textContent = name;
+                detail.append(detailTitle);
+                var detailRows = summary.METRIC_ORDER.map(metric => {
+                    var row = document.createElement('span');
+                    row.className = 'monitoring-hover-row';
+                    var metricName = document.createElement('span');
+                    metricName.className = 'monitoring-hover-metric';
+                    metricName.textContent = summary.getMetricDisplay(null, metric).metricLabel;
+                    var rowValue = document.createElement('strong');
+                    rowValue.className = 'monitoring-hover-value effect-missing';
+                    row.append(metricName, rowValue);
+                    detail.append(row);
+                    return {metric: metric, value: rowValue};
+                });
+                button.append(circle, label, detail);
                 button.addEventListener('click', () => onSelect({...spot, representativeImageUrl: spot.readUrl}));
                 button.addEventListener('mouseenter', positionLabels);
                 button.addEventListener('focus', positionLabels);
                 buttons.push({id: spot.spotId, code: spot.code, name: name, button: button, circle: circle,
                     label: label, metric: metricTag, value: spotValue, number: number, unit: unit,
-                    auxiliary: auxiliary, nearCircle: nearCircle,
+                    auxiliary: auxiliary, detail: detail, detailRows: detailRows, nearCircle: nearCircle,
                     xPercent: Number(spot.xPercent), yPercent: Number(spot.yPercent)});
                 overlay.append(button);
             });

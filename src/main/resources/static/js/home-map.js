@@ -22,7 +22,6 @@ var map = null;
 var survey = window.HomeSurvey;
 var monitoringEffects = window.monitoringEffects || {};
 var selectedSpot = null;
-var selectedParticipant = 'all';
 var loadVersion = 0;
 function validNumber(value) {
     return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value));
@@ -307,6 +306,8 @@ async function openSpotDetail(spot) {
         spotPreviousOverflow = document.body.style.overflow;
     }
     selectedSpot = spot;
+    healingSpotSelect.value = String(spot.spotId);
+    openSpotDetailButton.disabled = false;
     spatial.select(spot.spotId);
     renderSpotInformation(spot);
     resetSpotGallery(spot, '이미지를 불러오는 중입니다.', spot.representativeImageUrl);
@@ -439,6 +440,7 @@ async function loadHealingSpace(siteId) {
     clearHealingSpaceMap();
     healingCourses = [];
     healingSpots = [];
+    resetHealingSpotSelect();
     var status = document.getElementById('spaceStatus');
     status.textContent = '공간 정보를 불러오는 중입니다.';
     try {
@@ -452,6 +454,7 @@ async function loadHealingSpace(siteId) {
         if (!data.every(Array.isArray)) throw new Error('잘못된 공간 응답');
         healingCourses = data[0].filter(Boolean);
         healingSpots = data[1].filter(Boolean);
+        populateHealingSpotSelect(healingSpots);
         drawHealingCourses();
         drawHealingSpots();
         status.textContent = [
@@ -488,33 +491,52 @@ function courseAnalysisColor(course) {
     return '#749d80';
 }
 function currentEffects() {
-    return selectedSite ? survey.selectEffects(monitoringEffects, selectedSite.value, selectedParticipant) : [];
-}
-function currentParticipantLabel() {
-    var option = participantSelect.options[participantSelect.selectedIndex];
-    return option ? option.textContent || option.text || '전체 평균' : '전체 평균';
+    return selectedSite ? survey.selectEffects(monitoringEffects, selectedSite.value) : [];
 }
 function updateAnalysis() {
     var effects = currentEffects();
     spatial.setAnalysis(effects);
     courseCircles.forEach(circle => circle.setOptions({fillColor: courseAnalysisColor(circle.surveyCourse)}));
     document.getElementById('surveyLegendTitle').textContent = 'Healing Spot 개선';
-    document.getElementById('surveyLegendRange').textContent = currentParticipantLabel();
+    document.getElementById('surveyLegendRange').textContent = '전체 참가자 평균';
     document.getElementById('surveyLegendContext').textContent = 'Course 단위 수치는 계산하지 않으며 Spot별 Summary만 표시합니다.';
     if (selectedSpot) {
         var effect = survey.indexByCode(effects).get(selectedSpot.code);
         survey.renderSpot(document.getElementById('spotAnalysis'), {
-            participant: selectedParticipant, participantLabel: currentParticipantLabel(), effect: effect
+            participant: 'all', participantLabel: '전체 참가자 평균', effect: effect
         });
     }
-    if (!modal.hidden) renderAnalysisModal();
 }
-var participantSelect = document.getElementById('participantSelect');
-participantSelect.addEventListener('change', function() { selectedParticipant = this.value; updateAnalysis(); });
+var healingSpotSelect = document.getElementById('healingSpotSelect');
+var openSpotDetailButton = document.getElementById('openSpotDetailButton');
+function resetHealingSpotSelect() {
+    var placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Healing Spot을 선택하세요';
+    healingSpotSelect.replaceChildren(placeholder);
+    healingSpotSelect.value = '';
+    openSpotDetailButton.disabled = true;
+}
+function populateHealingSpotSelect(spots) {
+    resetHealingSpotSelect();
+    spots.slice().sort((a, b) => String(a.code).localeCompare(String(b.code), undefined, {numeric: true})).forEach(spot => {
+        var option = document.createElement('option');
+        option.value = String(spot.spotId);
+        option.textContent = [spot.code, spot.name].filter(Boolean).join(' · ');
+        healingSpotSelect.append(option);
+    });
+}
+healingSpotSelect.addEventListener('change', function() {
+    openSpotDetailButton.disabled = !this.value;
+});
+openSpotDetailButton.addEventListener('click', function() {
+    var spot = healingSpots.find(item => String(item.spotId) === healingSpotSelect.value);
+    if (spot) openSpotDetail(spot);
+});
 siteSelect.addEventListener('change', function() {
     selectedSite = siteSelect.options[siteSelect.selectedIndex];
-    closeAnalysisModal();
     closeSpotDetail(false);
+    resetHealingSpotSelect();
     showSiteInformation(selectedSite);
     spatial.load(selectedSite);
     updateAnalysis();
@@ -522,55 +544,6 @@ siteSelect.addEventListener('change', function() {
     document.getElementById('mapSelectionStatus').textContent = '';
     moveSiteMap(selectedSite);
     if (selectedSite) loadHealingSpace(selectedSite.value);
-});
-
-var modal = document.getElementById('analysisModal');
-var dialog = modal.querySelector('[role="dialog"]');
-var previousFocus = null;
-var previousOverflow = '';
-function renderAnalysisModal() {
-    document.getElementById('analysisModalTitle').textContent = selectedParticipant === 'all'
-        ? '참가자 전체 평균 분석' : currentParticipantLabel() + ' 분석';
-    document.getElementById('analysisModalSite').textContent = selectedSite ? selectedSite.dataset.name : '';
-    var analysisContent = document.getElementById('analysisModalContent');
-    if (selectedParticipant === 'all') survey.renderModal(analysisContent, currentEffects());
-    else survey.renderHighlights(analysisContent, currentEffects());
-    var historySection = document.getElementById('analysisHistorySection');
-    historySection.hidden = selectedParticipant === 'all';
-    var histories = selectedSite && window.monitoringHistory ? window.monitoringHistory[selectedSite.value] : null;
-    if (selectedParticipant !== 'all') window.MeasurementHistory.render(document.getElementById('analysisHistoryContent'),
-        histories ? histories[selectedParticipant] || [] : []);
-    else document.getElementById('analysisHistoryContent').replaceChildren();
-}
-function closeAnalysisModal() {
-    if (modal.hidden) return;
-    modal.hidden = true;
-    document.body.style.overflow = previousOverflow;
-    if (previousFocus) previousFocus.focus();
-}
-document.getElementById('openAnalysisButton').addEventListener('click', function() {
-    previousFocus = document.activeElement;
-    previousOverflow = document.body.style.overflow;
-    renderAnalysisModal();
-    modal.hidden = false;
-    dialog.scrollTop = 0;
-    document.body.style.overflow = 'hidden';
-    document.getElementById('closeAnalysisButton').focus();
-});
-document.getElementById('closeAnalysisButton').addEventListener('click', closeAnalysisModal);
-modal.addEventListener('click', event => { if (event.target === modal) closeAnalysisModal(); });
-document.addEventListener('keydown', function(event) {
-    if (modal.hidden || !spotModal.hidden) return;
-    if (event.key === 'Escape') closeAnalysisModal();
-    if (event.key === 'Tab') {
-        var controls = Array.from(dialog.querySelectorAll('button, select, [tabindex="0"]'));
-        var first = controls[0], last = controls[controls.length - 1];
-        if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
-            event.preventDefault(); last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault(); first.focus();
-        }
-    }
 });
 var spatial = window.HomeSpatial(openSpotDetail);
 var mapModal = document.getElementById('mapModal');
@@ -590,7 +563,6 @@ function resizeMap() {
     map.setCenter(center);
 }
 document.getElementById('openMapButton').addEventListener('click', function() {
-    closeAnalysisModal();
     mapPreviousFocus = document.activeElement;
     mapPreviousOverflow = document.body.style.overflow;
     document.getElementById('mapModalTitle').textContent = selectedSite ? selectedSite.dataset.name + ' · 지도' : '지도';

@@ -45,7 +45,7 @@ window.HomeCourseOverlay = (function() {
     function photoLayout(courses, width, imageHeight) {
         var diameter = width >= 800 ? 180 : width >= 550 ? 145 : 110;
         diameter = Math.min(diameter, Math.max(40, width - 32));
-        var gap = 16, padding = 12, labelHeight = 96;
+        var gap = 16, padding = 12, labelHeight = 146;
         var cell = Math.min(Math.max(diameter, width < 550 ? Math.min(140, (width - padding * 2 - gap) / 2) : 160), width - padding * 2);
         var placed = [], height = imageHeight;
         courses.forEach(course => {

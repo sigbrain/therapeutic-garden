@@ -21,6 +21,8 @@ public class MemberController {
 
     private final MemberService memberService;
     private final ScheduleService scheduleService;
+    private final com.example.manage.service.HealingEffectQueryService healingEffects;
+    private final com.example.manage.service.MeasurementHistoryQueryService measurementHistory;
 
     @GetMapping("/login")
     public String memberLogin() {
@@ -57,6 +59,8 @@ public class MemberController {
         List<ScheduleResponse> schedules = scheduleService.findScheduleByMemberId(memberId);
 
         model.addAttribute("schedules", schedules);
+        model.addAttribute("spotEffects", healingEffects.findImportedMember(memberId));
+        model.addAttribute("measurementHistory", measurementHistory.findImportedMember(memberId));
         return "member/home";
     }
 

@@ -22,9 +22,6 @@ function setup(options = {}) {
         address: '주소', latitude: String(36 + id), longitude: '127', mapLevel: String(id + 2),
         representativeImageUrl: id < 3 ? '/authenticated/site-' + id : ''}}));
     select.selectedIndex = 0;
-    const participantSelect = element('participantSelect');
-    participantSelect.options = [{value: 'all', textContent: '전체 평균'}, {value: '2', textContent: 'P002'}, {value: '8', textContent: 'P008'}];
-    participantSelect.selectedIndex = 0;
     const maps = [], circles = [], markers = [], frames = [], windowEvents = {}, documentEvents = {};
     let elementSequence = 0;
     const kakao = {maps: {
@@ -39,17 +36,15 @@ function setup(options = {}) {
         emotionalIncreaseRate: emotional, emotionalChangeDisplay: Math.abs(emotional).toFixed(1) + '% ' + (emotional >= 0 ? '증가' : '감소'),
         stressParticipantCount: 3, emotionalParticipantCount: 2, stressValidSessionCount: 5, emotionalValidSessionCount: 4});
     const monitoringEffects = {
-        '1': {overall: [effect(19.5, 54.3)], members: {'2': [effect(-38.6, 100.4)], '8':[effect(24.8,77.9)]}},
-        '2': {overall: [effect(21.2, 200.4)], members: {'2': []}},
-        '3': {overall: [], members: {'2': []}}
+        '1': [effect(19.5, 54.3)],
+        '2': [effect(21.2, 200.4)],
+        '3': []
     };
     const context = {document: {getElementById: element, querySelector: element,
             createElementNS(ns, tag) { return this.createElement(tag); },
             createElement(tag) { return Object.assign(element('created' + ++elementSequence), {tag}); },
             addEventListener(event, fn) { (documentEvents[event] ||= []).push(fn); }, body: {style: {}}},
         window: {kakao: options.noSdk ? null : kakao, monitoringEffects, location: {search: options.search || ''},
-            monitoringHistory: {'1': {'2': [{spotCode:'HS1',records:[]}], '8':[{spotCode:'HS4',records:[]}]}, '2': {'2':[]}},
-            MeasurementHistory: {render(container, data) {container.historyData=data;container.selectedSpot='';}},
             requestAnimationFrame(fn) { frames.push(fn); },
             addEventListener(event, fn) { const previous = windowEvents[event]; windowEvents[event] = (...args) => { if (previous) previous(...args); fn(...args); }; }}, kakao, Option: function() {},
         fetch: options.fetch || (async url => ({ok: true, json: async () => url.endsWith('/data')
@@ -72,30 +67,18 @@ function setup(options = {}) {
         change(index) { select.selectedIndex = index; select.change(); }};
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
-test('Monitoring only exposes personal history and refreshes it with audience and Site', async () => {
+test('Monitoring Spot selector targets shared detail without changing overall map Summary', async () => {
     const ui=setup();await flush();
-    ui.elements.analysisModal.hidden=false;
-    ui.context.renderAnalysisModal();
-    assert.equal(ui.elements.analysisHistorySection.hidden,true);
-    assert.equal(ui.elements.analysisModalContent.children.length,2);
-    ui.elements.participantSelect.selectedIndex=1;
-    ui.elements.participantSelect.value='2';ui.elements.participantSelect.change();
-    ui.context.renderAnalysisModal();
-    assert.equal(ui.elements.analysisHistorySection.hidden,false);
-    assert.equal(ui.elements.analysisModalContent.children.length,1);
-    assert.equal(ui.elements.analysisModalContent.children[0].children[0].textContent,'핵심 변화');
-    assert.equal(ui.elements.analysisHistoryContent.historyData[0].spotCode,'HS1');
-    ui.elements.analysisHistoryContent.selectedSpot='HS1';
-    ui.elements.participantSelect.selectedIndex=2;
-    ui.elements.participantSelect.value='8';ui.elements.participantSelect.change();
-    assert.equal(ui.elements.analysisHistoryContent.historyData[0].spotCode,'HS4');
-    assert.equal(ui.elements.analysisHistoryContent.selectedSpot,'');
-    ui.change(1);await flush();ui.context.renderAnalysisModal();
-    assert.equal(ui.elements.analysisHistoryContent.historyData.length,0);
-    ui.elements.participantSelect.selectedIndex=0;
-    ui.elements.participantSelect.value='all';ui.elements.participantSelect.change();
-    ui.context.renderAnalysisModal();
-    assert.equal(ui.elements.analysisHistorySection.hidden,true);
+    assert.equal(ui.elements.openSpotDetailButton.disabled,true);
+    assert.equal(ui.elements.healingSpotSelect.children[0].textContent,'Healing Spot을 선택하세요');
+    assert.equal(ui.elements.healingSpotSelect.children[1].textContent,'HS1 · 정원');
+    const overallBefore=ui.context.currentEffects()[0].stressReductionRate;
+    ui.elements.healingSpotSelect.value='1';ui.elements.healingSpotSelect.change();
+    assert.equal(ui.elements.openSpotDetailButton.disabled,false);
+    assert.equal(ui.context.currentEffects()[0].stressReductionRate,overallBefore);
+    ui.elements.openSpotDetailButton.click();await flush();
+    assert.equal(ui.elements.spotDetailModal.hidden,false);
+    assert.equal(ui.elements.spotDetailTitle.textContent,'HS1 · 정원');
 });
 test('Site selection replaces representative image and keeps map center/level movement', async () => {
     const ui = setup(); await flush(); ui.open();
@@ -140,7 +123,7 @@ test('halo debug values are opt-in and exercise good, bad and neutral Spot color
             xPercent: 15 + index * 13, yPercent: 20 + Math.floor(index / 2) * 30}))};
     const ui = setup({search: '?haloDebug=on', fetch: layoutFetch(layout)}); await flush(); image(ui).load();
     assert.deepEqual(hotspots(ui).map(button => button.children[1].children[0].textContent),
-        ['스트레스', '정서 안정', '스트레스', '정서 안정', '정서 안정', '스트레스']);
+        ['스트레스', '정서적 안정성', '스트레스', '정서적 안정성', '정서적 안정성', '스트레스']);
     assert.deepEqual(hotspots(ui).map(button => button.children[1].children[1].children.map(child => child.textContent).join(' ')),
         ['20.0% 개선', '15.0% 악화', '0.0% 변화 없음', '8.0% 개선', '5.0% 악화', '25.0% 개선']);
     assert.equal(hotspots(ui)[2].children[0].style['--spot-data-color'], 'hsl(40 35% 82%)');
@@ -344,10 +327,12 @@ test('Site change closes detail and ignores late gallery responses; reopen obtai
     await ui.context.openSpotDetail({spotId: 1}); assert.equal(ui.elements.spotImage.src, '/fresh');
     ui.elements.spotDetailModal.click({target: ui.elements.spotDetailModal}); assert.equal(ui.elements.spotDetailModal.hidden, true);
 });
-test('monitoring uses enlarged responsive circles and always-visible labels', () => {
+test('monitoring uses enlarged circles and floating hover detail without moving hotspots', () => {
     const css = fs.readFileSync('src/main/resources/static/css/home-spatial.css', 'utf8');
     assert.match(css, /clamp\(110px, 13vw, 180px\)/);
-    assert.doesNotMatch(css, /visibility: hidden/);
+    assert.match(css, /\.monitoring-hover-panel\s*\{[^}]*position: absolute/);
+    assert.match(css, /pointer-events: none/);
+    assert.match(css, /focus-visible \.monitoring-hover-panel/);
     assert.match(css, /border-radius: 16px/);
     assert.doesNotMatch(script, /spotInformationPanel|showSitePanelButton/);
 });
@@ -408,7 +393,7 @@ test('display layout keeps photos and labels inside the stage without mutating s
     canvas(ui).clientWidth = 334;
     image(ui).naturalWidth = 1000; image(ui).naturalHeight = 700;
     image(ui).load();
-    for (const [focus, shapes, deviation] of [[midFocus(ui), 1, 18], [nearFocus(ui), 3, 10]]) {
+    for (const [focus, shapes, deviation] of [[midFocus(ui), 2, 18], [nearFocus(ui), 3, 10]]) {
         assert.equal(focus.length, 2);
         const definitions=focus[0], mask=definitions.children[0], filter=definitions.children[1], focusImage=focus[1];
         assert.equal(mask.tag,'mask');
@@ -419,6 +404,14 @@ test('display layout keeps photos and labels inside the stage without mutating s
         assert.equal(focusImage.width,334);
         assert.equal(focusImage.height,parseFloat(canvas(ui).style.minHeight));
     }
+    const corridor=midFocus(ui)[0].children[0].children[0].children[0];
+    assert.equal(corridor.tag,'rect');
+    assert.equal(corridor.class,'monitoring-context-corridor-mask');
+    assert.equal(corridor.width,120);
+    assert.equal(corridor.x,107);
+    assert.equal(corridor.rx,60);
+    assert.ok(corridor.y < 0);
+    assert.ok(corridor.height > parseFloat(canvas(ui).style.minHeight));
     assert.equal(JSON.stringify(layout), before);
     assert.equal(hotspots(ui)[0].style.top, hotspots(ui)[1].style.top);
     for (const button of hotspots(ui)) {
@@ -426,10 +419,13 @@ test('display layout keeps photos and labels inside the stage without mutating s
         assert.ok(center - width / 2 >= 0 && center + width / 2 <= 334);
         assert.equal(button.children[0].style.width, '110px');
         assert.equal(button.children[1].children[3].textContent, 'GARDEN · 정원');
-        assert.ok(parseFloat(button.style.top) + 110 + 96 <= parseFloat(canvas(ui).style.minHeight));
+        assert.ok(parseFloat(button.style.top) + 110 + 146 <= parseFloat(canvas(ui).style.minHeight));
+        assert.ok(parseFloat(button.children[2].style.width) <= 318);
     }
     canvas(ui).clientWidth = 1000; ui.windowEvents.resize();
     assert.equal(hotspots(ui)[0].children[0].style.width, '180px');
+    assert.equal(corridor.width,160);
+    assert.equal(corridor.x,420);
     assert.equal(JSON.stringify(layout), before);
 });
 
@@ -437,7 +433,7 @@ const midFocus = ui => canvas(ui).children[1].children;
 const nearFocus = ui => canvas(ui).children[2].children;
 const halos = ui => canvas(ui).children[3].children;
 const badges = ui => canvas(ui).children[4].children;
-test('fixed Spot metric, Course score and audience changes stay synchronized', async () => {
+test('fixed Spot metric, hover rows and overall-only Course score stay synchronized', async () => {
     const ui = setup(); await flush(); image(ui).load();
     assert.equal(halos(ui).length, 1);
     const halo = halos(ui)[0];
@@ -449,13 +445,13 @@ test('fixed Spot metric, Course score and audience changes stay synchronized', a
     assert.equal(hotspots(ui)[0].children[1].children[1].children[0].textContent, '19.5%');
     assert.equal(hotspots(ui)[0].children[1].children[1].children[1].textContent, '개선');
     assert.deepEqual([halo.style.left, halo.style.top, halo.style.width, halo.style.height], before);
-    ui.elements.participantSelect.selectedIndex = 1;
-    ui.elements.participantSelect.value = '2';
-    ui.elements.participantSelect.change();
-    assert.equal(hotspots(ui)[0].children[1].children[1].children[0].textContent, '38.6%');
-    assert.equal(hotspots(ui)[0].children[1].children[1].children[1].textContent, '악화');
+    const hoverRows=hotspots(ui)[0].children[2].children.slice(1);
+    assert.deepEqual(hoverRows.map(row=>row.children[0].textContent),['스트레스','정서적 안정성']);
+    assert.deepEqual(hoverRows.map(row=>row.children[1].textContent),['19.5% 개선','54.3% 개선']);
+    assert.ok(hoverRows.every(row=>row.children.length===2));
+    assert.ok(!hotspots(ui)[0].children[2].children.some(child=>child.textContent==='대표'));
     hotspots(ui)[0].click(); await flush(); assert.equal(ui.elements.spotDetailModal.hidden, false);
-    assert.ok(ui.elements.spotAnalysis.children.some(row => row.children && row.children.some(child => child.textContent === '스트레스 유효 측정')));
+    assert.ok(ui.elements.spotAnalysis.children.some(row => row.children && row.children.some(child => child.textContent === '측정 인원')));
     ui.change(1); assert.equal(canvas(ui).children.length, 0); await flush();
     assert.equal(halos(ui).length, 1); assert.notEqual(halos(ui)[0], halo);
 });

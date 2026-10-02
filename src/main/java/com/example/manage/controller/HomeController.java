@@ -18,7 +18,6 @@ public class HomeController {
     private final SiteService siteService;
     private final com.example.manage.service.SiteImageService siteImages;
     private final com.example.manage.service.HealingEffectQueryService healingEffects;
-    private final com.example.manage.service.MeasurementHistoryQueryService measurementHistory;
 
     @Value("${kakao.maps.javascript-key}")
     private String kakaoMapsJavaScriptKey;
@@ -53,20 +52,10 @@ public class HomeController {
         sites.forEach(site -> imageUrls.put(site.getSiteId(), siteImages.representativeReadUrl(site.getSiteId())));
         model.addAttribute("siteImageUrls", imageUrls);
 
-        var participants = healingEffects.findMonitoringParticipants();
-        var monitoringEffects = new java.util.LinkedHashMap<String, com.example.manage.dto.MonitoringSiteEffectView>();
+        var monitoringEffects = new java.util.LinkedHashMap<String, java.util.List<com.example.manage.dto.MonitoringSpotEffectView>>();
         sites.forEach(site -> monitoringEffects.put(String.valueOf(site.getSiteId()),
-                healingEffects.findMonitoringForSite(site.getSiteId(), participants)));
-        model.addAttribute("monitoringParticipants", participants);
+                healingEffects.findMonitoringOverallForSite(site.getSiteId())));
         model.addAttribute("monitoringEffects", monitoringEffects);
-        var histories = new java.util.LinkedHashMap<String, java.util.Map<String, java.util.List<com.example.manage.dto.MeasurementHistoryView>>>();
-        sites.forEach(site -> {
-            var memberHistory = new java.util.LinkedHashMap<String, java.util.List<com.example.manage.dto.MeasurementHistoryView>>();
-            participants.forEach(member -> memberHistory.put(member.memberId().toString(),
-                    measurementHistory.findMemberForSite(member.memberId(), site.getSiteId())));
-            histories.put(site.getSiteId().toString(), memberHistory);
-        });
-        model.addAttribute("monitoringHistory", histories);
 
         return "home";
     }

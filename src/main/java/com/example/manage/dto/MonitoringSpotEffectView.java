@@ -1,7 +1,6 @@
 package com.example.manage.dto;
 
 import com.example.manage.domain.HealingSpotEffectSummary;
-import com.example.manage.domain.MemberHealingSpotEffectSummary;
 import java.math.BigDecimal;
 
 /** Summary-only data used by the protected Monitoring screen. */
@@ -25,14 +24,6 @@ public record MonitoringSpotEffectView(
                 summary.getEmotionalIncreaseRate(), HealingEffectView.emotionalChangeDisplay(summary.getEmotionalIncreaseRate()),
                 summary.getStressParticipantCount(), summary.getEmotionalParticipantCount(),
                 summary.getStressValidSessionCount(), summary.getEmotionalValidSessionCount(), true);
-    }
-
-    public static MonitoringSpotEffectView member(MemberHealingSpotEffectSummary summary) {
-        return new MonitoringSpotEffectView(
-                summary.getHealingSpot().getCode(), summary.getHealingSpot().getName(),
-                summary.getStressReductionRate(), HealingEffectView.stressChangeDisplay(summary.getStressReductionRate()),
-                summary.getEmotionalIncreaseRate(), HealingEffectView.emotionalChangeDisplay(summary.getEmotionalIncreaseRate()),
-                null, null, summary.getStressValidSessionCount(), summary.getEmotionalValidSessionCount(), true);
     }
 
     public static MonitoringSpotEffectView missing(String code, String name) {

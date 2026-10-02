@@ -11,7 +11,6 @@
             rel="stylesheet"
             th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/home-spatial.css}">
-    <link rel="stylesheet" th:href="@{/css/measurement-history.css}">
 </head>
 
 
@@ -89,15 +88,13 @@
         </div>
 
 
-        <section id="analysisControls" class="home-analysis-controls" aria-labelledby="analysisControlsTitle">
-            <h2 id="analysisControlsTitle">분석 설정</h2>
-            <label for="participantSelect">분석 대상</label>
-            <select id="participantSelect" class="site-select">
-                <option value="all">전체 평균</option>
-                <option th:each="participant : ${monitoringParticipants}"
-                        th:value="${participant.memberId}" th:text="${participant.label}"></option>
+        <section id="spotControls" class="home-analysis-controls" aria-labelledby="spotControlsTitle">
+            <h2 id="spotControlsTitle">스팟 설정</h2>
+            <label for="healingSpotSelect">Healing Spot</label>
+            <select id="healingSpotSelect" class="site-select">
+                <option value="">Healing Spot을 선택하세요</option>
             </select>
-            <button type="button" id="openAnalysisButton" class="primary-button">상세 분석 보기</button>
+            <button type="button" id="openSpotDetailButton" class="primary-button" disabled>상세 분석 보기</button>
         </section>
 
     </aside>
@@ -112,7 +109,7 @@
             <span><i class="is-good" aria-hidden="true"></i>개선</span>
             <span><i class="is-bad" aria-hidden="true"></i>악화</span>
             <span class="monitoring-legend-divider" aria-hidden="true">|</span>
-            <span>스트레스: 낮아질수록 개선 · 정서 안정: 높아질수록 개선</span>
+            <span>스트레스: 낮아질수록 개선 · 정서적 안정성: 높아질수록 개선</span>
         </div>
         <div class="monitoring-content">
             <p id="monitoringStatus" role="status" data-loading="true">공간 정보를 불러오는 중입니다.</p>
@@ -165,17 +162,6 @@
 </div>
 
 
-<div id="analysisModal" class="survey-modal" hidden>
-    <div class="survey-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="analysisModalTitle" tabindex="-1">
-        <div class="survey-modal-heading"><h2 id="analysisModalTitle"></h2><button type="button" id="closeAnalysisButton" aria-label="분석 닫기">×</button></div>
-        <p id="analysisModalSite" class="survey-note"></p>
-        <div id="analysisModalContent"></div>
-        <section id="analysisHistorySection" hidden>
-            <div id="analysisHistoryContent" class="measurement-history"></div>
-        </section>
-    </div>
-</div>
-
 <!-- ================================
      Kakao Maps SDK
 ================================ -->
@@ -191,8 +177,6 @@
 ================================ -->
 
 <script th:inline="javascript">window.monitoringEffects = /*[[${monitoringEffects}]]*/ {};</script>
-<script th:inline="javascript">window.monitoringHistory = /*[[${monitoringHistory}]]*/ {};</script>
-<script th:src="@{/js/measurement-history.js?v=analysis-ux}"></script>
 <script th:src="@{/js/home-survey-analysis.js?v=analysis-ux}"></script>
 <script th:src="@{/js/home-course-overlay.js?v=analysis-ux}"></script>
 <script th:src="@{/js/home-spatial.js?v=analysis-ux}"></script>

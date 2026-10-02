@@ -40,6 +40,10 @@
     --focus-mid-saturate: .9;
     --focus-mid-feather: 36px;
     --focus-mid-padding: 20px;
+    --context-corridor-center-ratio: .5;
+    --context-corridor-width-ratio: .16;
+    --context-corridor-min-width: 120px;
+    --context-corridor-max-width: 210px;
     --focus-near-saturate: 1.15;
     --focus-near-contrast: 1.04;
     --focus-near-feather: 20px;
@@ -80,6 +84,23 @@
 .monitoring-hotspot-auxiliary { color: #637169; font-size: 11px; }
 .monitoring-hotspot-auxiliary:empty { display: none; }
 .monitoring-hotspot-name { margin-top: 2px; color: #273f34; font-size: 14px; font-weight: 700; }
+.monitoring-hover-panel {
+    --hover-shift-x: 0px;
+    position: absolute; left: 50%; z-index: 3; display: none; box-sizing: border-box;
+    flex-direction: column; gap: 7px; padding: 12px 13px; border: 1px solid #dbe5db;
+    border-radius: 12px; background: rgba(255, 255, 252, .98); color: #273f34;
+    box-shadow: 0 10px 26px rgba(23, 46, 35, .22);
+    transform: translateX(calc(-50% + var(--hover-shift-x))); pointer-events: none; text-align: left;
+}
+.monitoring-hover-title { padding-bottom: 7px; border-bottom: 1px solid #e7ece5; font-size: 13px; overflow-wrap: anywhere; }
+.monitoring-hover-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 7px; min-height: 22px; }
+.monitoring-hover-metric { color: #526259; font-size: 12px; }
+.monitoring-hover-value { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.monitoring-hover-value.effect-good { color: var(--label-good-text); }
+.monitoring-hover-value.effect-bad { color: var(--label-bad-text); }
+.monitoring-hover-value.effect-neutral, .monitoring-hover-value.effect-missing { color: var(--label-neutral-text); }
+.monitoring-hotspot:hover .monitoring-hotspot-label, .monitoring-hotspot:focus-visible .monitoring-hotspot-label { visibility: hidden; }
+.monitoring-hotspot:hover .monitoring-hover-panel, .monitoring-hotspot:focus-visible .monitoring-hover-panel { display: flex; }
 .monitoring-hotspot:hover, .monitoring-hotspot:focus-visible, .monitoring-hotspot[aria-pressed="true"] { z-index: 2; }
 .monitoring-hotspot:hover .monitoring-hotspot-circle, .monitoring-hotspot:focus-visible .monitoring-hotspot-circle { transform: scale(1.04); box-shadow: 0 0 0 var(--spot-ring-color-width) var(--spot-data-color), 0 0 calc(var(--spot-glow-size) + 4px) calc(var(--spot-ring-color-width) + 3px) color-mix(in srgb, var(--spot-data-color) 38%, transparent), 0 9px 24px rgba(0, 0, 0, .3); }
 .monitoring-hotspot[aria-pressed="true"] .monitoring-hotspot-circle { outline: 2px solid #427e5c; outline-offset: 3px; }
@@ -128,9 +149,15 @@
     .monitoring-hotspot-label { padding: 6px 9px; }
     .monitoring-hotspot-value strong { font-size: 18px; }
     .monitoring-hotspot-name { font-size: 12px; }
+    .monitoring-hotspot:hover .monitoring-hotspot-label { visibility: visible; }
+    .monitoring-hotspot:hover .monitoring-hover-panel { display: none; }
     .spot-detail-dialog { width: 100%; }
     .spot-detail-content { padding: 0 16px 20px; }
     .spot-detail-section dl div { grid-template-columns: 95px 1fr; gap: 10px; }
+}
+@media (hover: none) {
+    .monitoring-hotspot:hover .monitoring-hotspot-label { visibility: visible; }
+    .monitoring-hotspot:hover .monitoring-hover-panel { display: none; }
 }
 
 .monitoring-effect-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 12px; padding: 0 24px 12px; color: #5a6a62; font-size: 13px; line-height: 1.5; }

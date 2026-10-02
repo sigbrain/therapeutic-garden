@@ -1,8 +1,6 @@
 package com.example.manage.service;
 
 import com.example.manage.dto.HealingEffectView;
-import com.example.manage.dto.MonitoringParticipantView;
-import com.example.manage.dto.MonitoringSiteEffectView;
 import com.example.manage.dto.MonitoringSpotEffectView;
 import com.example.manage.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -67,16 +65,8 @@ public class HealingEffectQueryService {
                 }).toList();
     }
 
-    /** Actual Member identities are exposed only to the authenticated admin Monitoring view. */
-    public List<MonitoringParticipantView> findMonitoringParticipants() {
-        return members.findAll(org.springframework.data.domain.Sort.by("participantNo", "memberId")).stream()
-                .map(member -> new MonitoringParticipantView(member.getMemberId(),
-                        "P" + String.format(java.util.Locale.ROOT, "%03d", member.getParticipantNo())))
-                .toList();
-    }
-
-    /** Builds one consistent Summary-only snapshot for all audience selections at a Site. */
-    public MonitoringSiteEffectView findMonitoringForSite(Long siteId, List<MonitoringParticipantView> audience) {
+    /** Builds the Site-wide Summary-only snapshot used by spatial Monitoring. */
+    public List<MonitoringSpotEffectView> findMonitoringOverallForSite(Long siteId) {
         var siteSpots = spots.findByHealingCourseSiteSiteId(siteId).stream()
                 .filter(spot -> spot.getCode().matches("HS[1-6]"))
                 .sorted(Comparator.comparing(com.example.manage.domain.HealingSpot::getCode))
@@ -84,25 +74,10 @@ public class HealingEffectQueryService {
 
         var overallBySpot = overall.findByHealingSpotHealingCourseSiteSiteIdOrderByHealingSpotCodeAsc(siteId).stream()
                 .collect(Collectors.toMap(s -> s.getHealingSpot().getSpotId(), Function.identity()));
-        var overallViews = siteSpots.stream().map(spot -> {
+        return siteSpots.stream().map(spot -> {
             var summary = overallBySpot.get(spot.getSpotId());
             return summary == null ? MonitoringSpotEffectView.missing(spot.getCode(), spot.getName())
                     : MonitoringSpotEffectView.overall(summary);
         }).toList();
-
-        var summariesByMember = participants
-                .findByHealingSpotHealingCourseSiteSiteIdOrderByMemberParticipantNoAscHealingSpotCodeAsc(siteId)
-                .stream().collect(Collectors.groupingBy(s -> s.getMember().getMemberId(),
-                        Collectors.toMap(s -> s.getHealingSpot().getSpotId(), Function.identity())));
-        Map<String, List<MonitoringSpotEffectView>> memberViews = new LinkedHashMap<>();
-        audience.forEach(member -> {
-            var measurements = summariesByMember.getOrDefault(member.memberId(), Map.of());
-            memberViews.put(String.valueOf(member.memberId()), siteSpots.stream().map(spot -> {
-                var summary = measurements.get(spot.getSpotId());
-                return summary == null ? MonitoringSpotEffectView.missing(spot.getCode(), spot.getName())
-                        : MonitoringSpotEffectView.member(summary);
-            }).toList());
-        });
-        return new MonitoringSiteEffectView(overallViews, memberViews);
     }
 }

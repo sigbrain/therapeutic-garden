@@ -2,8 +2,7 @@ package com.example.manage;
 
 import com.example.manage.domain.*;
 import com.example.manage.dto.HealingEffectView;
-import com.example.manage.dto.MonitoringParticipantView;
-import com.example.manage.dto.MonitoringSiteEffectView;
+import com.example.manage.dto.MonitoringSpotEffectView;
 import com.example.manage.repository.*;
 import com.example.manage.service.HealingEffectQueryService;
 import com.example.manage.healingeffect.HealingEffectExcelParser;
@@ -107,35 +106,45 @@ class HealingEffectUiTests {
         assertThat(service.findAnonymousExample()).isEmpty();
     }
 
-    @Test void adminMonitoringUsesOverallAndMemberSummariesWithHonestMissingValues() throws Exception {
+    @Test void adminMonitoringUsesOnlyOverallSummariesAndSpotSelection() throws Exception {
         fixture();
         var result = mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeExists("monitoringParticipants", "monitoringEffects"))
+                .andExpect(model().attributeExists("monitoringEffects"))
+                .andExpect(model().attributeDoesNotExist("monitoringParticipants", "monitoringHistory"))
                 .andReturn();
         @SuppressWarnings("unchecked")
-        var participants = (List<MonitoringParticipantView>) result.getModelAndView().getModel().get("monitoringParticipants");
-        assertThat(participants).extracting(MonitoringParticipantView::label).containsExactly("P001", "P002", "P004");
-        @SuppressWarnings("unchecked")
-        var bySite = (Map<String, MonitoringSiteEffectView>) result.getModelAndView().getModel().get("monitoringEffects");
+        var bySite = (Map<String, List<MonitoringSpotEffectView>>) result.getModelAndView().getModel().get("monitoringEffects");
         var data = bySite.values().iterator().next();
-        assertThat(data.overall()).hasSize(6);
-        assertThat(data.overall().getFirst().stressChangeDisplay()).isEqualTo("19.5% 감소");
-        assertThat(data.overall().getFirst().emotionalChangeDisplay()).isEqualTo("54.3% 증가");
-        assertThat(data.overall().getLast().stressChangeDisplay()).isEqualTo("21.2% 감소");
-        assertThat(data.overall().getLast().emotionalChangeDisplay()).isEqualTo("200.4% 증가");
-        var partialEffects = data.members().get(partial.getMemberId().toString());
-        assertThat(partialEffects).hasSize(6);
-        assertThat(partialEffects.getFirst().stressChangeDisplay()).isEqualTo("0.0% 변화 없음");
-        assertThat(partialEffects.get(4).hasMeasurement()).isFalse();
-        assertThat(partialEffects.get(4).stressValidSessionCount()).isNull();
+        assertThat(data).hasSize(6);
+        assertThat(data.getFirst().stressChangeDisplay()).isEqualTo("19.5% 감소");
+        assertThat(data.getFirst().emotionalChangeDisplay()).isEqualTo("54.3% 증가");
+        assertThat(data.getLast().stressChangeDisplay()).isEqualTo("21.2% 감소");
+        assertThat(data.getLast().emotionalChangeDisplay()).isEqualTo("200.4% 증가");
 
         String html = result.getResponse().getContentAsString();
-        assertThat(html).contains("P001", "P002", "P004", "19.5% 감소", "54.3% 증가", "200.4% 증가",
-                        "스트레스: 낮아질수록 개선", "정서 안정: 높아질수록 개선", "상세 분석 보기", "측정 데이터",
-                        "analysisHistorySection", "monitoringHistory", "measurement-history.js")
+        assertThat(html).contains("스팟 설정", "Healing Spot을 선택하세요", "19.5% 감소", "54.3% 증가", "200.4% 증가",
+                        "스트레스: 낮아질수록 개선", "정서적 안정성: 높아질수록 개선", "상세 분석 보기", "측정 데이터")
                 .doesNotContain("Demo 데이터", "시연용 데이터", "id=\"metricSelect\"", "id=\"hcStress\"", "id=\"hcEmotional\"", ">ISI<", ">PSS<",
+                        "P001", "P002", "P004", "participantSelect", "분석 대상", "monitoringHistory", "analysisHistorySection",
                         "1차", "2차", "3차", "4차", "5차", "방문 횟수", "<details id=\"analysisHistorySection\"");
+    }
+
+    @Test void participantHomeUsesOnlyAuthenticatedMembersSummaryAndHistory() throws Exception {
+        fixture();
+        var result = mvc.perform(get("/member").sessionAttr("loginMemberId", partial.getMemberId()))
+                .andExpect(status().isOk()).andExpect(view().name("member/home"))
+                .andExpect(model().attributeExists("spotEffects", "measurementHistory", "schedules"))
+                .andReturn();
+        @SuppressWarnings("unchecked") var effects = (List<HealingEffectView>) result.getModelAndView().getModel().get("spotEffects");
+        assertThat(effects).extracting(HealingEffectView::spotCode).containsExactly("HS1", "HS2", "HS3", "HS4", "HS5", "HS6");
+        assertThat(effects.getFirst().stressChangeDisplay()).isEqualTo("0.0% 변화 없음");
+        assertThat(effects.get(4).hasMeasurement()).isFalse();
+        String html = result.getResponse().getContentAsString();
+        assertThat(html).contains("나의 치유 분석", "나의 공간별 치유 효과와 측정 변화를 확인합니다.",
+                        "memberHealingEffects", "memberMeasurementHistory", "member-healing-analysis.js", "나의 달력")
+                .doesNotContain("P002", "P004", "secret-login-two", "secret-login-four");
+        assertThat(html.indexOf("나의 치유 분석")).isLessThan(html.indexOf("나의 달력"));
     }
 
     @Test void emptyDatabaseRendersHonestEmptyStates() throws Exception {

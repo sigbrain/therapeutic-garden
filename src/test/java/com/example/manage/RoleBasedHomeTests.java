@@ -81,7 +81,7 @@ class RoleBasedHomeTests {
         String html = mvc.perform(get("/member").session(session)).andExpect(status().isOk())
                 .andExpect(view().name("member/home")).andReturn().getResponse().getContentAsString();
         assertThat(html).contains("id=\"calendar\"", "id=\"schedule-data\"", "id=\"schedule-detail\"",
-                "MY CALENDAR", "나의 달력", "SELECTED SCHEDULE", "일정을 선택해 주세요.")
+                "MY HEALING ANALYSIS", "나의 치유 분석", "MY CALENDAR", "나의 달력", "SELECTED SCHEDULE", "일정을 선택해 주세요.")
                 .doesNotContain("PARTICIPANT", "나의 일정", "참가자님의 일정을 확인해 주세요.", "landing.js");
         String header = html.substring(html.indexOf("<header"), html.indexOf("</header>"));
         assertThat(header).contains("href=\"/member\"", "href=\"/member/logout\"")
@@ -97,14 +97,15 @@ class RoleBasedHomeTests {
         mvc.perform(get("/admin/monitoring")).andExpect(redirectedUrl("/admin/login"));
         String html = mvc.perform(get("/admin/monitoring").sessionAttr("loginAdminId", 1L))
                 .andExpect(status().isOk()).andExpect(view().name("home"))
-                .andExpect(model().attributeExists("sites", "monitoringParticipants", "monitoringEffects"))
+                .andExpect(model().attributeExists("sites", "monitoringEffects"))
+                .andExpect(model().attributeDoesNotExist("monitoringParticipants", "monitoringHistory"))
                 .andExpect(model().attribute("kakaoMapsJavaScriptKey", kakaoKey))
                 .andReturn().getResponse().getContentAsString();
-        assertThat(html).contains("id=\"siteSelect\"", "id=\"map\"", "id=\"analysisModal\"",
+        assertThat(html).contains("id=\"siteSelect\"", "id=\"map\"", "id=\"healingSpotSelect\"",
                 "id=\"spotDetailModal\"", "href=\"/admin/monitoring\"");
         String header = html.substring(html.indexOf("<header"), html.indexOf("</header>"));
         assertThat(header).contains("href=\"/admin/monitoring\"", "href=\"/admin\"", "href=\"/admin/logout\"")
-                .doesNotContain("/member", "/admin/login");
+                .doesNotContain("href=\"/member\"", "href=\"/member/login\"", "/admin/login");
         assertThat(html).doesNotContain("landing.js");
         assertThat(html).contains("sdk.js", "home-survey-analysis.js", "home-map.js");
         assertThat(html.indexOf("sdk.js")).isLessThan(html.indexOf("home-survey-analysis.js"));

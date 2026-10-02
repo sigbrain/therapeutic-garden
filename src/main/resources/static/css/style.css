@@ -3200,6 +3200,28 @@ input[type="time"].form-input {
     background-color: #f9fafb;
 }
 
+.admin-settings-menu { position: relative; display: inline-flex; align-items: stretch; }
+.admin-settings-menu .admin-settings-link { padding-right: 34px; }
+.admin-settings-toggle {
+    position: absolute; top: 1px; right: 1px; bottom: 1px; width: 32px; padding: 0;
+    border: 0; border-left: 1px solid #e5e7eb; border-radius: 0 7px 7px 0;
+    background: transparent; color: #64748b; cursor: pointer;
+}
+.admin-settings-toggle:focus-visible { outline: 2px solid #365d48; outline-offset: 2px; }
+.admin-settings-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0; z-index: 1200; display: none;
+    width: 150px; padding: 6px; border: 1px solid #dfe6df; border-radius: 10px;
+    background: #fff; box-shadow: 0 12px 30px rgba(15, 23, 42, .14);
+}
+.admin-settings-dropdown::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 9px; }
+.admin-settings-dropdown a {
+    display: block; padding: 9px 10px; border-radius: 7px; color: #374151;
+    font-size: 13px; font-weight: 600; line-height: 1.3; text-decoration: none; white-space: nowrap;
+}
+.admin-settings-dropdown a:hover, .admin-settings-dropdown a:focus-visible { background: #f0f5ef; color: #244b3b; outline: none; }
+.admin-settings-menu:hover .admin-settings-dropdown,
+.admin-settings-menu:focus-within .admin-settings-dropdown { display: block; }
+
 
 /* 전체 Site + 지도 영역 */
 .home-map-container {
@@ -7163,14 +7185,14 @@ input[type="time"].form-input {
 }
 .home-brand .home-title { font-size: 13px; color: #64748b; }
 .home-analysis-controls { margin: 24px 0 20px; padding-top: 18px; border-top: 1px solid #e5e7eb; }
-#analysisControlsTitle { margin: 0 0 12px; color: #374151; font-size: 14px; font-weight: 700; }
+#spotControlsTitle { margin: 0 0 12px; color: #374151; font-size: 14px; font-weight: 700; }
 .home-survey-page .site-panel-header > label { display: block; }
 .home-analysis-controls label { display: block; font-size: 12px; font-weight: 700; margin: 12px 0 7px; }
 .home-analysis-controls select { min-width: 0; max-width: 100%; }
 .home-survey-page .site-panel { min-width: 0; overflow-y: auto; }
 .survey-note, #spaceStatus { color: #64748b; font-size: 12px; line-height: 1.7; }
 .home-survey-page .spot-information-item strong { overflow-wrap: anywhere; }
-#openAnalysisButton { margin-top: 18px; }
+#openSpotDetailButton { margin-top: 18px; }
 .survey-legend { left: auto; position: absolute; z-index: 2; right: 16px; bottom: 20px; width: 220px; max-width: calc(100% - 32px); padding: 12px 14px; background: rgba(255,255,255,.96); border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 4px 14px #0f172a14; font-size: 11px; }
 .survey-legend p { margin: 6px 0; line-height: 1.5; }
 #surveyLegendTitle { font-size: 13px; font-weight: 700; }
@@ -7200,6 +7222,23 @@ input[type="time"].form-input {
 .survey-highlight-card strong { display: block; margin-top: 7px; font-size: 14px; }
 .survey-highlight-card p { margin: 6px 0 0; font-weight: 700; }
 .survey-highlight-label { color: #64748b; font-size: 12px; font-weight: 700; }
+.participant-analysis-page .effect-good { color: #347553; }
+.participant-analysis-page .effect-bad { color: #b4534b; }
+.participant-analysis-page .effect-neutral { color: #86743f; }
+.participant-analysis-page .effect-missing { color: #9ca3af; font-weight: 500; }
+.participant-analysis-page [hidden] { display: none !important; }
+.my-healing-section { margin-bottom: 28px; }
+.my-healing-heading { align-items: center; }
+.my-healing-description { margin: 8px 0 0; color: #64748b; font-size: 14px; line-height: 1.6; }
+.my-healing-heading .primary-button { flex: 0 0 auto; width: auto; margin: 0; padding: 0 18px; }
+.my-healing-card { padding: 4px 20px 22px; }
+.my-healing-card .survey-analysis-section { border-top: 0; margin-top: 0; padding-top: 18px; }
+.participant-analysis-page .survey-note { color: #64748b; font-size: 13px; line-height: 1.7; }
+@media (max-width: 620px) {
+    .my-healing-heading { align-items: stretch; flex-direction: column; }
+    .my-healing-heading .primary-button { width: 100%; }
+    .my-healing-card { padding: 2px 14px 18px; }
+}
 @media (max-width: 900px) {
     .home-analysis-controls { max-width: 420px; }
 }
