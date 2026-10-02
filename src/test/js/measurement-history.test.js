@@ -21,7 +21,7 @@ test('actual history graphs and table switch Spot and clear stale Member values'
     render(container,[{spotCode:'HS1',spotName:'정원',records:[]},{spotCode:'HS2',spotName:'원',records:[record('2026-08-14',20,15),record('2026-08-19',null,12)]}]);
     const select=all(container).find(n=>n.tag==='select');
     assert.equal(select.value,'');
-    assert.equal(select.children[0].textContent,'Healing Spot을 선택하세요');
+    assert.equal(select.children[0].textContent,'HS 선택');
     assert.equal(all(container).filter(n=>n.tag==='svg').length,0);
     assert.equal(all(container).filter(n=>n.tag==='table').length,0);
     select.value='HS2';select.events.change();

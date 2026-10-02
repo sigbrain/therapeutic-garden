@@ -7175,13 +7175,81 @@ input[type="time"].form-input {
    Home Survey Analysis
 ================================ */
 .home-survey-page [hidden] { display: none !important; }
+.home-utility-bar {
+    min-height: 40px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafbfa;
+}
+.home-login-navigation {
+    width: min(1400px, calc(100% - 48px));
+    min-height: 39px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+}
+.home-login-navigation > * + * {
+    padding-left: 14px;
+    border-left: 1px solid #d8ddd9;
+}
+.home-login-link {
+    min-height: auto;
+    padding: 5px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #5b6861;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.35;
+    text-decoration: none;
+    text-underline-offset: 3px;
+    transition: color .16s ease, opacity .16s ease;
+}
+.home-login-link:hover {
+    border-color: transparent;
+    background: transparent;
+    color: #244b3b;
+    text-decoration: underline;
+}
+.home-login-link:focus-visible {
+    outline: 2px solid #365d48;
+    outline-offset: 3px;
+}
+.admin-settings-menu { position: relative; display: inline-flex; align-items: center; }
+.admin-settings-menu .admin-settings-link { padding-right: 0; }
+.admin-settings-toggle {
+    position: static;
+    width: 18px;
+    min-height: 28px;
+    padding: 0 0 1px 4px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #6b7770;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+}
+.admin-settings-toggle:hover { color: #244b3b; }
+.admin-settings-dropdown { top: calc(100% + 5px); }
+.admin-settings-dropdown::before { height: 6px; }
 .home-brand { display: flex; flex-direction: column; gap: 3px; min-width: 0; color: inherit; text-decoration: none; }
 .home-brand:hover { opacity: .9; }
 .home-logo { width: 220px; height: 46px; object-fit: contain; object-position: left center; max-width: 100%; }
 .home-header-inner { padding-top: 14px; padding-bottom: 14px; box-sizing: border-box; }
 @media (max-width: 800px) {
     .home-logo { width: 200px; height: 42px; }
-    .home-header-inner { flex-wrap: wrap; }
+    .home-header-inner { flex-wrap: nowrap; }
+}
+@media (max-width: 520px) {
+    .home-utility-bar { min-height: 40px; }
+    .home-login-navigation { width: calc(100% - 32px); min-height: 39px; }
+    .home-login-navigation > * + * { padding-left: 12px; }
+    .home-login-link { flex: 0 1 auto; white-space: nowrap; }
+    .home-header-inner { align-items: center; flex-direction: row; }
 }
 .home-brand .home-title { font-size: 13px; color: #64748b; }
 .home-analysis-controls { margin: 24px 0 20px; padding-top: 18px; border-top: 1px solid #e5e7eb; }
@@ -7189,6 +7257,15 @@ input[type="time"].form-input {
 .home-survey-page .site-panel-header > label { display: block; }
 .home-analysis-controls label { display: block; font-size: 12px; font-weight: 700; margin: 12px 0 7px; }
 .home-analysis-controls select { min-width: 0; max-width: 100%; }
+#healingSpotSelect {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0 46px 0 12px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.25 6 6.25 11 1.25' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 12px 8px;
+}
 .home-survey-page .site-panel { min-width: 0; overflow-y: auto; }
 .survey-note, #spaceStatus { color: #64748b; font-size: 12px; line-height: 1.7; }
 .home-survey-page .spot-information-item strong { overflow-wrap: anywhere; }
@@ -7430,9 +7507,9 @@ input[type="time"].form-input {
 .service-page > .home-header { flex-shrink: 0; }
 .service-page > .page-container { min-height: 0; flex: 1; width: 100%; }
 .home-brand .home-title { font-weight: 700; }
-/* 데스크톱: Header 76px + 하단 테두리 1px + 지도 상하 여백 48px. */
+/* 데스크톱: utility bar 40px + main Header 76px + 하단 테두리 1px + 본문 상하 여백 48px. */
 @media (min-width: 901px) {
-    .home-survey-page .home-map-container { height: calc(100vh - 125px); }
+    .home-survey-page .home-map-container { height: calc(100vh - 165px); }
 }
 
 /* ==================================================================

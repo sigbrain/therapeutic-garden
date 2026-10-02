@@ -512,7 +512,7 @@ var openSpotDetailButton = document.getElementById('openSpotDetailButton');
 function resetHealingSpotSelect() {
     var placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = 'Healing Spot을 선택하세요';
+    placeholder.textContent = 'HS 선택';
     healingSpotSelect.replaceChildren(placeholder);
     healingSpotSelect.value = '';
     openSpotDetailButton.disabled = true;

@@ -70,7 +70,7 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 test('Monitoring Spot selector targets shared detail without changing overall map Summary', async () => {
     const ui=setup();await flush();
     assert.equal(ui.elements.openSpotDetailButton.disabled,true);
-    assert.equal(ui.elements.healingSpotSelect.children[0].textContent,'Healing Spot을 선택하세요');
+    assert.equal(ui.elements.healingSpotSelect.children[0].textContent,'HS 선택');
     assert.equal(ui.elements.healingSpotSelect.children[1].textContent,'HS1 · 정원');
     const overallBefore=ui.context.currentEffects()[0].stressReductionRate;
     ui.elements.healingSpotSelect.value='1';ui.elements.healingSpotSelect.change();

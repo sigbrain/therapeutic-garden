@@ -1,4 +1,13 @@
 /* Landing presentation; shared header and service screens keep their own styles. */
+.landing-page > .home-header { display: contents; }
+.landing-page .home-brand-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+}
+.landing-page #healing-effect { scroll-margin-top: 76px; }
 .landing-page .home-header-inner { padding-top: 14px; padding-bottom: 14px; }
 .landing-page .home-logo { width: 220px; height: 46px; }
 .landing-page .home-brand .home-title { font-size: 15px; color: #53675d; }
@@ -16,6 +25,10 @@
 .landing-page .landing-hero-image::after { background: linear-gradient(90deg, #f6f4f0 0%, rgba(246,244,240,.93) 9%, rgba(246,244,240,.35) 30%, transparent 49%), linear-gradient(180deg, rgba(246,244,240,.94) 0%, rgba(246,244,240,.75) 15%, rgba(246,244,240,.2) 31%, transparent 47%); }
 .landing-page .landing-hero-image img { object-position: 53% 50%; }
 .landing-page .landing-scroll { z-index: 1; }
+
+@media (max-width: 800px) {
+    .landing-page #healing-effect { scroll-margin-top: 90px; }
+}
 
 /* Numbered sections use a photographic heading band followed by a quiet content surface. */
 .landing-page .landing-section-hero { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; }

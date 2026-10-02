@@ -123,7 +123,7 @@ class HealingEffectUiTests {
         assertThat(data.getLast().emotionalChangeDisplay()).isEqualTo("200.4% 증가");
 
         String html = result.getResponse().getContentAsString();
-        assertThat(html).contains("스팟 설정", "Healing Spot을 선택하세요", "19.5% 감소", "54.3% 증가", "200.4% 증가",
+        assertThat(html).contains("스팟 설정", "HS 선택", "19.5% 감소", "54.3% 증가", "200.4% 증가",
                         "스트레스: 낮아질수록 개선", "정서적 안정성: 높아질수록 개선", "상세 분석 보기", "측정 데이터")
                 .doesNotContain("Demo 데이터", "시연용 데이터", "id=\"metricSelect\"", "id=\"hcStress\"", "id=\"hcEmotional\"", ">ISI<", ">PSS<",
                         "P001", "P002", "P004", "participantSelect", "분석 대상", "monitoringHistory", "analysisHistorySection",

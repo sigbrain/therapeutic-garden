@@ -72,8 +72,8 @@
 .monitoring-hotspot { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
 .monitoring-hotspot-circle { position: relative; display: flex; align-items: center; justify-content: center; width: clamp(110px, 13vw, 180px); height: clamp(110px, 13vw, 180px); box-sizing: border-box; border: var(--spot-ring-white-width) solid rgba(255, 255, 255, .92); border-radius: 50%; background: #375e48; color: white; font-size: 12px; font-weight: 700; overflow: hidden; box-shadow: 0 0 0 var(--spot-ring-color-width) var(--spot-data-color), 0 0 var(--spot-glow-size) calc(var(--spot-ring-color-width) + 2px) color-mix(in srgb, var(--spot-data-color) var(--spot-glow-alpha), transparent), 0 6px 18px rgba(0, 0, 0, .25); transition: transform .16s, box-shadow .16s; }
 .monitoring-hotspot-circle img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.monitoring-hotspot-label { display: flex; flex-direction: column; align-items: center; box-sizing: border-box; max-width: 100%; padding: 7px 13px; border-radius: 16px; background: rgba(255, 255, 255, .96); color: #244b3b; line-height: 1.35; text-align: center; white-space: normal; overflow-wrap: anywhere; box-shadow: 0 2px 8px rgba(0, 0, 0, .18); pointer-events: none; }
-.monitoring-hotspot-metric { display: inline-flex; padding: 2px 8px; border-radius: 999px; background: #eef1ee; color: #4a5a52; font-size: 12px; font-weight: 400; }
+.monitoring-hotspot-label { display: flex; flex-direction: column; align-items: center; box-sizing: border-box; width: 100%; max-width: 100%; padding: 7px 9px; border-radius: 16px; background: rgba(255, 255, 255, .96); color: #244b3b; line-height: 1.35; text-align: center; white-space: normal; overflow-wrap: anywhere; box-shadow: 0 2px 8px rgba(0, 0, 0, .18); pointer-events: none; }
+.monitoring-hotspot-metric { display: inline-flex; justify-content: center; min-width: 96px; box-sizing: border-box; padding: 2px 8px; border-radius: 999px; background: #eef1ee; color: #4a5a52; font-size: 12px; font-weight: 400; text-align: center; }
 .monitoring-hotspot-value { display: flex; align-items: baseline; justify-content: center; gap: 4px; margin-top: 3px; color: var(--label-neutral-text); white-space: nowrap; }
 .monitoring-hotspot-value strong { font-size: 20px; line-height: 1.15; font-weight: 800; font-variant-numeric: tabular-nums; }
 .monitoring-hotspot-value span { font-size: 13px; font-weight: 500; }
@@ -83,7 +83,7 @@
 .monitoring-hotspot-value.effect-missing strong { font-size: 14px; }
 .monitoring-hotspot-auxiliary { color: #637169; font-size: 11px; }
 .monitoring-hotspot-auxiliary:empty { display: none; }
-.monitoring-hotspot-name { margin-top: 2px; color: #273f34; font-size: 14px; font-weight: 700; }
+.monitoring-hotspot-name { margin-top: 2px; color: #273f34; font-size: 14px; font-weight: 700; white-space: nowrap; }
 .monitoring-hover-panel {
     --hover-shift-x: 0px;
     position: absolute; left: 50%; z-index: 3; display: none; box-sizing: border-box;

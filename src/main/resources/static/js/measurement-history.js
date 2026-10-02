@@ -68,7 +68,7 @@ window.MeasurementHistory = (() => {
         if (!histories || !histories.length) { container.append(element('p','측정 기록 없음')); return; }
         const label=element('label','Healing Spot '), select=element('select');
         select.setAttribute('aria-label','측정 기록 Healing Spot');
-        const placeholder=element('option','Healing Spot을 선택하세요');
+        const placeholder=element('option','HS 선택');
         placeholder.value=''; placeholder.disabled=true; placeholder.selected=true;
         select.append(placeholder);
         histories.forEach(h => { const option=element('option',h.spotCode+' · '+h.spotName); option.value=h.spotCode; select.append(option); });
