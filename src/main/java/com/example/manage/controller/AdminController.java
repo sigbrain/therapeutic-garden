@@ -130,11 +130,11 @@ public class AdminController {
 
         /*
          * DB에는
-         * [PHONE_REDACTED]
+         * 010-****-****
          *
          * 형태로 저장되어 있는 전화번호를
          * 화면에서는
-         * [PHONE_REDACTED]
+         * 010-****-****
          *
          * 형태로 보여준다.
          */
@@ -582,7 +582,7 @@ public class AdminController {
 
         /*
          * 수정 화면에서도 전화번호를
-         * [PHONE_REDACTED] 형태로 보여준다.
+         * 010-****-**** 형태로 보여준다.
          */
         String phone =
                 member.getPhone();
