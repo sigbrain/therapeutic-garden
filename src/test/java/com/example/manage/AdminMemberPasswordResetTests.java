@@ -183,11 +183,11 @@ class AdminMemberPasswordResetTests {
                         .param("groupNo", "2")
                         .param("loginId", target.getLoginId())
                         .param("name", "수정된 참가자")
-                        .param("phone", "[PHONE_REDACTED]"))
+                        .param("phone", SyntheticPhones.formatted(6)))
                 .andExpect(redirectedUrl("/admin/members/" + target.getMemberId()));
         Member updated = members.findById(target.getMemberId()).orElseThrow();
         assertThat(updated.getName()).isEqualTo("수정된 참가자");
-        assertThat(updated.getPhone()).isEqualTo("[PHONE_REDACTED]");
+        assertThat(updated.getPhone()).isEqualTo(SyntheticPhones.raw(6));
         assertThat(stored(target)).isEqualTo(originalHash);
     }
 }

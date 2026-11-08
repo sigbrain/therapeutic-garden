@@ -83,9 +83,9 @@ class TestParticipantAnalysisTests {
         String p004Password = UUID.randomUUID() + "Ab9!";
         String testPassword = UUID.randomUUID() + "Ab9!";
         Member p004 = members.saveAndFlush(new Member(4, 1, "private-p004-" + UUID.randomUUID(),
-                encoder.encode(p004Password), "실제 참가자", "[PHONE_REDACTED]"));
+                encoder.encode(p004Password), "실제 참가자", SyntheticPhones.raw(7)));
         Member other = members.saveAndFlush(new Member(5, 1, "private-other-" + UUID.randomUUID(),
-                encoder.encode(UUID.randomUUID().toString()), "다른 참가자", "[PHONE_REDACTED]"));
+                encoder.encode(UUID.randomUUID().toString()), "다른 참가자", SyntheticPhones.raw(3)));
         Member test = new Member(900_004, 0, "test004", encoder.encode(testPassword), "테스트 참가자", null);
         test.configureTestAnalysis(p004.getMemberId());
         test = members.saveAndFlush(test);

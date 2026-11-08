@@ -132,11 +132,11 @@ public class MemberService {
          * 전화번호 형식 통일
          *
          * 관리자가
-         * [PHONE_REDACTED]
+         * 010-****-****
          * 형식으로 입력해도
          *
          * DB에는
-         * [PHONE_REDACTED]
+         * 010-****-****
          * 형식으로 저장한다.
          */
         phone = normalizePhone(phone);

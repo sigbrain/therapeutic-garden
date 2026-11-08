@@ -45,11 +45,11 @@ class HealingEffectUiTests {
 
     void fixture() {
         var site = sites.save(new Site("effect-ui-site", "synthetic", 37.0, 127.0, 3));
-        partial = members.save(new Member(1, 1, "secret-login-one", "unused", "비공개이름하나", "[PHONE_REDACTED]"));
+        partial = members.save(new Member(1, 1, "secret-login-one", "unused", "비공개이름하나", SyntheticPhones.raw(6)));
         // Insertion/PK order intentionally differs from participantNo order.
-        laterComplete = members.save(new Member(4, 1, "secret-login-four", "unused", "비공개이름넷", "[PHONE_REDACTED]"));
-        firstComplete = members.save(new Member(2, 1, "secret-login-two", "unused", "비공개이름둘", "[PHONE_REDACTED]"));
-        landingParticipant = members.save(new Member(6, 1, "secret-login-six", "unused", "비공개이름육", "[PHONE_REDACTED]"));
+        laterComplete = members.save(new Member(4, 1, "secret-login-four", "unused", "비공개이름넷", SyntheticPhones.raw(7)));
+        firstComplete = members.save(new Member(2, 1, "secret-login-two", "unused", "비공개이름둘", SyntheticPhones.raw(1)));
+        landingParticipant = members.save(new Member(6, 1, "secret-login-six", "unused", "비공개이름육", SyntheticPhones.raw(5)));
         var courseNames = List.of("회복 코스", "감각 코스", "힐링 코스");
         int[] overallValid = {17, 16, 22, 23, 17, 18};
         int[] overallStressImproved = {15, 13, 16, 13, 11, 13};
@@ -137,7 +137,7 @@ class HealingEffectUiTests {
                         "최대 개선 스팟", "landing-preview-legend")
                 .doesNotContain("P001", "P002", "P004", "participantNo", "memberId", "participantCode", "loginId",
                         "secret-login-one", "secret-login-two", "secret-login-four", "secret-login-six", "비공개이름하나", "비공개이름둘", "비공개이름넷", "비공개이름육",
-                        "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]", "[PHONE_REDACTED]",
+                        SyntheticPhones.raw(6), SyntheticPhones.raw(1), SyntheticPhones.raw(7), SyntheticPhones.raw(5), SyntheticPhones.formatted(6), SyntheticPhones.formatted(1), SyntheticPhones.formatted(7), SyntheticPhones.formatted(5),
                         "참가자 예시", "익명 참가자의 측정 결과", "19.5% 감소", "54.3% 증가",
                         "평균 스트레스 증감률", "평균 정서 안정성 증감률", "정서적 안정성", "data-personal-spot=",
                         "data-stress-display=", "data-emotional-display=", "data-personal-metric=",
@@ -435,7 +435,7 @@ class HealingEffectUiTests {
                 .andExpect(model().attributeDoesNotExist("spotEffects"))
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("P001", "secret-login-one", "비공개이름하나", "[PHONE_REDACTED]",
+        assertThat(html).contains("P001", "secret-login-one", "비공개이름하나", SyntheticPhones.formatted(6),
                         "href=\"/admin/members/" + partial.getMemberId() + "/data\"", "데이터 보기",
                         "참가자 정보 수정", "참가자 삭제", "참가자 목록으로")
                 .doesNotContain("스팟별 치유 효과", "member-effect-spot", "HS1 ·");
@@ -466,7 +466,7 @@ class HealingEffectUiTests {
                 .doesNotContain("MY HEALING ANALYSIS", "나의 치유 분석",
                         "나의 공간별 치유 효과와 측정 변화를 확인합니다.",
                         "member-data-navigation", "나의 달력", "calendar-section", "schedule-data", "fullcalendar", "/member/api",
-                        "secret-login-one", "[PHONE_REDACTED]");
+                        "secret-login-one", SyntheticPhones.formatted(6));
         var p004 = mvc.perform(get("/admin/members/" + laterComplete.getMemberId() + "/data")
                 .sessionAttr("loginAdminId", 1L)).andExpect(status().isOk()).andReturn().getModelAndView().getModel();
         var p004Own = mvc.perform(get("/member").sessionAttr("loginMemberId", laterComplete.getMemberId()))

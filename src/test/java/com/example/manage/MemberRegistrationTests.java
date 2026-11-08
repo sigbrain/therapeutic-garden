@@ -41,13 +41,13 @@ class MemberRegistrationTests {
     void createsMemberWithNextNumberAndEncodedPasswordWithoutChangingExistingMembers() {
         Member existing = members.save(new Member(27, 1, "registration-existing", encoder.encode("old-secret")));
         MemberCreateForm form = form("registration-new", "initial-secret");
-        form.setPhone("[PHONE_REDACTED]");
+        form.setPhone(SyntheticPhones.formatted(6));
 
         Member created = memberService.createMember(form);
 
         assertThat(created.getParticipantNo()).isEqualTo(28);
         assertThat(created.getGroupNo()).isEqualTo(2);
-        assertThat(created.getPhone()).isEqualTo("[PHONE_REDACTED]");
+        assertThat(created.getPhone()).isEqualTo(SyntheticPhones.raw(6));
         assertThat(created.getPassword()).isNotEqualTo("initial-secret");
         assertThat(encoder.matches("initial-secret", created.getPassword())).isTrue();
         assertThat(memberService.login("registration-new", "initial-secret")).isNotNull();
@@ -85,7 +85,7 @@ class MemberRegistrationTests {
         var result = mvc.perform(post("/admin/members").session(session)
                         .param("groupNo", "3").param("loginId", "registration-controller")
                         .param("password", "initial-secret").param("name", "테스트 참가자")
-                        .param("phone", "[PHONE_REDACTED]"))
+                        .param("phone", SyntheticPhones.formatted(4)))
                 .andExpect(status().is3xxRedirection()).andReturn();
         Member member = members.findByLoginId("registration-controller").orElseThrow();
         assertThat(result.getResponse().getRedirectedUrl()).isEqualTo("/admin/members/" + member.getMemberId());

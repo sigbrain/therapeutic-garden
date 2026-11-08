@@ -56,7 +56,7 @@ class AdminMemberControllerTests {
 
     private Member member() {
         return members.saveAndFlush(new Member(PARTICIPANT_NO.incrementAndGet(), 1,
-                "member-controller-" + UUID.randomUUID(), encoder.encode("secret"), "참가자", "[PHONE_REDACTED]"));
+                "member-controller-" + UUID.randomUUID(), encoder.encode("secret"), "참가자", SyntheticPhones.raw(6)));
     }
 
     @Test

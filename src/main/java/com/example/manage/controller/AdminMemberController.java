@@ -163,7 +163,7 @@ public class AdminMemberController {
 
         /*
          * 수정 화면에서도 전화번호를
-         * [PHONE_REDACTED] 형태로 보여준다.
+         * 010-****-**** 형태로 보여준다.
          */
         String phone =
                 member.getPhone();

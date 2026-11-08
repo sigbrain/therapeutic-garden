@@ -56,8 +56,8 @@ class MemberMyPageTests {
 
     @Test
     void loginShowsMyPageImmediatelyBeforeLogoutAndOwnInformationOnly() throws Exception {
-        Member own = member("본인 참가자", "[PHONE_REDACTED]");
-        Member other = member("다른 참가자", "[PHONE_REDACTED]");
+        Member own = member("본인 참가자", SyntheticPhones.raw(6));
+        Member other = member("다른 참가자", SyntheticPhones.raw(2));
         MockHttpSession session = new MockHttpSession();
         mvc.perform(post("/member/login").with(csrf()).session(session)
                         .param("loginId", own.getLoginId()).param("password", PASSWORD))
@@ -79,9 +79,9 @@ class MemberMyPageTests {
         assertThat(result.getModelAndView().getModel().get("member")).isInstanceOf(MemberProfileView.class);
         String page = result.getResponse().getContentAsString();
         assertThat(page).contains("MY PAGE", "마이페이지", "member-detail-list",
-                "P" + own.getParticipantNo(), own.getLoginId(), "본인 참가자", "[PHONE_REDACTED]",
+                "P" + own.getParticipantNo(), own.getLoginId(), "본인 참가자", SyntheticPhones.formatted(6),
                 "href=\"/member/password\">비밀번호 변경</a>");
-        assertThat(page).doesNotContain(other.getLoginId(), "다른 참가자", "[PHONE_REDACTED]",
+        assertThat(page).doesNotContain(other.getLoginId(), "다른 참가자", SyntheticPhones.formatted(2),
                 own.getPassword(), "선택한 참가자의 등록 정보를 확인하고 관리합니다.",
                 "참가자 정보 수정", "데이터 보기", "참가자 목록으로", "참가자 삭제", "/admin/members");
         mvc.perform(get("/member/password").session(session)).andExpect(status().isOk());

@@ -92,7 +92,7 @@ class SpatialLayoutTests {
 
     @Test void adminMemberAnalysisApiRequiresAdminAndScopesImagesAndSite() throws Exception {
         var member = members.saveAndFlush(new Member(804, 1, "spatial-admin-" + UUID.randomUUID(),
-                "unused", "테스트 참가자", "[PHONE_REDACTED]"));
+                "unused", "테스트 참가자", SyntheticPhones.raw(6)));
         effectBatches.saveAndFlush(new HealingEffectImportBatch("a".repeat(64), "spatial.xlsx",
                 LocalDateTime.now(), 1, 1, site.getSiteId()));
         var photo = new MockMultipartFile("files", "spot.png", "image/png",
