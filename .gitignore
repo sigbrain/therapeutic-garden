@@ -44,6 +44,54 @@ src/main/resources/application.yaml
 src/main/resources/application.yml
 src/main/resources/application.properties
 
+# Local environment files; keep shareable examples available.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.envrc
+*.env
+*.local.yaml
+*.local.yml
+*.local.properties
+
+# Private keys and credentials (do not ignore normal SQL schemas).
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials.json
+service-account*.json
+accounts.sql
+*-accounts.local.sql
+
+# Database dumps, compressed SQL backups and local backup directories.
+*.dump
+*.sql.gz
+*.sql.zip
+*.sql.xz
+*.sql.zst
+*.sql.tar.gz
+*.sql.bak
+*.bak.sql
+*.dump.sql
+*.backup.sql
+*-dump.sql
+*-backup.sql
+dump.sql
+backup.sql
+dump-*.sql
+backup-*.sql
+full-restore.sql
+delivery-full-restore.sql
+source-backup-*.sql
+therapeutic-garden-*-aes256.zip
+/handover-private/
+/backup/
+/backups/
+
 # Runtime uploads and rollback recovery files
 .local/
 .codex-reference/

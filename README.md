@@ -399,6 +399,10 @@ Railway, 원격 MySQL 또는 운영 환경으로 판단되는 실행에서는 �
 
 SQL 파일에 따라 기존 정의와 중복되는 컬럼이 있을 수 있으므로, 각 스키마 문서를 독립적으로 검토하고 현재 DB 상태를 확인해야 합니다.
 
+### 신규 로컬 개발 DB
+
+완전히 새로운 빈 MySQL DB에만 [통합 스키마](docs/local-setup/schema.sql)를 실행합니다. 기존 DB나 아래 운영 마이그레이션 SQL과 중복 적용하지 않습니다. 개발용 계정은 프로젝트 루트에서 `docs/local-setup/generate-accounts`(macOS·Linux) 또는 `docs/local-setup/generate-accounts.bat`(Windows)를 실행해 별도 비밀번호로 생성할 수 있습니다. 생성된 `.local/setup/accounts.sql`은 비밀자료이므로 Git에 추가하거나 공유하지 않습니다. 계정 SQL 실행 후에만 선택적으로 [합성 Seed](docs/local-setup/synthetic-seed.sql)를 적용합니다. 이 Seed는 실제 정원·참가자 데이터를 복원하지 않습니다.
+
 ### 배포 시 확인사항
 
 - 배포 대상 Git 브랜치와 커밋
@@ -422,11 +426,11 @@ SQL 파일에 따라 기존 정의와 중복되는 컬럼이 있을 수 있으�
 | [코드 스타일 가이드](docs/CODE_STYLE.md) | Java 및 프로젝트 코드 스타일 기준 |
 | [Healing Effect 스키마](docs/healing-effect-schema.sql) | 효과 집계 관련 스키마 |
 | [Healing Improvement 스키마](docs/healing-improvement-schema.sql) | 개선 지표 관련 스키마 정의 |
-| [측정 데이터 감사](docs/healing-measurement-audit.md) | 측정 데이터 분석 및 검증 |
+| [효과·측정 데이터 Import](docs/healing-effect-import.md) | 집계·측정 Import와 재집계 절차 |
 | [개인 EEG 통합 안내](docs/personal-eeg-integration.md) | 개인 EEG 데이터 구조 및 Import·버전 관리 |
 | [참가자 비밀번호 재설정](docs/participant-password-reset.md) | 비밀번호 재설정 CLI 안전 실행 절차 |
 | [TEST004 스키마](docs/test004-schema.sql) | 테스트 참가자 관련 스키마 |
-| [운영 사전 점검](docs/test004-production-preflight.md) | 운영 반영 전 확인 절차 |
+| [TEST004 적용 및 복구](docs/test004-rollout.md) | 운영 반영 전 점검 및 복구 절차 |
 
 운영용 CLI 및 데이터 Import 작업은 해당 문서의 사전 검증·승인 절차를 확인한 뒤 수행해야 합니다.
 

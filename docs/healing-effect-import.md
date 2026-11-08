@@ -24,8 +24,9 @@ Any SQL/runtime failure rolls back both summary tables and the batch.
 
 ## Mapping and queries
 
-Participant text must match `P[0-9]{3}` exactly. `P004` maps to `Member.participantNo=4`;
-only the Member FK is stored. Every referenced Member must exist. A duplicate mapping fails.
+Participant text must match `P[0-9]{3}` exactly. Its three-digit numeric portion maps to
+`Member.participantNo` as an integer; only the Member FK is stored. Every referenced Member
+must exist. A duplicate mapping fails.
 An explicit Site ID scopes Spot matching; codes are not globally unique.
 That Site must contain exactly HC-A 회복 코스, HC-B 감각 코스, HC-C 힐링 코스 and
 HS1 호스타 정원, HS2 곶자왈원, HS3 가든 위스퍼스, HS4 콜로네이드 가든,
@@ -49,7 +50,7 @@ export HEALING_IMPORT_JDBC_URL='jdbc:mysql://127.0.0.1:3306/manage'
 export HEALING_IMPORT_DB_USER='<local user>'
 # Set HEALING_IMPORT_DB_PASSWORD securely in your shell/session.
 
-./gradlew healingEffectImport --args='--file ../private-data/healing_spot_stress_emotional_summary.xlsx --site-id 1 --dry-run'
+./gradlew healingEffectImport --args='--file <external.xlsx> --site-id <verified-site-id> --dry-run'
 ```
 
 Only localhost/127.0.0.1 MySQL URLs without URL options are accepted. Railway/remote URLs
@@ -67,10 +68,9 @@ Explicit write invocation (requires authorization for the target environment):
 Before an authorized write, back up the local DB and prepare/review the three tables using
 `docs/healing-effect-schema.sql` (manual SQL, not an automatic migration).
 Existing referenced tables and summary tables must use InnoDB. Do not run the normal app
-just to dry-run, since its existing `ddl-auto=update` can change schema.
+just to dry-run, because an `update` DDL setting can change schema.
 Repeat dry-run and require `schemaReady=true`, zero validation errors, the expected SHA and
-counts. See `healing-effect-local-validation.md` for the subsequently authorized local import.
-Production schema/import/deployment is a separate, unperformed step.
+counts. Production schema, import and deployment require separate target review.
 
 Same SHA+Site returns `ALREADY_IMPORTED` with zero inserts, even after summary deletion.
 Same SHA with a different Site fails. Any existing batch/summary data with another SHA or
@@ -83,27 +83,25 @@ Member deletion explicitly removes its participant summaries, preserving overall
 Unused Spot deletion removes both kinds of summaries. Scheduled Spot deletion remains
 blocked by existing policy. No cascade remove was added. Batch audit records survive deletion.
 
-## Read-only validation on 2026-09-30
+## Raw measurements and improvement rebuild
 
-Source: external `../private-data/healing_spot_stress_emotional_summary.xlsx`.
-SHA-256: `d0f81649162ee0177093365a27c5a53e51ec152135b2d70627c9f000185cb31d`.
-Local Site 1 mapping passed. Existing Member participant numbers span 1–11 (11 Members).
-Parser and DB mapping validation passed: overall 6 rows, participant summary 60 rows,
-planned inserts 6/60, validation errors 0. HS6 displayed 21.2% / 200.4%.
-Status `DRY_RUN`, `schemaReady=false`: all three new tables were absent.
-No schema/data/batch writes were performed. SQL preparation above was not executed.
+Raw measurement history is stored separately from the summaries in the three JDBC tables
+defined by `docs/healing-measurement-schema.sql`. A source row is a dated Course measurement,
+not proof of a visit or a numbered session. The parser checks headers, dates, participant and
+Course/Spot mapping, route consistency and numeric values. Missing measurements and Baselines
+remain missing; they must not be interpreted as zero or turned into invented rates.
 
-## Tests and next UI stage
+The local-only tools use the same `HEALING_IMPORT_*` connection settings described above.
+They do not create schema or run automatically at startup. After reviewing the target and a
+backup, use dry-run before a separately authorized write:
 
-Run `./gradlew test` and `git diff --check`. Tests use H2 isolated from MySQL and cover
-parser failures, precision, mapping, unique constraints, ordered queries, missing versus zero,
-SHA guards, concurrent duplicate import, late failure rollback, missing schema and deletions.
-Actual MySQL write/rollback is intentionally not exercised with the private workbook.
+```sh
+./gradlew healingMeasurementImport --args='--file <external.xlsx> --site-id <verified-id> --dry-run'
+./gradlew healingImprovementRebuild --args='--site-id <verified-id> --dry-run'
+```
 
-HomeController now supplies overall effects and anonymous example DTOs to landing.html/landing.js.
-AdminController supplies Member effects to admin/member-detail.html. The successful batch selects
-the target Site. Public examples select the first complete six-Spot Member by participantNo;
-no complete candidate yields an empty state, with no sample-value fallback.
-Public personal views must use the label `참가자 예시` and disclose no identifiers in HTML,
-JS, attributes or payloads. These values are Spot averages, not a chronological series;
-do not connect Baseline → HS1 → HS2 as a time trend. Missing rows mean `측정 없음`.
+Review schema readiness, mappings and reported counts before replacing `--dry-run` with
+`--write`. The rebuild validates raw and summary coverage before updating improvement counts;
+it is not a general-purpose replacement for importing data. Production tools have separate
+target guards and require an independently reviewed execution plan. Keep participant data
+out of logs, documentation and public pages. Tests use generated synthetic workbooks.

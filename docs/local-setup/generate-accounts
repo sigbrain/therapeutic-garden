@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+# Invoke from project root, with a terminal. Never accepts passwords as arguments.
+classpath=$(./gradlew -q participantPasswordResetClasspath)
+exec java --class-path "$classpath" docs/local-setup/GenerateAccounts.java
