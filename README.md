@@ -8,6 +8,8 @@
 
 현재 Railway를 통해 웹서비스를 배포·운영하고 있으며, 일부 데이터 분석 기능은 관련 데이터베이스 스키마와 측정 데이터의 준비 상태에 따라 제공 범위가 달라집니다.
 
+배포 주소: https://therapeutic-garden-production.up.railway.app
+
 ---
 
 ## 1. 주요 기능
