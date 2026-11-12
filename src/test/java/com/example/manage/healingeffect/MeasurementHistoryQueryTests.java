@@ -29,7 +29,7 @@ class MeasurementHistoryQueryTests {
         assertEquals("HS1",data.get(0).spotCode());assertEquals(2,data.get(0).records().size());
         assertEquals("2026-08-14",data.get(0).records().get(0).measurementDate());
         assertEquals(new BigDecimal("15.25"),data.get(0).records().get(0).stress().post());
-        assertEquals("25.0% 증가",data.get(0).records().get(0).emotional().rateDisplay());
+        assertEquals("25% 증가",data.get(0).records().get(0).emotional().rateDisplay());
         assertNull(data.get(0).records().get(1).stress().rate());
         assertTrue(data.get(1).records().isEmpty());
         assertTrue(service.findMemberForSite(5L,1L).stream().allMatch(s->s.records().isEmpty()));

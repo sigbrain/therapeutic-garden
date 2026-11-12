@@ -52,12 +52,12 @@ class RawMeasurementTests {
     }
     @Test void metricKeepsSignsZeroMissingAndLargeRates() {
         var b=new BigDecimal("20");
-        assertEquals("25.0% 감소",MeasurementHistoryView.Metric.of(b,new BigDecimal("15"),true).rateDisplay());
-        assertEquals("25.0% 감소",MeasurementHistoryView.Metric.of(b,new BigDecimal("15"),false).rateDisplay());
-        assertEquals("0.0% 변화 없음",MeasurementHistoryView.Metric.of(b,b,true).rateDisplay());
+        assertEquals("25% 감소",MeasurementHistoryView.Metric.of(b,new BigDecimal("15"),true).rateDisplay());
+        assertEquals("25% 감소",MeasurementHistoryView.Metric.of(b,new BigDecimal("15"),false).rateDisplay());
+        assertEquals("0% 변화 없음",MeasurementHistoryView.Metric.of(b,b,true).rateDisplay());
         assertNull(MeasurementHistoryView.Metric.of(null,b,true).change());
         assertNull(MeasurementHistoryView.Metric.of(BigDecimal.ZERO,b,true).rate());
-        assertEquals("1423.5% 증가",MeasurementHistoryView.Metric.of(new BigDecimal("1"),new BigDecimal("15.235"),false).rateDisplay());
+        assertEquals("1424% 증가",MeasurementHistoryView.Metric.of(new BigDecimal("1"),new BigDecimal("15.235"),false).rateDisplay());
     }
     DriverManagerDataSource database() {
         var ds=new DriverManagerDataSource("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=MySQL;DB_CLOSE_DELAY=-1","sa","");

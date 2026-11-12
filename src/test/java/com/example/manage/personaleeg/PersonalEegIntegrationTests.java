@@ -245,8 +245,8 @@ class PersonalEegIntegrationTests {
         assertEquals(new BigDecimal("2.000000000000000000"),first.stress().baseline());
         assertEquals(new BigDecimal("1.500000000000000000"),first.stress().post());
         assertEquals(new BigDecimal("-0.500000000000000000"),first.stress().change());
-        assertEquals("25.0% 감소",first.stress().rateDisplay());
-        assertEquals("20.0% 증가",first.emotional().rateDisplay());
+        assertEquals("25% 감소",first.stress().rateDisplay());
+        assertEquals("20% 증가",first.emotional().rateDisplay());
         assertNull(history.findImportedMember(1L).get(1).records().getFirst().stress().post());
         assertEquals("계산 불가",history.findImportedMember(1L).get(1).records().getFirst().stress().rateDisplay());
 
